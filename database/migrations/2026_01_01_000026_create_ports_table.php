@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('name');
             $table->enum('type', ['sea', 'air'])->default('sea');
             $table->timestamps();
-
             $table->foreign('country_id')->references('id')->on('countries')->restrictOnDelete();
             $table->index('country_id');
         });

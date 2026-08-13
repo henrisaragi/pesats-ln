@@ -17,6 +17,67 @@
                 ],
             ],
         ],
+        [
+            'title' => __('Master Data'),
+            'items' => [
+                [
+                    'label' => __('Master Data'),
+                    'icon' => 'database',
+                    'children' => [
+                        [
+                            'label' => __('Negara'),
+                            'route' => 'master.countries.index',
+                            'permission' => 'countries.view',
+                        ],
+                        [
+                            'label' => __('Provinsi'),
+                            'route' => 'master.provinsi.index',
+                            'permission' => 'provinsi.view',
+                        ],
+                        [
+                            'label' => __('Kota'),
+                            'route' => 'master.kota.index',
+                            'permission' => 'kota.view',
+                        ],
+                        [
+                            'label' => __('Kecamatan'),
+                            'route' => 'master.kecamatan.index',
+                            'permission' => 'kecamatan.view',
+                        ],
+                        [
+                            'label' => __('Kelurahan'),
+                            'route' => 'master.kelurahan.index',
+                            'permission' => 'kelurahan.view',
+                        ],
+                        [
+                            'label' => __('Pelabuhan'),
+                            'route' => 'master.ports.index',
+                            'permission' => 'ports.view',
+                        ],
+                        [
+                            'label' => __('Kode Perdagangan'),
+                            'route' => 'master.trade-codes.index',
+                            'permission' => 'trade-codes.view',
+                        ],
+                        [
+                            'label' => __('Komoditas'),
+                            'route' => 'master.komoditas.index',
+                            'permission' => 'komoditas.view',
+                        ],
+                        [
+                            'label' => __('Status Asal'),
+                            'route' => 'master.source-statuses.index',
+                            'permission' => 'source-statuses.view',
+                        ],
+                        [
+                            'label' => __('Spesies'),
+                            'route' => 'master.species.index',
+                            'permission' => 'species.view',
+                        ],
+                    ],
+                ],
+            ],
+        ],
     ];
 
     $userCanSeeMenu = function (?string $permission) {
