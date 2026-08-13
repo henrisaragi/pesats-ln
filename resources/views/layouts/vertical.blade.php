@@ -27,6 +27,8 @@
         </div>
 
     </div>
+
+    @include('layouts.partials/flash-dialog')
 </body>
 
 </html>

@@ -1,0 +1,78 @@
+@php
+    $menuSections = [
+        [
+            'title' => __('Administrasi'),
+            'items' => [
+                [
+                    'label' => __('Role'),
+                    'icon' => 'users-round',
+                    'route' => 'roles.index',
+                    'permission' => 'roles.view',
+                ],
+                [
+                    'label' => __('Permission'),
+                    'icon' => 'key-round',
+                    'route' => 'permissions.index',
+                    'permission' => 'permissions.view',
+                ],
+            ],
+        ],
+    ];
+
+    $userCanSeeMenu = function (?string $permission) {
+        return $permission === null || (auth()->check() && auth()->user()->can($permission));
+    };
+
+    $isMenuItemVisible = function (array $item) use (&$isMenuItemVisible, $userCanSeeMenu) {
+        if (! empty($item['children'])) {
+            foreach ($item['children'] as $child) {
+                if ($isMenuItemVisible($child)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return $userCanSeeMenu($item['permission'] ?? null);
+    };
+@endphp
+
+<ul class="side-nav p-3 hs-accordion-group">
+    @foreach ($menuSections as $section)
+        @php $visibleItems = collect($section['items'])->filter($isMenuItemVisible); @endphp
+        @if ($visibleItems->isNotEmpty())
+            <li class="menu-title">
+                <span>{{ $section['title'] }}</span>
+            </li>
+            @foreach ($visibleItems as $item)
+                @if (! empty($item['children']))
+                    @php $visibleChildren = collect($item['children'])->filter($isMenuItemVisible); @endphp
+                    <li class="menu-item hs-accordion">
+                        <a class="hs-accordion-toggle menu-link" href="javascript:void(0)">
+                            <span class="menu-icon"><i data-lucide="{{ $item['icon'] }}"></i></span>
+                            <span class="menu-text">{{ $item['label'] }}</span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <ul class="sub-menu hs-accordion-content hidden">
+                            @foreach ($visibleChildren as $child)
+                                <li class="menu-item">
+                                    <a class="menu-link" href="{{ route($child['route']) }}">
+                                        <span class="menu-text">{{ $child['label'] }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @else
+                    <li class="menu-item">
+                        <a class="menu-link" href="{{ route($item['route']) }}">
+                            <span class="menu-icon"><i data-lucide="{{ $item['icon'] }}"></i></span>
+                            <div class="menu-text">{{ $item['label'] }}</div>
+                        </a>
+                    </li>
+                @endif
+            @endforeach
+        @endif
+    @endforeach
+</ul>
