@@ -21,6 +21,17 @@ class UserRequest extends FormRequest
                 'username' => str_replace(' ', '', (string) $this->input('username')),
             ]);
         }
+
+        $actor = $this->user();
+
+        // Non-super-admins can only manage users within their own entity and role,
+        // regardless of what the (visually locked) form fields actually submitted.
+        if ($actor && ! $actor->hasRole('super-admin')) {
+            $this->merge([
+                'entity_id' => $actor->entity_id,
+                'role' => $actor->roles->first()?->name,
+            ]);
+        }
     }
 
     /**

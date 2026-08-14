@@ -133,10 +133,20 @@ document.addEventListener('DOMContentLoaded', function () {
             editForm.querySelector('[name="name"]').value = name || '';
             editForm.querySelector('[name="username"]').value = username || '';
             editForm.querySelector('[name="email"]').value = email || '';
-            editForm.querySelector('[name="entity_id"]').value = entityId || '';
+            // entity_id/role are only editable <select>s for super-admins; for everyone
+            // else they're locked hidden inputs (set server-side) and must stay untouched.
+            const entityField = editForm.querySelector('[name="entity_id"]');
+            if (entityField?.tagName === 'SELECT') {
+                entityField.value = entityId || '';
+            }
+
+            const roleField = editForm.querySelector('[name="role"]');
+            if (roleField?.tagName === 'SELECT') {
+                roleField.value = role || '';
+            }
+
             editForm.querySelector('[name="nip"]').value = nip || '';
             editForm.querySelector('[name="jabatan"]').value = jabatan || '';
-            editForm.querySelector('[name="role"]').value = role || '';
             editForm.querySelector('[name="password"]').value = '';
             editForm.querySelector('input[name="is_active"][type="checkbox"]').checked = isActive === '1';
             editForm.querySelector('[data-username-error]')?.classList.add('hidden');

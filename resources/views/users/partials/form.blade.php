@@ -1,6 +1,8 @@
 @php
     $modalId = 'user-'.$prefix.'-modal';
     $isRedisplay = old('_modal') === $modalId;
+    $isSuperAdmin = auth()->user()->hasRole('super-admin');
+    $viewerRoleName = auth()->user()->roles->first()?->name;
 @endphp
 
 <div class="p-4 overflow-y-auto max-h-[70vh]">
@@ -47,17 +49,24 @@
         </div>
         <div>
             <label class="inline-block mb-2 text-sm font-medium" for="user-{{ $prefix }}-entity">{{ __('Entitas') }}</label>
-            <select class="form-input" id="user-{{ $prefix }}-entity" name="entity_id">
-                <option value="">{{ __('Pilih Entitas') }}</option>
-                @foreach ($entityOptions as $entityOption)
-                    <option value="{{ $entityOption->id }}"
-                            @selected($isRedisplay && (int) old('entity_id') === $entityOption->id)>
-                        {{ $entityOption->name }}
-                    </option>
-                @endforeach
-            </select>
-            @if ($isRedisplay && $errors->has('entity_id'))
-                <p class="mt-1 text-xs text-danger">{{ $errors->first('entity_id') }}</p>
+            @if ($isSuperAdmin)
+                <select class="form-input" id="user-{{ $prefix }}-entity" name="entity_id">
+                    <option value="">{{ __('Pilih Entitas') }}</option>
+                    @foreach ($entityOptions as $entityOption)
+                        <option value="{{ $entityOption->id }}"
+                                @selected($isRedisplay && (int) old('entity_id') === $entityOption->id)>
+                            {{ $entityOption->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @if ($isRedisplay && $errors->has('entity_id'))
+                    <p class="mt-1 text-xs text-danger">{{ $errors->first('entity_id') }}</p>
+                @endif
+            @else
+                <select class="form-input bg-default-100 text-default-500 cursor-not-allowed" disabled>
+                    <option selected>{{ auth()->user()->entity?->name ?? __('Tidak ada entitas') }}</option>
+                </select>
+                <input name="entity_id" type="hidden" value="{{ auth()->user()->entity_id }}">
             @endif
         </div>
         <div>
@@ -78,17 +87,24 @@
         </div>
         <div>
             <label class="inline-block mb-2 text-sm font-medium" for="user-{{ $prefix }}-role">{{ __('Role') }}</label>
-            <select class="form-input" id="user-{{ $prefix }}-role" name="role">
-                <option value="">{{ __('Pilih Role') }}</option>
-                @foreach ($roleOptions as $roleOption)
-                    <option value="{{ $roleOption->name }}"
-                            @selected($isRedisplay && old('role') === $roleOption->name)>
-                        {{ $roleOption->name }}
-                    </option>
-                @endforeach
-            </select>
-            @if ($isRedisplay && $errors->has('role'))
-                <p class="mt-1 text-xs text-danger">{{ $errors->first('role') }}</p>
+            @if ($isSuperAdmin)
+                <select class="form-input" id="user-{{ $prefix }}-role" name="role">
+                    <option value="">{{ __('Pilih Role') }}</option>
+                    @foreach ($roleOptions as $roleOption)
+                        <option value="{{ $roleOption->name }}"
+                                @selected($isRedisplay && old('role') === $roleOption->name)>
+                            {{ $roleOption->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @if ($isRedisplay && $errors->has('role'))
+                    <p class="mt-1 text-xs text-danger">{{ $errors->first('role') }}</p>
+                @endif
+            @else
+                <select class="form-input bg-default-100 text-default-500 cursor-not-allowed" disabled>
+                    <option selected>{{ $viewerRoleName ?? '-' }}</option>
+                </select>
+                <input name="role" type="hidden" value="{{ $viewerRoleName }}">
             @endif
         </div>
         <div class="flex items-center gap-2">

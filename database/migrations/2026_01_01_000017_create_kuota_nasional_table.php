@@ -19,7 +19,6 @@ return new class extends Migration
             $table->unsignedBigInteger('species_id');
             $table->unsignedBigInteger('source_id');
             $table->unsignedBigInteger('trade_code_id');
-            $table->unsignedBigInteger('harga_patokan_id');
             $table->decimal('quota', 15, 2);
             $table->smallInteger('year');
             $table->timestamps();
