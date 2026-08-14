@@ -19,8 +19,15 @@ class SourceStatusRequest extends FormRequest
      */
     public function rules(): array
     {
+        $sourceStatusId = $this->route('sourceStatus')?->id;
+
         return [
-            'code' => ['required', Rule::in(['W', 'F', 'C', 'I'])],
+            'code' => [
+                'required',
+                'string',
+                'max:5',
+                Rule::unique('source_statuses', 'code')->ignore($sourceStatusId),
+            ],
             'description' => ['nullable', 'string', 'max:1000'],
         ];
     }

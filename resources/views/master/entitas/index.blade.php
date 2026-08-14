@@ -14,7 +14,7 @@
 @endphp
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Master Data', 'title' => 'Entitas'])
+    @include('layouts.partials/page-title', ['subtitle' => 'Administrasi', 'title' => 'Entitas'])
 
     <div class="card">
         <div class="card-header">

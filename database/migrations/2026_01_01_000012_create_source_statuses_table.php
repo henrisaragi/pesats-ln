@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('source_statuses', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->enum('code', ['W', 'F', 'C', 'I']);
+            $table->string('code', 5)->unique();
             $table->string('description')->nullable();
             $table->timestamps();
         });

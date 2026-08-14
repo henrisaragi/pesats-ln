@@ -8,12 +8,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\KelurahanRequest;
 use App\Models\Kecamatan;
 use App\Models\Kelurahan;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class KelurahanController extends Controller
 {
+    public function byKecamatan(Kecamatan $kecamatan): JsonResponse
+    {
+        return response()->json(
+            $kecamatan->kelurahan()->orderBy('name')->get(['id', 'name'])
+        );
+    }
+
     public function index(Request $request): View
     {
         $kelurahan = Kelurahan::query()

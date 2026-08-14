@@ -9,12 +9,20 @@ use App\Http\Requests\Master\KecamatanRequest;
 use App\Models\Kecamatan;
 use App\Models\Kota;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class KecamatanController extends Controller
 {
+    public function byKota(Kota $kota): JsonResponse
+    {
+        return response()->json(
+            $kota->kecamatan()->orderBy('name')->get(['id', 'name'])
+        );
+    }
+
     public function index(Request $request): View
     {
         $kecamatan = Kecamatan::query()

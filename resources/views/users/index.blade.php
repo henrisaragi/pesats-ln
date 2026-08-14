@@ -26,12 +26,14 @@
                            data-lucide="search"></i>
                     </div>
                 </div>
-                <select class="form-input form-input-sm" id="users-filter-entity">
-                    <option value="">{{ __('Semua Entitas') }}</option>
-                    @foreach ($entityOptions as $entityOption)
-                        <option value="{{ $entityOption->id }}">{{ $entityOption->name }}</option>
-                    @endforeach
-                </select>
+                @can('users.view-all')
+                    <select class="form-input form-input-sm" id="users-filter-entity">
+                        <option value="">{{ __('Semua Entitas') }}</option>
+                        @foreach ($entityOptions as $entityOption)
+                            <option value="{{ $entityOption->id }}">{{ $entityOption->name }}</option>
+                        @endforeach
+                    </select>
+                @endcan
             </div>
         </div>
         <div class="card-body">

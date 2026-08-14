@@ -169,6 +169,7 @@ return [
         'username' => 'username',
         'login' => 'username/email',
         'permissions' => 'permission',
+        'code' => 'kode',
     ],
 
 ];

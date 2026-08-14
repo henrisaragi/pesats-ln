@@ -9,12 +9,20 @@ use App\Http\Requests\Master\KotaRequest;
 use App\Models\Kota;
 use App\Models\Provinsi;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class KotaController extends Controller
 {
+    public function byProvinsi(Provinsi $provinsi): JsonResponse
+    {
+        return response()->json(
+            $provinsi->kota()->orderBy('name')->get(['id', 'name'])
+        );
+    }
+
     public function index(Request $request): View
     {
         $kota = Kota::query()

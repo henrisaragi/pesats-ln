@@ -28,8 +28,16 @@ class UserController extends Controller
 
     public function data(Request $request): JsonResponse
     {
+        $viewer = $request->user();
+
         $users = User::query()
             ->with(['entity', 'roles'])
+            ->when(
+                ! $viewer->can('users.view-all'),
+                fn ($query) => $viewer->entity_id === null
+                    ? $query->whereNull('entity_id')
+                    : $query->where('entity_id', $viewer->entity_id)
+            )
             ->when(
                 $request->filled('entity_id'),
                 fn ($query) => $query->where('entity_id', $request->integer('entity_id'))
@@ -45,6 +53,28 @@ class UserController extends Controller
             ->addColumn('action', fn (User $user) => view('users.partials.action', ['user' => $user])->render())
             ->rawColumns(['status', 'action'])
             ->make(true);
+    }
+
+    public function checkUsername(Request $request): JsonResponse
+    {
+        $username = str_replace(' ', '', (string) $request->query('username', ''));
+
+        if ($username === '') {
+            return response()->json(['available' => true]);
+        }
+
+        $exists = User::query()
+            ->where('username', $username)
+            ->when(
+                $request->filled('exclude'),
+                fn ($query) => $query->where('id', '!=', $request->integer('exclude'))
+            )
+            ->exists();
+
+        return response()->json([
+            'available' => ! $exists,
+            'message' => $exists ? __('Username sudah digunakan.') : null,
+        ]);
     }
 
     public function store(UserRequest $request): RedirectResponse

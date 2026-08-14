@@ -32,6 +32,7 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
     });
 
     Route::prefix('kota')->name('kota.')->group(function (): void {
+        Route::get('by-provinsi/{provinsi}', [KotaController::class, 'byProvinsi'])->name('by-provinsi');
         Route::get('', [KotaController::class, 'index'])->middleware('permission:kota.view')->name('index');
         Route::post('', [KotaController::class, 'store'])->middleware('permission:kota.create')->name('store');
         Route::put('{kota}', [KotaController::class, 'update'])->middleware('permission:kota.update')->name('update');
@@ -39,6 +40,7 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
     });
 
     Route::prefix('kecamatan')->name('kecamatan.')->group(function (): void {
+        Route::get('by-kota/{kota}', [KecamatanController::class, 'byKota'])->name('by-kota');
         Route::get('', [KecamatanController::class, 'index'])->middleware('permission:kecamatan.view')->name('index');
         Route::post('', [KecamatanController::class, 'store'])->middleware('permission:kecamatan.create')->name('store');
         Route::put('{kecamatan}', [KecamatanController::class, 'update'])->middleware('permission:kecamatan.update')->name('update');
@@ -46,6 +48,7 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
     });
 
     Route::prefix('kelurahan')->name('kelurahan.')->group(function (): void {
+        Route::get('by-kecamatan/{kecamatan}', [KelurahanController::class, 'byKecamatan'])->name('by-kecamatan');
         Route::get('', [KelurahanController::class, 'index'])->middleware('permission:kelurahan.view')->name('index');
         Route::post('', [KelurahanController::class, 'store'])->middleware('permission:kelurahan.create')->name('store');
         Route::put('{kelurahan}', [KelurahanController::class, 'update'])->middleware('permission:kelurahan.update')->name('update');

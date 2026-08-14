@@ -8,6 +8,7 @@ File: App.js
 */
 
 import './alert.js';
+import './components/select.js';
 
 // App js for Sidenav Page Active and Fullscreen
 class App {

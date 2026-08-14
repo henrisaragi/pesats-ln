@@ -16,10 +16,20 @@
                     'permission' => 'permissions.view',
                 ],
                 [
-                    'label' => __('User'),
-                    'icon' => 'user-cog',
-                    'route' => 'users.index',
-                    'permission' => 'users.view',
+                    'label' => __('Entitas'),
+                    'icon' => 'building-2',
+                    'children' => [
+                        [
+                            'label' => __('Entitas'),
+                            'route' => 'master.entitas.index',
+                            'permission' => 'entitas.view',
+                        ],
+                        [
+                            'label' => __('User'),
+                            'route' => 'users.index',
+                            'permission' => 'users.view',
+                        ],
+                    ],
                 ],
             ],
         ],
@@ -79,11 +89,6 @@
                             'label' => __('Spesies'),
                             'route' => 'master.species.index',
                             'permission' => 'species.view',
-                        ],
-                        [
-                            'label' => __('Entitas'),
-                            'route' => 'master.entitas.index',
-                            'permission' => 'entitas.view',
                         ],
                     ],
                 ],

@@ -1,0 +1,69 @@
+/* Choices.js (data-choice selects - resources/js/components/select.js) restyled to match .form-input. */
+
+@layer components {
+    .choices {
+        @apply text-sm m-0;
+    }
+
+    .choices[data-type*='select-one'] .choices__inner {
+        @apply bg-card h-9.25 py-0 ps-3 pe-8 rounded outline-0 border border-default-200 text-default-800 transition-all cursor-pointer;
+    }
+
+    .choices.is-focused .choices__inner,
+    .choices.is-open .choices__inner {
+        @apply border-default-300 ring-default-300/30 ring-[3px];
+    }
+
+    .choices.is-disabled .choices__inner {
+        @apply cursor-not-allowed opacity-70 bg-default-100/80;
+    }
+
+    .choices[data-type*='select-one']::after {
+        @apply border-default-500;
+    }
+
+    .choices[data-type*='select-one'] .choices__button {
+        @apply hidden;
+    }
+
+    .choices__list--single {
+        @apply p-0 flex items-center h-full;
+    }
+
+    .choices__list--single .choices__item {
+        @apply text-default-800;
+    }
+
+    .choices__placeholder {
+        @apply text-default-400 opacity-100;
+    }
+
+    .choices__list--dropdown,
+    .choices__list[aria-expanded] {
+        @apply bg-card border border-default-200 shadow-lg rounded mt-1 z-50;
+    }
+
+    .choices__list--dropdown .choices__input {
+        @apply bg-card border-b border-default-200 text-default-800 placeholder:text-default-400;
+    }
+
+    .choices__list--dropdown .choices__item--selectable {
+        @apply text-sm text-default-700 py-2 px-3;
+    }
+
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+        @apply bg-primary/10 text-primary;
+    }
+
+    .choices__list--dropdown .choices__item--choice.is-disabled {
+        @apply text-default-400 cursor-not-allowed;
+    }
+
+    .choices__list--dropdown .choices__item--selectable.is-selected {
+        @apply text-primary font-medium;
+    }
+
+    .choices__list--dropdown .choices__list {
+        @apply max-h-60;
+    }
+}

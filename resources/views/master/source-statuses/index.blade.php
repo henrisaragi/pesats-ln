@@ -4,10 +4,6 @@
 
 @endsection
 
-@php
-    $sourceStatusCodes = ['W', 'F', 'C', 'I'];
-@endphp
-
 @section('content')
     @include('layouts.partials/page-title', ['subtitle' => 'Master Data', 'title' => 'Status Asal'])
 
@@ -120,14 +116,9 @@
                                     <label class="inline-block mb-2 text-sm font-medium" for="source-status-create-code">
                                         {{ __('Kode') }}
                                     </label>
-                                    <select class="form-input" id="source-status-create-code" name="code">
-                                        @foreach ($sourceStatusCodes as $codeOption)
-                                            <option value="{{ $codeOption }}"
-                                                    @selected(old('_modal') === 'source-status-create-modal' && old('code') === $codeOption)>
-                                                {{ $codeOption }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <input class="form-input" id="source-status-create-code" maxlength="5" name="code"
+                                           type="text"
+                                           value="{{ old('_modal') === 'source-status-create-modal' ? old('code') : '' }}"/>
                                     @if (old('_modal') === 'source-status-create-modal' && $errors->has('code'))
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('code') }}</p>
                                     @endif
@@ -189,15 +180,9 @@
                                                for="source-status-edit-code-{{ $item->id }}">
                                             {{ __('Kode') }}
                                         </label>
-                                        <select class="form-input" id="source-status-edit-code-{{ $item->id }}"
-                                                name="code">
-                                            @foreach ($sourceStatusCodes as $codeOption)
-                                                <option value="{{ $codeOption }}"
-                                                        @selected(old('_modal') === 'source-status-edit-modal-'.$item->id ? old('code') === $codeOption : $item->code === $codeOption)>
-                                                    {{ $codeOption }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <input class="form-input" id="source-status-edit-code-{{ $item->id }}"
+                                               maxlength="5" name="code" type="text"
+                                               value="{{ old('_modal') === 'source-status-edit-modal-'.$item->id ? old('code') : $item->code }}"/>
                                         @if (old('_modal') === 'source-status-edit-modal-'.$item->id && $errors->has('code'))
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('code') }}</p>
                                         @endif

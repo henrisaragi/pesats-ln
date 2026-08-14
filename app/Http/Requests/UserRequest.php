@@ -14,6 +14,15 @@ class UserRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('username')) {
+            $this->merge([
+                'username' => str_replace(' ', '', (string) $this->input('username')),
+            ]);
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */

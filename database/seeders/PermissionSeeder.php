@@ -25,6 +25,7 @@ class PermissionSeeder extends Seeder
             'permissions.edit',
             'permissions.delete',
             'users.view',
+            'users.view-all',
             'users.create',
             'users.edit',
             'users.delete',

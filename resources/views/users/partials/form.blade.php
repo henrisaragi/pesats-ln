@@ -15,10 +15,13 @@
         </div>
         <div>
             <label class="inline-block mb-2 text-sm font-medium" for="user-{{ $prefix }}-username">{{ __('Username') }}</label>
-            <input class="form-input" id="user-{{ $prefix }}-username" name="username" type="text"
+            <input autocomplete="off" class="form-input" data-check-url="{{ route('users.check-username') }}"
+                   data-username-check id="user-{{ $prefix }}-username" name="username" type="text"
                    value="{{ $isRedisplay ? old('username') : '' }}"/>
             @if ($isRedisplay && $errors->has('username'))
                 <p class="mt-1 text-xs text-danger">{{ $errors->first('username') }}</p>
+            @else
+                <p class="mt-1 text-xs text-danger hidden" data-username-error></p>
             @endif
         </div>
         <div>
