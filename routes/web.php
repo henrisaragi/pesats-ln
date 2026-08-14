@@ -10,6 +10,7 @@ require __DIR__.'/auth.php';
 require __DIR__.'/roles.php';
 require __DIR__.'/permissions.php';
 require __DIR__.'/master.php';
+require __DIR__.'/users.php';
 
 Route::group(['prefix' => '/'], function () {
     Route::get('', [RoutingController::class, 'index'])->middleware('auth')->name('root');

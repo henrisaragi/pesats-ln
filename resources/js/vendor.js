@@ -16,3 +16,6 @@ import 'simplebar';
 
 import { createIcons, icons } from 'lucide';
 createIcons({ icons });
+
+// Re-run after content injected later (e.g. DataTables AJAX rows) so data-lucide attrs still render.
+window.lucideCreateIcons = () => createIcons({ icons });

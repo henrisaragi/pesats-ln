@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Entitas\EntitasController;
 use App\Http\Controllers\Master\CountryController;
 use App\Http\Controllers\Master\KecamatanController;
 use App\Http\Controllers\Master\KelurahanController;
@@ -84,6 +85,13 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
         Route::post('', [SpeciesController::class, 'store'])->middleware('permission:species.create')->name('store');
         Route::put('{species}', [SpeciesController::class, 'update'])->middleware('permission:species.update')->name('update');
         Route::delete('{species}', [SpeciesController::class, 'destroy'])->middleware('permission:species.delete')->name('destroy');
+    });
+
+    Route::prefix('entitas')->name('entitas.')->group(function (): void {
+        Route::get('', [EntitasController::class, 'index'])->middleware('permission:entitas.view')->name('index');
+        Route::post('', [EntitasController::class, 'store'])->middleware('permission:entitas.create')->name('store');
+        Route::put('{entity}', [EntitasController::class, 'update'])->middleware('permission:entitas.update')->name('update');
+        Route::delete('{entity}', [EntitasController::class, 'destroy'])->middleware('permission:entitas.delete')->name('destroy');
     });
 
 });

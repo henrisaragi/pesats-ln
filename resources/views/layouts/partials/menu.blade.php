@@ -15,6 +15,12 @@
                     'route' => 'permissions.index',
                     'permission' => 'permissions.view',
                 ],
+                [
+                    'label' => __('User'),
+                    'icon' => 'user-cog',
+                    'route' => 'users.index',
+                    'permission' => 'users.view',
+                ],
             ],
         ],
         [
@@ -73,6 +79,11 @@
                             'label' => __('Spesies'),
                             'route' => 'master.species.index',
                             'permission' => 'species.view',
+                        ],
+                        [
+                            'label' => __('Entitas'),
+                            'route' => 'master.entitas.index',
+                            'permission' => 'entitas.view',
                         ],
                     ],
                 ],

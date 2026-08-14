@@ -21,6 +21,7 @@ class MasterDataPermissionSeeder extends Seeder
         'komoditas',
         'source-statuses',
         'species',
+        'entitas',
     ];
 
     private const ACTIONS = ['view', 'create', 'update', 'delete'];

@@ -1,0 +1,76 @@
+/* Restyle DataTables.net v3 (Yajra) default chrome to blend with the Tailwind table look.
+   Class names below match datatables.net-dt v3's actual markup (dt-*), not the legacy
+   v1.x names (dataTables_*, paginate_button) - verify against rendered DOM if upgrading. */
+
+@layer components {
+    .dt-container {
+        @apply w-full;
+    }
+
+    table.dataTable tbody tr {
+        @apply text-default-800 font-normal text-sm whitespace-nowrap;
+    }
+
+    table.dataTable tbody td {
+        @apply px-3.5 py-3;
+    }
+
+    .dt-processing {
+        @apply text-default-500 text-sm text-center py-6;
+    }
+
+    .dt-footer {
+        @apply flex items-center justify-between flex-wrap gap-3 pt-4;
+    }
+
+    .dt-length {
+        @apply order-2 text-sm text-default-600;
+    }
+
+    .dt-length label {
+        @apply inline-flex items-center gap-2 whitespace-nowrap;
+    }
+
+    .dt-length select.dt-input {
+        @apply bg-card h-7.5 text-xs rounded outline-0 block border border-default-200 text-default-800 px-2;
+    }
+
+    .dt-info {
+        @apply order-1 text-default-500 text-sm;
+    }
+
+    .dt-paging {
+        @apply order-3;
+    }
+
+    .dt-paging nav {
+        @apply flex items-center gap-2;
+    }
+
+    .dt-paging .dt-paging-button {
+        @apply cursor-pointer inline-flex items-center justify-center size-7.5 rounded border border-default-200 bg-transparent text-default-600 text-sm transition-all;
+
+        &:hover {
+            @apply bg-primary/10 text-primary border-primary/10;
+        }
+    }
+
+    /* First/Previous/Next/Last carry text labels (e.g. "Sebelumnya") that don't fit the
+       fixed square used for numbered page buttons - give them auto width instead. */
+    .dt-paging .dt-paging-button.first,
+    .dt-paging .dt-paging-button.previous,
+    .dt-paging .dt-paging-button.next,
+    .dt-paging .dt-paging-button.last {
+        @apply w-auto h-7.5 px-3;
+    }
+
+    .dt-paging .dt-paging-button.current,
+    .dt-paging .dt-paging-button.current:hover {
+        @apply bg-primary text-white border-primary;
+    }
+
+    .dt-paging .dt-paging-button.disabled,
+    .dt-paging .dt-paging-button.disabled:hover {
+        @apply opacity-50 pointer-events-none;
+    }
+}
