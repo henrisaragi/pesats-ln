@@ -10,6 +10,8 @@ File: App.js
 import './alert.js';
 import './components/select.js';
 import './components/document-viewer.js';
+import './components/notification-dropdown.js';
+import './echo';
 
 // App js for Sidenav Page Active and Fullscreen
 class App {

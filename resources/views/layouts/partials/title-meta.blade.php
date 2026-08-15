@@ -21,6 +21,11 @@
         },
     };
 </script>
+@auth
+    <script>
+        window.authUserId = {{ Auth::id() }};
+    </script>
+@endauth
 <meta content="Portal Elektronik Surat Angkut Tumbuhan dan Satwa Liar" name="description" />
 <meta content="PeSATS" name="kemenhut" />
 <!-- App favicon -->

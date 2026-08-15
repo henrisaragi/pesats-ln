@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\KomoditasEntitas;
 
 use App\Enums\KomoditasEntitasStatus;
+use App\Enums\NotificationCategory;
 use App\Http\Controllers\Controller;
 use App\Models\KomoditasEntitas;
+use App\Notifications\AppNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class KomoditasEntitasVerifikasiController extends Controller
@@ -41,6 +44,12 @@ class KomoditasEntitasVerifikasiController extends Controller
             'verified_at' => now(),
         ]);
 
+        $this->notifySubmitter(
+            $komoditasEntitas,
+            __('Pengajuan Komoditas Entitas Terverifikasi'),
+            __('Pengajuan komoditas :komoditas telah diverifikasi.', ['komoditas' => $komoditasEntitas->komoditas?->name])
+        );
+
         return redirect()->route('komoditas-entitas.verifikasi.index')
             ->with('success', __('Komoditas entitas berhasil diverifikasi.'));
     }
@@ -53,7 +62,31 @@ class KomoditasEntitasVerifikasiController extends Controller
             'verified_at' => now(),
         ]);
 
+        $this->notifySubmitter(
+            $komoditasEntitas,
+            __('Pengajuan Komoditas Entitas Ditolak'),
+            __('Pengajuan komoditas :komoditas ditolak.', ['komoditas' => $komoditasEntitas->komoditas?->name])
+        );
+
         return redirect()->route('komoditas-entitas.verifikasi.index')
             ->with('success', __('Komoditas entitas berhasil ditolak.'));
+    }
+
+    private function notifySubmitter(KomoditasEntitas $komoditasEntitas, string $title, string $message): void
+    {
+        $komoditasEntitas->loadMissing(['entitas.users', 'komoditas']);
+
+        $recipients = $komoditasEntitas->entitas?->users ?? collect();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Notification::send($recipients, new AppNotification(
+            NotificationCategory::Permohonan,
+            $title,
+            $message,
+            route('komoditas-entitas.index'),
+        ));
     }
 }

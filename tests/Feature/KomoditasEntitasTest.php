@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\KomoditasEntitasStatus;
+use App\Enums\NotificationCategory;
 use App\Models\Entitas\Entitas;
 use App\Models\Komoditas;
 use App\Models\KomoditasEntitas;
 use App\Models\User;
+use App\Notifications\AppNotification;
 use Database\Seeders\MasterDataPermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -92,6 +95,35 @@ class KomoditasEntitasTest extends TestCase
         Storage::disk('local')->assertExists($record->file_path);
     }
 
+    public function test_submitting_notifies_users_with_verify_permission_only(): void
+    {
+        Notification::fake();
+
+        $submitter = $this->makeUser('perusahaan');
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+
+        $verifier = $this->makeUser('penangkaran');
+        $verifier->givePermissionTo('komoditas-entitas.verify');
+
+        $bystander = $this->makeUser('perusahaan');
+
+        $this->actingAs($submitter)->post(route('komoditas-entitas.store'), [
+            'komoditas_id' => $komoditas->id,
+            'tanggal_terbit' => '2026-01-10',
+            'file' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
+        ])->assertRedirect(route('komoditas-entitas.index'));
+
+        Notification::assertSentTo(
+            $verifier,
+            AppNotification::class,
+            fn (AppNotification $notification) => $notification->category === NotificationCategory::Permohonan
+                && $notification->url === route('komoditas-entitas.verifikasi.index')
+        );
+
+        Notification::assertNotSentTo($bystander, AppNotification::class);
+        Notification::assertNotSentTo($submitter, AppNotification::class);
+    }
+
     public function test_non_pdf_file_is_rejected(): void
     {
         $user = $this->makeUser('perusahaan');
@@ -163,6 +195,56 @@ class KomoditasEntitasTest extends TestCase
         $this->assertNotNull($toVerify->verified_at);
 
         $this->assertSame(KomoditasEntitasStatus::Rejected, $toReject->status);
+    }
+
+    public function test_verify_and_reject_notify_the_submitting_entitys_users(): void
+    {
+        Notification::fake();
+
+        $submitter = $this->makeUser('penangkaran');
+        $verifier = $this->makeUser('perusahaan');
+        $verifier->givePermissionTo('komoditas-entitas.verify');
+
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+
+        $toVerify = KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $submitter->entity_id,
+            'file_path' => 'komoditas-entitas/dummy1.pdf',
+            'tanggal_terbit' => '2026-01-10',
+            'tanggal_berakhir' => '2031-01-10',
+            'status' => KomoditasEntitasStatus::Pending,
+        ]);
+
+        $toReject = KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $submitter->entity_id,
+            'file_path' => 'komoditas-entitas/dummy2.pdf',
+            'tanggal_terbit' => '2026-02-01',
+            'tanggal_berakhir' => '2031-02-01',
+            'status' => KomoditasEntitasStatus::Pending,
+        ]);
+
+        $this->actingAs($verifier)->post(route('komoditas-entitas.verifikasi.verify', $toVerify));
+        $this->actingAs($verifier)->post(route('komoditas-entitas.verifikasi.reject', $toReject));
+
+        Notification::assertSentToTimes($submitter, AppNotification::class, 2);
+
+        Notification::assertSentTo(
+            $submitter,
+            AppNotification::class,
+            fn (AppNotification $notification) => $notification->category === NotificationCategory::Permohonan
+                && $notification->title === __('Pengajuan Komoditas Entitas Terverifikasi')
+        );
+
+        Notification::assertSentTo(
+            $submitter,
+            AppNotification::class,
+            fn (AppNotification $notification) => $notification->category === NotificationCategory::Permohonan
+                && $notification->title === __('Pengajuan Komoditas Entitas Ditolak')
+        );
+
+        Notification::assertNotSentTo($verifier, AppNotification::class);
     }
 
     public function test_download_is_restricted_to_owner_and_verifier(): void
