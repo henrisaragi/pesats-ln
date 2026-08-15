@@ -34,6 +34,23 @@
             ],
         ],
         [
+            'title' => __('Layanan Entitas'),
+            'items' => [
+                [
+                    'label' => __('Komoditas Entitas'),
+                    'icon' => 'package',
+                    'route' => 'komoditas-entitas.index',
+                    'permission' => 'komoditas-entitas.view',
+                ],
+                [
+                    'label' => __('Verifikasi Komoditas'),
+                    'icon' => 'shield-check',
+                    'route' => 'komoditas-entitas.verifikasi.index',
+                    'permission' => 'komoditas-entitas.verify',
+                ],
+            ],
+        ],
+        [
             'title' => __('Master Data'),
             'items' => [
                 [

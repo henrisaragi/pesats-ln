@@ -7,9 +7,14 @@
 @section('content')
     @include('layouts.partials/page-title', ['subtitle' => 'Database Kuota', 'title' => 'Kuota Nasional'])
 
-    <div class="card">
+    <div class="card" data-kuota-nasional-page>
         <div class="card-header">
-            <h6 class="card-title">{{ __('Daftar Kuota Nasional') }}</h6>
+            <h6 class="card-title">
+                {{ __('Daftar Kuota Nasional') }}
+                @if ($activeYear !== null)
+                    <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.75 border border-primary/30 bg-primary/10 text-primary text-xs ms-1">{{ __('Tahun :year', ['year' => $activeYear]) }}</span>
+                @endif
+            </h6>
             @can('kuota-nasional.create')
                 <button class="btn btn-sm bg-primary text-white" data-hs-overlay="#kuota-nasional-create-modal"
                         type="button">
@@ -20,6 +25,7 @@
         <div class="card-header">
             <form action="{{ route('master.kuota-nasional.index') }}"
                   class="md:flex items-center md:space-y-0 space-y-4 gap-3" method="GET">
+                <input name="year" type="hidden" value="{{ $activeYear }}"/>
                 <div class="relative">
                     <input class="form-input form-input-sm ps-9" name="search"
                            placeholder="{{ __('Cari komoditas atau spesies') }}" type="text"
@@ -145,16 +151,9 @@
                                            for="kuota-nasional-create-species">
                                         {{ __('Spesies') }}
                                     </label>
-                                    <select class="form-input" data-choice id="kuota-nasional-create-species"
-                                            name="species_id">
-                                        <option value="">{{ __('Pilih Spesies') }}</option>
-                                        @foreach ($speciesOptions as $option)
-                                            <option value="{{ $option->id }}"
-                                                    @selected(old('_modal') === 'kuota-nasional-create-modal' && (int) old('species_id') === $option->id)>
-                                                {{ $option->scientific_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <x-species-select depends-on="kuota-nasional-create-komoditas"
+                                                       id="kuota-nasional-create-species" name="species_id"
+                                                       :selected="old('_modal') === 'kuota-nasional-create-modal' ? old('species_id') : null"/>
                                     @if (old('_modal') === 'kuota-nasional-create-modal' && $errors->has('species_id'))
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('species_id') }}</p>
                                     @endif
@@ -285,16 +284,10 @@
                                                for="kuota-nasional-edit-species-{{ $item->id }}">
                                             {{ __('Spesies') }}
                                         </label>
-                                        <select class="form-input" data-choice
-                                                id="kuota-nasional-edit-species-{{ $item->id }}" name="species_id">
-                                            <option value="">{{ __('Pilih Spesies') }}</option>
-                                            @foreach ($speciesOptions as $option)
-                                                <option value="{{ $option->id }}"
-                                                        @selected(old('_modal') === 'kuota-nasional-edit-modal-'.$item->id ? (int) old('species_id') === $option->id : $item->species_id === $option->id)>
-                                                    {{ $option->scientific_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <x-species-select depends-on="kuota-nasional-edit-komoditas-{{ $item->id }}"
+                                                           id="kuota-nasional-edit-species-{{ $item->id }}"
+                                                           name="species_id"
+                                                           :selected="old('_modal') === 'kuota-nasional-edit-modal-'.$item->id ? old('species_id') : $item->species_id"/>
                                         @if (old('_modal') === 'kuota-nasional-edit-modal-'.$item->id && $errors->has('species_id'))
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('species_id') }}</p>
                                         @endif
@@ -425,5 +418,5 @@
 @endsection
 
 @section('scripts')
-
+    @vite(['resources/js/pages/kuota-nasional-index.js'])
 @endsection

@@ -29,6 +29,7 @@ class AuthenticationService
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'is_active' => true,
+            'onboarding_completed' => false,
         ]);
     }
 

@@ -4,6 +4,14 @@
 
 @endsection
 
+@php
+    $activeLocale = app()->getLocale();
+    $locales = [
+        'id' => ['label' => 'Indonesia', 'flag' => 'indonesia.svg'],
+        'en' => ['label' => 'English', 'flag' => 'us.jpg'],
+    ];
+@endphp
+
 @section('content')
     <div
         class="relative flex flex-row w-full overflow-hidden bg-gradient-to-r from-blue-900 h-screen to-blue-800 dark:to-blue-900 dark:from-blue-950">
@@ -18,51 +26,18 @@
                         <button aria-expanded="false" aria-haspopup="menu" aria-label="Dropdown"
                                 class="hs-dropdown-toggle py-2 px-4 bg-transparent border border-default-200 text-default-600 hover:border-primary rounded-md hover:text-primary font-medium text-sm gap-2 flex items-center"
                                 type="button">
-                            <img alt="" class="size-5 rounded-full" src="/images/flags/us.jpg"/>
-                            English
+                            <img alt="" class="size-5 rounded-full" src="/images/flags/{{ $locales[$activeLocale]['flag'] }}"/>
+                            {{ __($locales[$activeLocale]['label']) }}
                         </button>
                         <div aria-labelledby="dropdown-menu" aria-orientation="vertical" class="hs-dropdown-menu"
                              role="menu">
-                            <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
-                               href="#">
-                                <img alt="" class="size-4 rounded-full" src="/images/flags/us.jpg"/>
-                                English
-                            </a>
-                            <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
-                               href="#">
-                                <img alt="" class="size-4 rounded-full" src="/images/flags/spain.jpg"/>
-                                Spanish
-                            </a>
-                            <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
-                               href="#">
-                                <img alt="" class="size-4 rounded-full" src="/images/flags/germany.jpg"/>
-                                German
-                            </a>
-                            <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
-                               href="#">
-                                <img alt="" class="size-4 rounded-full" src="/images/flags/french.jpg"/>
-                                French
-                            </a>
-                            <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
-                               href="#">
-                                <img alt="" class="size-4 rounded-full" src="/images/flags/japanese.svg"/>
-                                Japanese
-                            </a>
-                            <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
-                               href="#">
-                                <img alt="" class="size-4 rounded-full" src="/images/flags/italy.jpg"/>
-                                Italian
-                            </a>
-                            <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
-                               href="#">
-                                <img alt="" class="size-4 rounded-full" src="/images/flags/russia.jpg"/>
-                                Russian
-                            </a>
-                            <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
-                               href="#">
-                                <img alt="" class="size-4 rounded-full" src="/images/flags/arebian.svg"/>
-                                Arabic
-                            </a>
+                            @foreach ($locales as $code => $locale)
+                                <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded{{ $code === $activeLocale ? ' bg-default-150' : '' }}"
+                                   href="{{ route('locale.switch', $code) }}">
+                                    <img alt="" class="size-4 rounded-full" src="/images/flags/{{ $locale['flag'] }}"/>
+                                    {{ __($locale['label']) }}
+                                </a>
+                            @endforeach
                         </div>
                     </div>
                 </div>

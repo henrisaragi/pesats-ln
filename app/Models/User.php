@@ -35,6 +35,7 @@ class User extends Authenticatable
         'jabatan',
         'signature_path',
         'is_active',
+        'onboarding_completed',
     ];
 
     /**
@@ -58,6 +59,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'onboarding_completed' => 'boolean',
         ];
     }
 

@@ -42,6 +42,22 @@ class MasterDataPermissionSeeder extends Seeder
     ];
 
     /**
+     * Komoditas Entitas only needs view/create (self-service submission by the entity)
+     * plus verify (approve/reject) - not the generic CRUD sweep, since no UI uses
+     * update/delete for it.
+     */
+    private const KOMODITAS_ENTITAS_PERMISSIONS = [
+        'komoditas-entitas.view',
+        'komoditas-entitas.create',
+        'komoditas-entitas.verify',
+    ];
+
+    /**
+     * Roles allowed to submit Komoditas Entitas registrations for their own entity.
+     */
+    private const KOMODITAS_ENTITAS_SUBMITTER_ROLES = ['perusahaan', 'penangkaran'];
+
+    /**
      * Seed the master data permissions.
      */
     public function run(): void
@@ -58,6 +74,8 @@ class MasterDataPermissionSeeder extends Seeder
             $permissions[] = "{$entity}.sync";
         }
 
+        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS);
+
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
                 'name' => $permission,
@@ -69,6 +87,12 @@ class MasterDataPermissionSeeder extends Seeder
 
         if ($superAdmin) {
             $superAdmin->givePermissionTo($permissions);
+        }
+
+        foreach (self::KOMODITAS_ENTITAS_SUBMITTER_ROLES as $roleName) {
+            $role = Role::where('name', $roleName)->first();
+
+            $role?->givePermissionTo(['komoditas-entitas.view', 'komoditas-entitas.create']);
         }
     }
 }

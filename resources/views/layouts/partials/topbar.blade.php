@@ -1,6 +1,13 @@
 @php
-    $currentTopbarYear = now()->year;
-    $topbarYears = range($currentTopbarYear, $currentTopbarYear - 5);
+    $topbarYears = \App\Models\KuotaNasional::query()
+        ->select('year')
+        ->distinct()
+        ->orderByDesc('year')
+        ->pluck('year');
+
+    if ($topbarYears->isEmpty()) {
+        $topbarYears = collect([now()->year]);
+    }
 @endphp
 
 <!-- Topbar Start -->
@@ -433,6 +440,7 @@
                 localStorage.setItem(STORAGE_KEY, year);
                 highlightActiveYear(year);
                 console.log('Tahun aktif:', year);
+                window.dispatchEvent(new CustomEvent('active-year-changed', {detail: {year: year}}));
             });
         });
     })();

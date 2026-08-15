@@ -7,7 +7,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Models\User;
 use App\Services\Auth\AuthenticationService;
+use App\Services\Onboarding\OnboardingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +18,10 @@ use Illuminate\View\View;
 
 class AuthenticationController extends Controller
 {
-    public function __construct(private readonly AuthenticationService $authenticationService) {}
+    public function __construct(
+        private readonly AuthenticationService $authenticationService,
+        private readonly OnboardingService $onboardingService,
+    ) {}
 
     public function showLogin(): View
     {
@@ -41,6 +46,13 @@ class AuthenticationController extends Controller
 
         $request->session()->regenerate();
 
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (! $user->onboarding_completed) {
+            return redirect()->to($this->onboardingService->nextIncompleteStepRoute($user));
+        }
+
         return redirect()->intended(route('second', ['dashboards', 'index']));
     }
 
@@ -57,7 +69,7 @@ class AuthenticationController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('second', ['dashboards', 'index']));
+        return redirect()->to(route('onboarding.type.show'));
     }
 
     public function logout(Request $request): RedirectResponse

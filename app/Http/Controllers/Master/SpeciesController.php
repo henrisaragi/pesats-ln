@@ -8,12 +8,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\SpeciesRequest;
 use App\Models\Komoditas;
 use App\Models\Species;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SpeciesController extends Controller
 {
+    public function byKomoditas(Komoditas $komoditas): JsonResponse
+    {
+        return response()->json(
+            $komoditas->species()->orderBy('scientific_name')->get(['id', 'scientific_name as name'])
+        );
+    }
+
     public function index(Request $request): View
     {
         $species = Species::query()

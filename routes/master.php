@@ -101,6 +101,7 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
     });
 
     Route::prefix('species')->name('species.')->group(function (): void {
+        Route::get('by-komoditas/{komoditas}', [SpeciesController::class, 'byKomoditas'])->name('by-komoditas');
         Route::get('', [SpeciesController::class, 'index'])->middleware('permission:species.view')->name('index');
         Route::post('', [SpeciesController::class, 'store'])->middleware('permission:species.create')->name('store');
         Route::put('{species}', [SpeciesController::class, 'update'])->middleware('permission:species.update')->name('update');

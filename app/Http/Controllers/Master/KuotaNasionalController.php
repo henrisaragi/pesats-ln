@@ -9,7 +9,6 @@ use App\Http\Requests\Master\KuotaNasionalRequest;
 use App\Models\Komoditas;
 use App\Models\KuotaNasional;
 use App\Models\SourceStatus;
-use App\Models\Species;
 use App\Models\TradeCode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,8 +18,11 @@ class KuotaNasionalController extends Controller
 {
     public function index(Request $request): View
     {
+        $activeYear = $request->filled('year') ? $request->integer('year') : null;
+
         $kuotaNasional = KuotaNasional::query()
             ->with(['komoditas', 'species', 'source', 'tradeCode'])
+            ->when($activeYear !== null, fn ($query) => $query->where('year', $activeYear))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $term = $request->string('search');
 
@@ -35,8 +37,8 @@ class KuotaNasionalController extends Controller
 
         return view('master.kuota-nasional.index', [
             'kuotaNasional' => $kuotaNasional,
+            'activeYear' => $activeYear,
             'komoditasOptions' => Komoditas::query()->orderBy('name')->get(),
-            'speciesOptions' => Species::query()->orderBy('scientific_name')->get(),
             'sourceOptions' => SourceStatus::query()->orderBy('code')->get(),
             'tradeCodeOptions' => TradeCode::query()->orderBy('code')->get(),
         ]);

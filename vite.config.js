@@ -7,6 +7,7 @@ export default defineConfig({
         laravel({
             input: [
             'resources/js/app.js',
+            'resources/js/onboarding-tour.js',
             'resources/js/components/dropzone.js',
             'resources/js/components/input-spin.js',
             'resources/js/components/timepicker.js',
@@ -19,6 +20,8 @@ export default defineConfig({
             'resources/js/pages/dashboard-hr.js',
             'resources/js/pages/kecamatan-index.js',
             'resources/js/pages/kelurahan-index.js',
+            'resources/js/pages/komoditas-entitas-index.js',
+            'resources/js/pages/kuota-nasional-index.js',
             'resources/js/pages/landing.js',
             'resources/js/pages/pages-coming-soon.js',
             'resources/js/pages/ports-index.js',

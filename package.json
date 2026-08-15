@@ -35,6 +35,7 @@
     "choices.js": "^11.2.3",
     "datatables.net": "^3.0.1",
     "datatables.net-dt": "^3.0.1",
+    "driver.js": "^1.8.0",
     "dropzone": "^6.0.0-beta.2",
     "flatpickr": "^4.6.13",
     "fullcalendar": "^6.1.17",
