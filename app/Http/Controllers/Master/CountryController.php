@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\CountryRequest;
 use App\Models\Country;
+use App\Services\Master\CountrySeedService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -54,5 +55,15 @@ class CountryController extends Controller
         }
 
         return redirect()->route('master.countries.index')->with('success', __('Negara berhasil dihapus.'));
+    }
+
+    public function sync(CountrySeedService $service): RedirectResponse
+    {
+        $summary = $service->seed();
+
+        return redirect()->route('master.countries.index')->with('success', __(
+            'Data negara berhasil dimuat: :created baru, :updated diperbarui.',
+            ['created' => $summary['created'], 'updated' => $summary['updated']]
+        ));
     }
 }

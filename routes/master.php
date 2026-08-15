@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Entitas\EntitasController;
+use App\Http\Controllers\Entitas\EntityProfileController;
 use App\Http\Controllers\Master\CountryController;
 use App\Http\Controllers\Master\KecamatanController;
 use App\Http\Controllers\Master\KelurahanController;
@@ -20,6 +21,7 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
     Route::prefix('countries')->name('countries.')->group(function (): void {
         Route::get('', [CountryController::class, 'index'])->middleware('permission:countries.view')->name('index');
         Route::post('', [CountryController::class, 'store'])->middleware('permission:countries.create')->name('store');
+        Route::post('sync', [CountryController::class, 'sync'])->middleware('permission:countries.sync')->name('sync');
         Route::put('{country}', [CountryController::class, 'update'])->middleware('permission:countries.update')->name('update');
         Route::delete('{country}', [CountryController::class, 'destroy'])->middleware('permission:countries.delete')->name('destroy');
     });
@@ -99,6 +101,13 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
         Route::post('', [EntitasController::class, 'store'])->middleware('permission:entitas.create')->name('store');
         Route::put('{entity}', [EntitasController::class, 'update'])->middleware('permission:entitas.update')->name('update');
         Route::delete('{entity}', [EntitasController::class, 'destroy'])->middleware('permission:entitas.delete')->name('destroy');
+
+        Route::prefix('{entity}/profile')->name('profile.')->group(function (): void {
+            Route::get('', [EntityProfileController::class, 'show'])->middleware('permission:entity-profiles.view')->name('show');
+            Route::post('', [EntityProfileController::class, 'store'])->middleware('permission:entity-profiles.create')->name('store');
+            Route::put('', [EntityProfileController::class, 'update'])->middleware('permission:entity-profiles.update')->name('update');
+            Route::delete('', [EntityProfileController::class, 'destroy'])->middleware('permission:entity-profiles.delete')->name('destroy');
+        });
     });
 
 });

@@ -22,6 +22,7 @@ class MasterDataPermissionSeeder extends Seeder
         'source-statuses',
         'species',
         'entitas',
+        'entity-profiles',
     ];
 
     private const ACTIONS = ['view', 'create', 'update', 'delete'];
@@ -30,6 +31,7 @@ class MasterDataPermissionSeeder extends Seeder
      * Entities that support syncing region data from INSW.
      */
     private const SYNCABLE_ENTITIES = [
+        'countries',
         'provinsi',
         'kota',
         'kecamatan',

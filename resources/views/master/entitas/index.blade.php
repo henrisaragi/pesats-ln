@@ -335,12 +335,20 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
-                                <button class="btn bg-default-150" data-hs-overlay="#entitas-edit-modal-{{ $entity->id }}"
-                                        type="button">
-                                    {{ __('Batal') }}
-                                </button>
-                                <button class="btn bg-primary text-white" type="submit">{{ __('Simpan') }}</button>
+                            <div class="p-4 flex justify-between gap-2 border-t border-dashed border-default-900/10">
+                                @canany(['entity-profiles.view', 'entity-profiles.create'])
+                                    <a class="btn bg-default-150 text-default-700 hover:bg-default-200"
+                                       href="{{ route('master.entitas.profile.show', $entity) }}">
+                                        <i class="size-4 me-1" data-lucide="id-card"></i>{{ __('Lengkapi Profil') }}
+                                    </a>
+                                @endcanany
+                                <div class="flex gap-2 ms-auto">
+                                    <button class="btn bg-default-150" data-hs-overlay="#entitas-edit-modal-{{ $entity->id }}"
+                                            type="button">
+                                        {{ __('Batal') }}
+                                    </button>
+                                    <button class="btn bg-primary text-white" type="submit">{{ __('Simpan') }}</button>
+                                </div>
                             </div>
                         </form>
                     </div>

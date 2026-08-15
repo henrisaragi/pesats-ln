@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Entitas extends Model
@@ -57,5 +58,25 @@ class Entitas extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'entity_id');
+    }
+
+    public function perusahaanDetail(): HasOne
+    {
+        return $this->hasOne(PerusahaanDetail::class, 'entity_id');
+    }
+
+    public function penangkaranDetail(): HasOne
+    {
+        return $this->hasOne(PenangkaranDetail::class, 'entity_id');
+    }
+
+    public function peroranganDetail(): HasOne
+    {
+        return $this->hasOne(PeroranganDetail::class, 'entity_id');
+    }
+
+    public function uptKsdaDetail(): HasOne
+    {
+        return $this->hasOne(UptKsdaDetail::class, 'entity_id');
     }
 }

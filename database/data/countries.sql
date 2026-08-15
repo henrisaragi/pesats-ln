@@ -1,0 +1,307 @@
+-- phpMyAdmin SQL Dump
+-- version 5.0.4
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost
+-- Generation Time: Aug 15, 2026 at 09:35 AM
+-- Server version: 5.7.40-log
+-- PHP Version: 7.4.33
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `siasat_main`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `countries`
+--
+
+CREATE TABLE `countries` (
+  `id` int(10) NOT NULL,
+  `id_country` varchar(10) NOT NULL,
+  `name` varchar(200) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `countries`
+--
+
+INSERT INTO `countries` (`id`, `id_country`, `name`) VALUES
+(1, 'AD', 'ANDORRA'),
+(2, 'AE', 'UNITED ARAB EMIRATES'),
+(3, 'AF', 'AFGHANISTAN'),
+(4, 'AG', 'ANTIGUA AND BARBUDA'),
+(5, 'AI', 'ANGUILLA'),
+(6, 'AL', 'ALBANIA'),
+(7, 'AM', 'ARMENIA'),
+(8, 'AN', 'NETHERLANDS ANTILLES'),
+(9, 'AO', 'ANGOLA'),
+(10, 'AQ', 'ANTARCTICA'),
+(11, 'AR', 'ARGENTINA'),
+(12, 'AS', 'AMERICAN SAMOA'),
+(13, 'AT', 'AUSTRIA'),
+(14, 'AU', 'AUSTRALIA'),
+(15, 'AW', 'ARUBA'),
+(16, 'AZ', 'AZERBAIJAN'),
+(17, 'BA', 'BOSNIA AND HERZEGOVINA'),
+(18, 'BB', 'BARBADOS'),
+(19, 'BD', 'BANGLADESH'),
+(20, 'BE', 'BELGIUM'),
+(21, 'BF', 'BURKINA FASO'),
+(22, 'BG', 'BULGARIA'),
+(23, 'BH', 'BAHRAIN'),
+(24, 'BI', 'BURUNDI'),
+(25, 'BJ', 'BENIN'),
+(26, 'BM', 'BERMUDA'),
+(27, 'BN', 'BRUNEI DARUSSALAM'),
+(28, 'BO', 'BOLIVIA'),
+(29, 'BR', 'BRAZIL'),
+(30, 'BS', 'BAHAMAS'),
+(31, 'BT', 'BHUTAN'),
+(32, 'BV', 'BOUVET ISLAND'),
+(33, 'BW', 'BOTSWANA'),
+(34, 'BY', 'BELARUS'),
+(35, 'BZ', 'BELIZE'),
+(36, 'CA', 'CANADA'),
+(37, 'CC', 'COCOS (KEELING) ISLANDS'),
+(38, 'CD', 'CONGO, THE DEMOCRATIC REPUBLIC OF THE'),
+(39, 'CF', 'CENTRAL AFRICAN REPUBLIC'),
+(40, 'CG', 'CONGO'),
+(41, 'CH', 'SWITZERLAND'),
+(42, 'CI', 'COTE D\'IVOIRE'),
+(43, 'CK', 'COOK ISLANDS'),
+(44, 'CL', 'CHILE'),
+(45, 'CM', 'CAMEROON'),
+(46, 'CN', 'CHINA'),
+(47, 'CO', 'COLOMBIA'),
+(48, 'CR', 'COSTA RICA'),
+(49, 'CS', 'FORMER CZECHOSLOVAKIA'),
+(50, 'CU', 'CUBA'),
+(51, 'CV', 'CAPE VERDE'),
+(52, 'CX', 'CHRISTMAS ISLAND'),
+(53, 'CY', 'CYPRUS'),
+(54, 'CZ', 'CZECH REPUBLIC'),
+(55, 'DE', 'GERMANY'),
+(56, 'DJ', 'DJIBOUTI'),
+(57, 'DK', 'DENMARK'),
+(58, 'DM', 'DOMINICA'),
+(59, 'DO', 'DOMINICAN REPUBLIC'),
+(60, 'DZ', 'ALGERIA'),
+(61, 'EC', 'ECUADOR'),
+(62, 'EE', 'ESTONIA'),
+(63, 'EG', 'EGYPT'),
+(64, 'EH', 'WESTERN SAHARA'),
+(65, 'ER', 'ERITREA'),
+(66, 'ES', 'SPAIN'),
+(67, 'ET', 'ETHIOPIA'),
+(68, 'FI', 'FINLAND'),
+(69, 'FJ', 'FIJI'),
+(70, 'FK', 'FALKLAND ISLANDS (MALVINAS)'),
+(71, 'FM', 'MICRONESIA, FEDERATED STATES OF'),
+(72, 'FO', 'FAROE ISLANDS'),
+(73, 'FR', 'FRANCE'),
+(74, 'GA', 'GABON'),
+(75, 'GB', 'UNITED KINGDOM'),
+(76, 'GD', 'GRENADA'),
+(77, 'GE', 'GEORGIA'),
+(78, 'GF', 'FRENCH GUIANA'),
+(79, 'GH', 'GHANA'),
+(80, 'GI', 'GIBRALTAR'),
+(81, 'GL', 'GREENLAND'),
+(82, 'GM', 'GAMBIA'),
+(83, 'GN', 'GUINEA'),
+(84, 'GP', 'GUADELOUPE'),
+(85, 'GQ', 'EQUATORIAL GUINEA'),
+(86, 'GR', 'GREECE'),
+(87, 'GS', 'SOUTH GEORGIA AND THE SOUTH SANDWICH ISL'),
+(88, 'GT', 'GUATEMALA'),
+(89, 'GU', 'GUAM'),
+(90, 'GW', 'GUINEA-BISSAU'),
+(91, 'GY', 'GUYANA'),
+(92, 'HK', 'HONG KONG'),
+(93, 'HM', 'HEARD ISLAND AND MCDONALD ISLANDS'),
+(94, 'HN', 'HONDURAS'),
+(95, 'HR', 'CROATIA'),
+(96, 'HT', 'HAITI'),
+(97, 'HU', 'HUNGARY'),
+(98, 'ID', 'INDONESIA'),
+(99, 'IE', 'IRELAND'),
+(100, 'IL', 'ISRAEL'),
+(101, 'IN', 'INDIA'),
+(102, 'IO', 'BRITISH INDIAN OCEAN TERRITORY'),
+(103, 'IQ', 'IRAQ'),
+(104, 'IR', 'IRAN, ISLAMIC REPUBLIC OF'),
+(105, 'IS', 'ICELAND'),
+(106, 'IT', 'ITALY'),
+(107, 'JM', 'JAMAICA'),
+(108, 'JO', 'JORDAN'),
+(109, 'JP', 'JAPAN'),
+(110, 'KE', 'KENYA'),
+(111, 'KG', 'KYRGYZSTAN'),
+(112, 'KH', 'CAMBODIA'),
+(113, 'KI', 'KIRIBATI'),
+(114, 'KM', 'COMOROS'),
+(115, 'KN', 'SAINT KITTS AND NEVIS'),
+(116, 'KP', 'KOREA, DEMOCRATIC PEOPLE\'S REPUBLIC OF'),
+(117, 'KR', 'KOREA, REPUBLIC OF'),
+(118, 'KW', 'KUWAIT'),
+(119, 'KY', 'CAYMAN ISLANDS'),
+(120, 'KZ', 'KAZAKSTAN'),
+(121, 'LA', 'LAO PEOPLE\'S DEMOCRATIC REPUBLIC'),
+(122, 'LB', 'LEBANON'),
+(123, 'LC', 'SAINT LUCIA'),
+(124, 'LI', 'LIECHTENSTEIN'),
+(125, 'LK', 'SRI LANKA'),
+(126, 'LR', 'LIBERIA'),
+(127, 'LS', 'LESOTHO'),
+(128, 'LT', 'LITHUANIA'),
+(129, 'LU', 'LUXEMBOURG'),
+(130, 'LV', 'LATVIA'),
+(131, 'LY', 'LIBYAN ARAB JAMAHIRIYA'),
+(132, 'MA', 'MOROCCO'),
+(133, 'MC', 'MONACO'),
+(134, 'MD', 'MOLDOVA, REPUBLIC OF'),
+(135, 'MG', 'MADAGASCAR'),
+(136, 'MH', 'MARSHALL ISLANDS'),
+(137, 'MK', 'MACEDONIA, THE FORMER YUGOSLAV REPUBLIC'),
+(138, 'ML', 'MALI'),
+(139, 'MM', 'MYANMAR'),
+(140, 'MN', 'MONGOLIA'),
+(141, 'MO', 'MACAU'),
+(142, 'MP', 'NORTHERN MARIANA ISLANDS'),
+(143, 'MQ', 'MARTINIQUE'),
+(144, 'MR', 'MAURITANIA'),
+(145, 'MS', 'MONTSERRAT'),
+(146, 'MT', 'MALTA'),
+(147, 'MU', 'MAURITIUS'),
+(148, 'MV', 'MALDIVES'),
+(149, 'MW', 'MALAWI'),
+(150, 'MX', 'MEXICO'),
+(151, 'MY', 'MALAYSIA'),
+(152, 'MZ', 'MOZAMBIQUE'),
+(153, 'NA', 'NAMIBIA'),
+(154, 'NC', 'NEW CALEDONIA'),
+(155, 'NE', 'NIGER'),
+(156, 'NF', 'NORFOLK ISLAND'),
+(157, 'NG', 'NIGERIA'),
+(158, 'NI', 'NICARAGUA'),
+(159, 'NL', 'NETHERLANDS'),
+(160, 'NO', 'NORWAY'),
+(161, 'NP', 'NEPAL'),
+(162, 'NR', 'NAURU'),
+(163, 'NU', 'NIUE'),
+(164, 'NZ', 'NEW ZEALAND'),
+(165, 'OM', 'OMAN'),
+(166, 'PA', 'PANAMA'),
+(167, 'PE', 'PERU'),
+(168, 'PF', 'FRENCH POLYNESIA'),
+(169, 'PG', 'PAPUA NEW GUINEA'),
+(170, 'PH', 'PHILIPPINES'),
+(171, 'PK', 'PAKISTAN'),
+(172, 'PL', 'POLAND'),
+(173, 'PM', 'SAINT PIERRE AND MIQUELON'),
+(174, 'PN', 'PITCAIRN'),
+(175, 'PR', 'PUERTO RICO'),
+(176, 'PS', 'PALESTINIAN TERRITORY, OCCUPIED'),
+(177, 'PT', 'PORTUGAL'),
+(178, 'PW', 'PALAU'),
+(179, 'PY', 'PARAGUAY'),
+(180, 'QA', 'QATAR'),
+(181, 'RE', 'REUNION'),
+(182, 'RO', 'ROMANIA'),
+(183, 'RS', 'SERBIA'),
+(184, 'RU', 'RUSSIAN FEDERATION'),
+(185, 'RW', 'RWANDA'),
+(186, 'SA', 'SAUDI ARABIA'),
+(187, 'SB', 'SOLOMON ISLANDS'),
+(188, 'SC', 'SEYCHELLES'),
+(189, 'SD', 'SUDAN'),
+(190, 'SE', 'SWEDEN'),
+(191, 'SG', 'SINGAPORE'),
+(192, 'SH', 'SAINT HELENA'),
+(193, 'SI', 'SLOVENIA'),
+(194, 'SJ', 'SVALBARD AND JAN MAYEN'),
+(195, 'SK', 'SLOVAKIA'),
+(196, 'SL', 'SIERRA LEONE'),
+(197, 'SM', 'SAN MARINO'),
+(198, 'SN', 'SENEGAL'),
+(199, 'SO', 'SOMALIA'),
+(200, 'SR', 'SURINAME'),
+(201, 'ST', 'SAO TOME AND PRINCIPE'),
+(202, 'SV', 'EL SALVADOR'),
+(203, 'SY', 'SYRIAN ARAB REPUBLIC'),
+(204, 'SZ', 'SWAZILAND'),
+(205, 'TC', 'TURKS AND CAICOS ISLANDS'),
+(206, 'TD', 'CHAD'),
+(207, 'TF', 'FRENCH SOUTHERN TERRITORIES'),
+(208, 'TG', 'TOGO'),
+(209, 'TH', 'THAILAND'),
+(210, 'TJ', 'TAJIKISTAN'),
+(211, 'TK', 'TOKELAU'),
+(212, 'TM', 'TURKMENISTAN'),
+(213, 'TN', 'TUNISIA'),
+(214, 'TO', 'TONGA'),
+(215, 'TP', 'EAST TIMOR'),
+(216, 'TR', 'TURKEY'),
+(217, 'TT', 'TRINIDAD AND TOBAGO'),
+(218, 'TV', 'TUVALU'),
+(219, 'TW', 'TAIWAN'),
+(220, 'TZ', 'TANZANIA, UNITED REPUBLIC OF'),
+(221, 'UA', 'UKRAINE'),
+(222, 'UG', 'UGANDA'),
+(223, 'UM', 'UNITED STATES MINOR OUTLYING ISLANDS'),
+(224, 'US', 'UNITED STATES'),
+(225, 'UY', 'URUGUAY'),
+(226, 'UZ', 'UZBEKISTAN'),
+(227, 'VA', 'HOLY SEE (VATICAN CITY STATE)'),
+(228, 'VC', 'SAINT VINCENT AND THE GRENADINES'),
+(229, 'VE', 'VENEZUELA'),
+(230, 'VG', 'VIRGIN ISLANDS, BRITISH'),
+(231, 'VI', 'VIRGIN ISLANDS, U.S.'),
+(232, 'VN', 'VIET NAM'),
+(233, 'VU', 'VANUATU'),
+(234, 'WF', 'WALLIS AND FUTUNA'),
+(235, 'WS', 'SAMOA'),
+(236, 'YE', 'YEMEN'),
+(237, 'YT', 'MAYOTTE'),
+(238, 'YU', 'YUGOSLAVIA'),
+(239, 'ZA', 'SOUTH AFRICA'),
+(240, 'ZM', 'ZAMBIA'),
+(241, 'ZW', 'ZIMBABWE'),
+(242, 'BL', 'Saint-Barthelemy');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `countries`
+--
+ALTER TABLE `countries`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `countries`
+--
+ALTER TABLE `countries`
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=243;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
