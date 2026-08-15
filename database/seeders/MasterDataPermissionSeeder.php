@@ -36,6 +36,7 @@ class MasterDataPermissionSeeder extends Seeder
         'kota',
         'kecamatan',
         'kelurahan',
+        'ports',
     ];
 
     /**

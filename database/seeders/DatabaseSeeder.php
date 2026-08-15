@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             MasterDataPermissionSeeder::class,
             CountrySeeder::class,
+            PortSeeder::class,
             UserSeeder::class,
         ]);
     }

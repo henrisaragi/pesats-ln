@@ -63,7 +63,9 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
 
     Route::prefix('ports')->name('ports.')->group(function (): void {
         Route::get('', [PortController::class, 'index'])->middleware('permission:ports.view')->name('index');
+        Route::get('data', [PortController::class, 'data'])->middleware('permission:ports.view')->name('data');
         Route::post('', [PortController::class, 'store'])->middleware('permission:ports.create')->name('store');
+        Route::post('sync', [PortController::class, 'sync'])->middleware('permission:ports.sync')->name('sync');
         Route::put('{port}', [PortController::class, 'update'])->middleware('permission:ports.update')->name('update');
         Route::delete('{port}', [PortController::class, 'destroy'])->middleware('permission:ports.delete')->name('destroy');
     });

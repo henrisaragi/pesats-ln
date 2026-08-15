@@ -21,6 +21,7 @@ export default defineConfig({
             'resources/js/pages/kelurahan-index.js',
             'resources/js/pages/landing.js',
             'resources/js/pages/pages-coming-soon.js',
+            'resources/js/pages/ports-index.js',
             'resources/js/pages/users-index.js',
             'resources/js/vendor.js'
         ],
