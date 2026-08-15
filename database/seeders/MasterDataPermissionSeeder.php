@@ -58,6 +58,21 @@ class MasterDataPermissionSeeder extends Seeder
     private const KOMODITAS_ENTITAS_SUBMITTER_ROLES = ['perusahaan', 'penangkaran'];
 
     /**
+     * Chat: "start" lets an entity user open a new conversation, "respond" puts a user in the
+     * staff pool that sees the unclaimed queue and can reply/claim - not a CRUD sweep, this
+     * feature has no update/delete actions.
+     */
+    private const CHAT_PERMISSIONS = [
+        'chat.start',
+        'chat.respond',
+    ];
+
+    /**
+     * Roles allowed to start a new chat conversation.
+     */
+    private const CHAT_STARTER_ROLES = ['perusahaan', 'penangkaran', 'perorangan'];
+
+    /**
      * Seed the master data permissions.
      */
     public function run(): void
@@ -74,7 +89,7 @@ class MasterDataPermissionSeeder extends Seeder
             $permissions[] = "{$entity}.sync";
         }
 
-        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS);
+        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
@@ -93,6 +108,12 @@ class MasterDataPermissionSeeder extends Seeder
             $role = Role::where('name', $roleName)->first();
 
             $role?->givePermissionTo(['komoditas-entitas.view', 'komoditas-entitas.create']);
+        }
+
+        foreach (self::CHAT_STARTER_ROLES as $roleName) {
+            $role = Role::where('name', $roleName)->first();
+
+            $role?->givePermissionTo('chat.start');
         }
     }
 }

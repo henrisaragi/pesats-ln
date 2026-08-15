@@ -14,6 +14,7 @@ export default defineConfig({
             'resources/js/pages/apps-calendar.js',
             'resources/js/pages/apps-ecommerce-orders.js',
             'resources/js/pages/apps-mailbox.js',
+            'resources/js/pages/chat.js',
             'resources/js/pages/dashboard-analytics.js',
             'resources/js/pages/dashboard-ecommerce.js',
             'resources/js/pages/dashboard-email.js',

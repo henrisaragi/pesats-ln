@@ -149,6 +149,8 @@
 </div>
 <!-- Topbar End -->
 
+<x-notification-alert-modal/>
+
 <script>
     (function () {
         var STORAGE_KEY = 'tahun_aktif';

@@ -58,6 +58,7 @@ function renderDropdown(dropdown, payload) {
     const { notifications, unread_count: unreadCount } = payload;
 
     updateBadge(unreadCount);
+    queueNotificationAlerts(notifications);
 
     dropdown.querySelectorAll('[data-notification-list]').forEach((container) => {
         const category = container.dataset.notificationList;
@@ -74,9 +75,9 @@ function renderDropdown(dropdown, payload) {
         }
     });
 
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
+    // Icons in dynamically-inserted HTML need to be re-scanned - lucide isn't exposed as
+    // window.lucide in this app, see resources/js/vendor.js's window.lucideCreateIcons wrapper.
+    window.lucideCreateIcons?.();
 }
 
 function fetchNotifications(dropdown) {
@@ -90,8 +91,109 @@ function fetchNotifications(dropdown) {
         .then((payload) => renderDropdown(dropdown, payload));
 }
 
+// Auto-popup (resources/views/components/notification-alert-modal.blade.php) for notifications
+// that arrive *after* the page has loaded - never for what's already there on first fetch, so
+// opening the page doesn't dump a wall of popups for old unread notifications. Only ever runs in
+// the browser tab of whichever session is actively viewing the page, since it's driven purely by
+// this session's own poll/push cycle.
+let knownNotificationIds = null;
+const pendingAlerts = [];
+let alertShowing = false;
+
+function playNotificationSound() {
+    const audio = new Audio('/sounds/notification.mp3');
+    audio.play().catch(() => {
+        // Browsers block autoplay before the user has interacted with the page at all -
+        // nothing to do about that, the popup itself still shows.
+    });
+}
+
+function isOnChatPage() {
+    return document.querySelector('[data-chat-page]') !== null;
+}
+
+function showNextAlert() {
+    if (alertShowing || pendingAlerts.length === 0 || !window.HSOverlay) {
+        return;
+    }
+
+    if (isOnChatPage()) {
+        // No popup/sound while actively on the Chat page - real-time delivery there (see
+        // resources/js/pages/chat.js) already shows the message live, and any non-chat
+        // notification isn't urgent enough to interrupt an active conversation. The badge/list
+        // still update normally (see fetchNotifications) - just no popup + sound.
+        pendingAlerts.length = 0;
+
+        return;
+    }
+
+    const modal = document.getElementById('notification-alert-modal');
+
+    if (!modal) {
+        return;
+    }
+
+    const notification = pendingAlerts.shift();
+    alertShowing = true;
+
+    modal.querySelector('[data-notification-alert-title]').textContent = notification.title ?? '';
+    modal.querySelector('[data-notification-alert-message]').textContent = notification.message ?? '';
+    modal.dataset.notificationAlertId = notification.id;
+    modal.dataset.notificationAlertUrl = notification.url ?? '';
+
+    playNotificationSound();
+    window.HSOverlay.open(modal);
+}
+
+function queueNotificationAlerts(notifications) {
+    if (knownNotificationIds === null) {
+        // First fetch since page load - this is the existing baseline, not new arrivals.
+        knownNotificationIds = new Set(notifications.map((notification) => notification.id));
+
+        return;
+    }
+
+    notifications
+        .filter((notification) => !notification.read && !knownNotificationIds.has(notification.id))
+        .forEach((notification) => pendingAlerts.push(notification));
+
+    notifications.forEach((notification) => knownNotificationIds.add(notification.id));
+
+    showNextAlert();
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const dropdown = document.getElementById('notification-dropdown');
+    const alertModal = document.getElementById('notification-alert-modal');
+
+    alertModal?.addEventListener('close.hs.overlay', function () {
+        alertShowing = false;
+        setTimeout(showNextAlert, 400);
+    });
+
+    alertModal?.querySelector('[data-notification-alert-later]')?.addEventListener('click', function () {
+        window.HSOverlay?.close(alertModal);
+    });
+
+    alertModal?.querySelector('[data-notification-alert-view]')?.addEventListener('click', function () {
+        const id = alertModal.dataset.notificationAlertId;
+        const url = alertModal.dataset.notificationAlertUrl;
+
+        fetch(`/notifications/${id}/read`, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        }).finally(() => {
+            if (url) {
+                window.location.href = url;
+            } else {
+                window.HSOverlay?.close(alertModal);
+            }
+        });
+    });
 
     if (!dropdown) {
         return;
@@ -152,10 +254,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     fetchNotifications(dropdown);
 
-    // Reverb's live push (resources/js/echo.js) updates this instantly when it can reach the
-    // browser, but a private WebSocket channel isn't guaranteed to connect in every environment
-    // (e.g. mixed-content blocks a plain ws:// endpoint from an https:// page in local dev) - so
-    // this poll is the mechanism that's guaranteed to work everywhere, keeping the badge/list
-    // fresh without the user having to open the dropdown first.
-    setInterval(() => fetchNotifications(dropdown), 20000);
+    // General notifications have no real-time push (see resources/js/echo.js) - this poll is
+    // the only delivery mechanism, so it's kept close to real-time (3s, the fastest interval
+    // used anywhere in the app) without the user having to open the dropdown first.
+    setInterval(() => fetchNotifications(dropdown), 3000);
 });

@@ -170,6 +170,7 @@ return [
         'login' => 'username/email',
         'permissions' => 'permission',
         'code' => 'kode',
+        'body' => 'pesan',
     ],
 
 ];

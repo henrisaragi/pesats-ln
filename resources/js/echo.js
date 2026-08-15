@@ -3,6 +3,12 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 
+// Real-time (WebSocket) push is reserved for the chat feature only (see
+// resources/js/pages/chat.js, which subscribes to "conversation.{id}" / "chat.queue").
+// General app notifications (the bell dropdown) intentionally do NOT use a live push
+// listener here - they're picked up by resources/js/components/notification-dropdown.js's
+// own polling instead. App\Notifications\AppNotification only broadcasts to 'database' now,
+// so there is nothing for a general listener to subscribe to.
 window.Echo = new Echo({
     broadcaster: 'reverb',
     key: import.meta.env.VITE_REVERB_APP_KEY,
@@ -12,15 +18,3 @@ window.Echo = new Echo({
     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
     enabledTransports: ['ws', 'wss'],
 });
-
-// Live push for the notification dropdown (resources/js/components/notification-dropdown.js):
-// Laravel's Notifiable trait broadcasts on the notifiable's default private channel
-// ("App.Models.User.{id}", authorized in routes/channels.php) using the built-in
-// ".Illuminate\\Notifications\\Events\\BroadcastNotificationCreated" event - we don't need a
-// custom event/channel for this, just listen for it.
-if (window.authUserId) {
-    window.Echo.private(`App.Models.User.${window.authUserId}`)
-        .notification(() => {
-            window.refreshNotifications?.();
-        });
-}

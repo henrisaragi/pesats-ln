@@ -14,6 +14,7 @@ require __DIR__.'/master.php';
 require __DIR__.'/users.php';
 require __DIR__.'/komoditas-entitas.php';
 require __DIR__.'/notifications.php';
+require __DIR__.'/chat.php';
 
 Route::group(['prefix' => '/'], function () {
     Route::get('', [RoutingController::class, 'index'])->middleware('auth')->name('root');

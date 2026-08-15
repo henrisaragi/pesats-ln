@@ -308,4 +308,181 @@ class KomoditasEntitasTest extends TestCase
         $this->actingAs($verifier)->get(route('komoditas-entitas.preview', $record))->assertOk();
         $this->actingAs($verifier)->get(route('komoditas-entitas.download', $record))->assertOk();
     }
+
+    public function test_cannot_submit_the_same_komoditas_twice_while_pending_or_verified(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+
+        KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $user->entity_id,
+            'file_path' => 'komoditas-entitas/existing.pdf',
+            'tanggal_terbit' => '2026-01-10',
+            'tanggal_berakhir' => '2031-01-10',
+            'status' => KomoditasEntitasStatus::Pending,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('komoditas-entitas.store'), [
+            'komoditas_id' => $komoditas->id,
+            'tanggal_terbit' => '2026-02-01',
+            'file' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
+        ]);
+
+        $response->assertSessionHasErrors('komoditas_id');
+        $this->assertSame(1, KomoditasEntitas::where('entitas_id', $user->entity_id)->count());
+    }
+
+    public function test_can_submit_a_different_komoditas_while_one_is_pending(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $reptil = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        $mamalia = Komoditas::create(['name' => 'Mamalia', 'code' => 'MML']);
+
+        KomoditasEntitas::create([
+            'komoditas_id' => $reptil->id,
+            'entitas_id' => $user->entity_id,
+            'file_path' => 'komoditas-entitas/existing.pdf',
+            'tanggal_terbit' => '2026-01-10',
+            'tanggal_berakhir' => '2031-01-10',
+            'status' => KomoditasEntitasStatus::Pending,
+        ]);
+
+        $this->actingAs($user)->post(route('komoditas-entitas.store'), [
+            'komoditas_id' => $mamalia->id,
+            'tanggal_terbit' => '2026-02-01',
+            'file' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
+        ])->assertRedirect(route('komoditas-entitas.index'));
+
+        $this->assertSame(2, KomoditasEntitas::where('entitas_id', $user->entity_id)->count());
+    }
+
+    public function test_rejected_submission_can_be_edited_and_resets_to_pending(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        Storage::disk('local')->put('komoditas-entitas/old.pdf', 'old-content');
+
+        $record = KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $user->entity_id,
+            'file_path' => 'komoditas-entitas/old.pdf',
+            'tanggal_terbit' => '2026-01-10',
+            'tanggal_berakhir' => '2031-01-10',
+            'status' => KomoditasEntitasStatus::Rejected,
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->put(route('komoditas-entitas.update', $record), [
+            'komoditas_id' => $komoditas->id,
+            'tanggal_terbit' => '2026-03-05',
+            'file' => UploadedFile::fake()->create('baru.pdf', 100, 'application/pdf'),
+        ]);
+
+        $response->assertRedirect(route('komoditas-entitas.index'));
+
+        $record->refresh();
+        $this->assertSame(KomoditasEntitasStatus::Pending, $record->status);
+        $this->assertNull($record->verified_by);
+        $this->assertNull($record->verified_at);
+        $this->assertSame('2026-03-05', $record->tanggal_terbit->toDateString());
+        $this->assertSame('2031-03-05', $record->tanggal_berakhir->toDateString());
+        Storage::disk('local')->assertExists($record->file_path);
+        Storage::disk('local')->assertMissing('komoditas-entitas/old.pdf');
+    }
+
+    public function test_editing_a_rejected_submission_without_a_new_file_keeps_the_existing_one(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        Storage::disk('local')->put('komoditas-entitas/keep.pdf', 'keep-content');
+
+        $record = KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $user->entity_id,
+            'file_path' => 'komoditas-entitas/keep.pdf',
+            'tanggal_terbit' => '2026-01-10',
+            'tanggal_berakhir' => '2031-01-10',
+            'status' => KomoditasEntitasStatus::Rejected,
+        ]);
+
+        $this->actingAs($user)->put(route('komoditas-entitas.update', $record), [
+            'komoditas_id' => $komoditas->id,
+            'tanggal_terbit' => '2026-03-05',
+        ])->assertRedirect(route('komoditas-entitas.index'));
+
+        $record->refresh();
+        $this->assertSame('komoditas-entitas/keep.pdf', $record->file_path);
+        Storage::disk('local')->assertExists('komoditas-entitas/keep.pdf');
+    }
+
+    public function test_pending_or_verified_submission_cannot_be_edited_or_deleted(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+
+        $record = KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $user->entity_id,
+            'file_path' => 'komoditas-entitas/dummy.pdf',
+            'tanggal_terbit' => '2026-01-10',
+            'tanggal_berakhir' => '2031-01-10',
+            'status' => KomoditasEntitasStatus::Verified,
+        ]);
+
+        $this->actingAs($user)->put(route('komoditas-entitas.update', $record), [
+            'komoditas_id' => $komoditas->id,
+            'tanggal_terbit' => '2026-03-05',
+        ])->assertForbidden();
+
+        $this->actingAs($user)->delete(route('komoditas-entitas.destroy', $record))->assertForbidden();
+
+        $this->assertDatabaseHas('komoditas_entitas', ['id' => $record->id, 'status' => KomoditasEntitasStatus::Verified->value]);
+    }
+
+    public function test_rejected_submission_can_be_deleted(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        Storage::disk('local')->put('komoditas-entitas/dummy.pdf', 'fake-pdf-content');
+
+        $record = KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $user->entity_id,
+            'file_path' => 'komoditas-entitas/dummy.pdf',
+            'tanggal_terbit' => '2026-01-10',
+            'tanggal_berakhir' => '2031-01-10',
+            'status' => KomoditasEntitasStatus::Rejected,
+        ]);
+
+        $this->actingAs($user)->delete(route('komoditas-entitas.destroy', $record))
+            ->assertRedirect(route('komoditas-entitas.index'));
+
+        $this->assertDatabaseMissing('komoditas_entitas', ['id' => $record->id]);
+        Storage::disk('local')->assertMissing('komoditas-entitas/dummy.pdf');
+    }
+
+    public function test_cannot_edit_or_delete_another_entitys_submission(): void
+    {
+        $owner = $this->makeUser('perusahaan');
+        $stranger = $this->makeUser('perusahaan');
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+
+        $record = KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $owner->entity_id,
+            'file_path' => 'komoditas-entitas/dummy.pdf',
+            'tanggal_terbit' => '2026-01-10',
+            'tanggal_berakhir' => '2031-01-10',
+            'status' => KomoditasEntitasStatus::Rejected,
+        ]);
+
+        $this->actingAs($stranger)->put(route('komoditas-entitas.update', $record), [
+            'komoditas_id' => $komoditas->id,
+            'tanggal_terbit' => '2026-03-05',
+        ])->assertForbidden();
+
+        $this->actingAs($stranger)->delete(route('komoditas-entitas.destroy', $record))->assertForbidden();
+    }
 }

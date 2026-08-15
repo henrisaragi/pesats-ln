@@ -1,33 +1,35 @@
 // Cosmetic-only preview of "tanggal berakhir" (issue date + 5 years) in the Komoditas
-// Entitas create modal (resources/views/komoditas-entitas/index.blade.php). The
-// authoritative value is always computed server-side in
-// App\Http\Controllers\KomoditasEntitas\KomoditasEntitasController::store().
+// Entitas create/edit modals (resources/views/komoditas-entitas/index.blade.php - there can be
+// several edit modals, one per rejected row, plus the single create modal). The authoritative
+// value is always computed server-side in
+// App\Http\Controllers\KomoditasEntitas\KomoditasEntitasController::store()/update().
 
 document.addEventListener('DOMContentLoaded', function () {
-    const input = document.querySelector('[data-komoditas-entitas-tanggal-terbit]');
-    const preview = document.querySelector('[data-komoditas-entitas-tanggal-berakhir-preview]');
+    document.querySelectorAll('[data-komoditas-entitas-tanggal-terbit]').forEach(function (input) {
+        const preview = input.closest('div')?.querySelector('[data-komoditas-entitas-tanggal-berakhir-preview]');
 
-    if (!input || !preview) {
-        return;
-    }
-
-    function updatePreview() {
-        if (!input.value) {
-            preview.textContent = '';
-
+        if (!preview) {
             return;
         }
 
-        const issued = new Date(input.value);
-        const expires = new Date(issued);
-        expires.setFullYear(expires.getFullYear() + 5);
+        function updatePreview() {
+            if (!input.value) {
+                preview.textContent = '';
 
-        const day = String(expires.getDate()).padStart(2, '0');
-        const month = String(expires.getMonth() + 1).padStart(2, '0');
-        const year = expires.getFullYear();
+                return;
+            }
 
-        preview.textContent = `(${day}/${month}/${year})`;
-    }
+            const issued = new Date(input.value);
+            const expires = new Date(issued);
+            expires.setFullYear(expires.getFullYear() + 5);
 
-    input.addEventListener('change', updatePreview);
+            const day = String(expires.getDate()).padStart(2, '0');
+            const month = String(expires.getMonth() + 1).padStart(2, '0');
+            const year = expires.getFullYear();
+
+            preview.textContent = `(${day}/${month}/${year})`;
+        }
+
+        input.addEventListener('change', updatePreview);
+    });
 });

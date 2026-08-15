@@ -48,6 +48,12 @@
                     'route' => 'komoditas-entitas.verifikasi.index',
                     'permission' => 'komoditas-entitas.verify',
                 ],
+                [
+                    'label' => __('Chat'),
+                    'icon' => 'messages-square',
+                    'route' => 'chat.index',
+                    'permission' => ['chat.start', 'chat.respond'],
+                ],
             ],
         ],
         [
@@ -129,8 +135,16 @@
         ],
     ];
 
-    $userCanSeeMenu = function (?string $permission) {
-        return $permission === null || (auth()->check() && auth()->user()->can($permission));
+    $userCanSeeMenu = function (string|array|null $permission) {
+        if ($permission === null) {
+            return true;
+        }
+
+        if (! auth()->check()) {
+            return false;
+        }
+
+        return is_array($permission) ? auth()->user()->canAny($permission) : auth()->user()->can($permission);
     };
 
     $isMenuItemVisible = function (array $item) use (&$isMenuItemVisible, $userCanSeeMenu) {

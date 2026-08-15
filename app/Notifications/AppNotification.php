@@ -7,7 +7,6 @@ namespace App\Notifications;
 use App\Enums\NotificationCategory;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class AppNotification extends Notification implements ShouldQueue
@@ -26,11 +25,15 @@ class AppNotification extends Notification implements ShouldQueue
     }
 
     /**
+     * Database only - real-time (broadcast) push is reserved for the chat feature
+     * (App\Events\ChatMessageSent). General notifications are picked up by the bell
+     * dropdown's polling instead (resources/js/components/notification-dropdown.js).
+     *
      * @return list<string>
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database'];
     }
 
     /**
@@ -44,10 +47,5 @@ class AppNotification extends Notification implements ShouldQueue
             'message' => $this->message,
             'url' => $this->url,
         ];
-    }
-
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage($this->toArray($notifiable));
     }
 }
