@@ -22,12 +22,10 @@ return new class extends Migration
             $table->decimal('quota', 15, 2);
             $table->smallInteger('year');
             $table->timestamps();
-
             $table->foreign('komoditas_id')->references('id')->on('komoditas')->restrictOnDelete();
             $table->foreign('species_id')->references('id')->on('species')->restrictOnDelete();
             $table->foreign('source_id')->references('id')->on('source_statuses')->restrictOnDelete();
             $table->foreign('trade_code_id')->references('id')->on('trade_codes')->restrictOnDelete();
-            $table->foreign('harga_patokan_id')->references('id')->on('harga_patokan')->restrictOnDelete();
             $table->index('year');
         });
     }

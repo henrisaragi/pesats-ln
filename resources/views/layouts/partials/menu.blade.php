@@ -97,6 +97,17 @@
                         ],
                     ],
                 ],
+                [
+                    'label' => __('Database Kuota'),
+                    'icon' => 'gauge',
+                    'children' => [
+                        [
+                            'label' => __('Kuota Nasional'),
+                            'route' => 'master.kuota-nasional.index',
+                            'permission' => 'kuota-nasional.view',
+                        ],
+                    ],
+                ],
             ],
         ],
     ];

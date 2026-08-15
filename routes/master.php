@@ -9,6 +9,7 @@ use App\Http\Controllers\Master\KecamatanController;
 use App\Http\Controllers\Master\KelurahanController;
 use App\Http\Controllers\Master\KomoditasController;
 use App\Http\Controllers\Master\KotaController;
+use App\Http\Controllers\Master\KuotaNasionalController;
 use App\Http\Controllers\Master\PortController;
 use App\Http\Controllers\Master\ProvinsiController;
 use App\Http\Controllers\Master\PurposeOfTransactionController;
@@ -104,6 +105,13 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
         Route::post('', [SpeciesController::class, 'store'])->middleware('permission:species.create')->name('store');
         Route::put('{species}', [SpeciesController::class, 'update'])->middleware('permission:species.update')->name('update');
         Route::delete('{species}', [SpeciesController::class, 'destroy'])->middleware('permission:species.delete')->name('destroy');
+    });
+
+    Route::prefix('kuota-nasional')->name('kuota-nasional.')->group(function (): void {
+        Route::get('', [KuotaNasionalController::class, 'index'])->middleware('permission:kuota-nasional.view')->name('index');
+        Route::post('', [KuotaNasionalController::class, 'store'])->middleware('permission:kuota-nasional.create')->name('store');
+        Route::put('{kuotaNasional}', [KuotaNasionalController::class, 'update'])->middleware('permission:kuota-nasional.update')->name('update');
+        Route::delete('{kuotaNasional}', [KuotaNasionalController::class, 'destroy'])->middleware('permission:kuota-nasional.delete')->name('destroy');
     });
 
     Route::prefix('entitas')->name('entitas.')->group(function (): void {

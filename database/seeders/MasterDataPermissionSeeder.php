@@ -22,6 +22,7 @@ class MasterDataPermissionSeeder extends Seeder
         'source-statuses',
         'species',
         'purpose-of-transactions',
+        'kuota-nasional',
         'entitas',
         'entity-profiles',
     ];
