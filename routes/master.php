@@ -11,6 +11,7 @@ use App\Http\Controllers\Master\KomoditasController;
 use App\Http\Controllers\Master\KotaController;
 use App\Http\Controllers\Master\PortController;
 use App\Http\Controllers\Master\ProvinsiController;
+use App\Http\Controllers\Master\PurposeOfTransactionController;
 use App\Http\Controllers\Master\SourceStatusController;
 use App\Http\Controllers\Master\SpeciesController;
 use App\Http\Controllers\Master\TradeCodeController;
@@ -75,6 +76,13 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
         Route::post('', [TradeCodeController::class, 'store'])->middleware('permission:trade-codes.create')->name('store');
         Route::put('{tradeCode}', [TradeCodeController::class, 'update'])->middleware('permission:trade-codes.update')->name('update');
         Route::delete('{tradeCode}', [TradeCodeController::class, 'destroy'])->middleware('permission:trade-codes.delete')->name('destroy');
+    });
+
+    Route::prefix('purpose-of-transactions')->name('purpose-of-transactions.')->group(function (): void {
+        Route::get('', [PurposeOfTransactionController::class, 'index'])->middleware('permission:purpose-of-transactions.view')->name('index');
+        Route::post('', [PurposeOfTransactionController::class, 'store'])->middleware('permission:purpose-of-transactions.create')->name('store');
+        Route::put('{purposeOfTransaction}', [PurposeOfTransactionController::class, 'update'])->middleware('permission:purpose-of-transactions.update')->name('update');
+        Route::delete('{purposeOfTransaction}', [PurposeOfTransactionController::class, 'destroy'])->middleware('permission:purpose-of-transactions.delete')->name('destroy');
     });
 
     Route::prefix('komoditas')->name('komoditas.')->group(function (): void {

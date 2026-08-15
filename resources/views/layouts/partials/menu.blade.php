@@ -90,6 +90,11 @@
                             'route' => 'master.species.index',
                             'permission' => 'species.view',
                         ],
+                        [
+                            'label' => __('Tujuan Transaksi'),
+                            'route' => 'master.purpose-of-transactions.index',
+                            'permission' => 'purpose-of-transactions.view',
+                        ],
                     ],
                 ],
             ],
