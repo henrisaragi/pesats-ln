@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\KotaRequest;
 use App\Models\Kota;
 use App\Models\Provinsi;
+use App\Services\Insw\InswRegionSyncService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -65,5 +66,37 @@ class KotaController extends Controller
         }
 
         return redirect()->route('master.kota.index')->with('success', __('Kota berhasil dihapus.'));
+    }
+
+    public function sync(InswRegionSyncService $syncService): RedirectResponse
+    {
+        set_time_limit(0);
+
+        $summary = $syncService->syncCities();
+
+        return redirect()->route('master.kota.index')->with(...$this->syncFlash($summary));
+    }
+
+    /**
+     * @param  array{created: int, updated: int, skipped: int, errors: list<string>}  $summary
+     * @return array{0: string, 1: string}
+     */
+    private function syncFlash(array $summary): array
+    {
+        if ($summary['created'] === 0 && $summary['updated'] === 0) {
+            return ['error', $summary['errors'][0] ?? __('Tidak ada data kota yang berhasil disinkronkan.')];
+        }
+
+        $message = __(':created baru, :updated diperbarui, :skipped dilewati.', [
+            'created' => $summary['created'],
+            'updated' => $summary['updated'],
+            'skipped' => $summary['skipped'],
+        ]);
+
+        if (! empty($summary['errors'])) {
+            $message .= ' '.__(':count provinsi gagal diproses.', ['count' => count($summary['errors'])]);
+        }
+
+        return ['success', $message];
     }
 }

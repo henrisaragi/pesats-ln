@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'insw' => [
+        'auth_url' => env('INSW_AUTH_URL'),
+        'token_url' => env('INSW_TOKEN_URL'),
+        'base_url' => env('INSW_API_BASE_URL'),
+        'client_id' => env('INSW_CLIENT_ID'),
+        'client_secret' => env('INSW_CLIENT_SECRET'),
+        'provision_key' => env('INSW_PROVISION_KEY'),
+        'user_id' => env('INSW_USER_ID'),
+        'redirect_uri' => env('INSW_REDIRECT_URI'),
+    ],
+
 ];

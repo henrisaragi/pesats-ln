@@ -7,10 +7,6 @@ namespace App\Http\Controllers\Entitas;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Entitas\EntitasRequest;
 use App\Models\Entitas\Entitas;
-use App\Models\Kecamatan;
-use App\Models\Kelurahan;
-use App\Models\Kota;
-use App\Models\Provinsi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -29,12 +25,13 @@ class EntitasController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        // Region dropdowns are rendered via <x-province-select>/<x-city-select>/<x-district-select>/
+        // <x-subdistrict-select> (resources/views/components/*-select.blade.php), which each load
+        // only what they need (province: full ~38-row list; city/district/sub-district: only the
+        // currently-selected row, rest fetched via AJAX as the user picks a parent) - no full-table
+        // options need to be passed in from here.
         return view('master.entitas.index', [
             'entities' => $entities,
-            'provinsiOptions' => Provinsi::orderBy('name')->get(),
-            'kotaOptions' => Kota::orderBy('name')->get(),
-            'kecamatanOptions' => Kecamatan::orderBy('name')->get(),
-            'kelurahanOptions' => Kelurahan::orderBy('name')->get(),
         ]);
     }
 

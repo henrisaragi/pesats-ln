@@ -10,11 +10,22 @@
     <div class="card">
         <div class="card-header">
             <h6 class="card-title">{{ __('Daftar Provinsi') }}</h6>
-            @can('provinsi.create')
-                <button class="btn btn-sm bg-primary text-white" data-hs-overlay="#provinsi-create-modal" type="button">
-                    <i class="size-4 me-1" data-lucide="plus"></i>{{ __('Tambah Provinsi') }}
-                </button>
-            @endcan
+            <div class="flex items-center gap-2">
+                @can('provinsi.sync')
+                    <form action="{{ route('master.provinsi.sync') }}" id="provinsi-sync-form" method="POST">
+                        @csrf
+                        <button class="btn btn-sm bg-default-150 text-default-700 hover:bg-default-200"
+                                id="provinsi-sync-button" type="submit">
+                            <i class="size-4 me-1" data-lucide="refresh-cw" id="provinsi-sync-icon"></i>{{ __('Sinkron dari INSW') }}
+                        </button>
+                    </form>
+                @endcan
+                @can('provinsi.create')
+                    <button class="btn btn-sm bg-primary text-white" data-hs-overlay="#provinsi-create-modal" type="button">
+                        <i class="size-4 me-1" data-lucide="plus"></i>{{ __('Tambah Provinsi') }}
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-header">
             <form action="{{ route('master.provinsi.index') }}" class="md:flex items-center md:space-y-0 space-y-4 gap-3"
@@ -255,5 +266,13 @@
 @endsection
 
 @section('scripts')
-
+    <script>
+        document.getElementById('provinsi-sync-form')?.addEventListener('submit', function () {
+            const button = document.getElementById('provinsi-sync-button');
+            const icon = document.getElementById('provinsi-sync-icon');
+            button.disabled = true;
+            button.classList.add('opacity-70', 'cursor-not-allowed');
+            icon?.classList.add('animate-spin');
+        });
+    </script>
 @endsection

@@ -27,6 +27,16 @@ class MasterDataPermissionSeeder extends Seeder
     private const ACTIONS = ['view', 'create', 'update', 'delete'];
 
     /**
+     * Entities that support syncing region data from INSW.
+     */
+    private const SYNCABLE_ENTITIES = [
+        'provinsi',
+        'kota',
+        'kecamatan',
+        'kelurahan',
+    ];
+
+    /**
      * Seed the master data permissions.
      */
     public function run(): void
@@ -37,6 +47,10 @@ class MasterDataPermissionSeeder extends Seeder
             foreach (self::ACTIONS as $action) {
                 $permissions[] = "{$entity}.{$action}";
             }
+        }
+
+        foreach (self::SYNCABLE_ENTITIES as $entity) {
+            $permissions[] = "{$entity}.sync";
         }
 
         foreach ($permissions as $permission) {

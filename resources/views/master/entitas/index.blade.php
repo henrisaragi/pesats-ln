@@ -165,15 +165,8 @@
                                     <label class="inline-block mb-2 text-sm font-medium" for="entitas-create-provinsi">
                                         {{ __('Provinsi') }}
                                     </label>
-                                    <select class="form-input" id="entitas-create-provinsi" name="provinsi_id">
-                                        <option value="">{{ __('Pilih Provinsi') }}</option>
-                                        @foreach ($provinsiOptions as $provinsiOption)
-                                            <option value="{{ $provinsiOption->id }}"
-                                                    @selected(old('_modal') === 'entitas-create-modal' && (int) old('provinsi_id') === $provinsiOption->id)>
-                                                {{ $provinsiOption->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <x-province-select id="entitas-create-provinsi" name="provinsi_id"
+                                                        :selected="old('_modal') === 'entitas-create-modal' ? old('provinsi_id') : null"/>
                                     @if (old('_modal') === 'entitas-create-modal' && $errors->has('provinsi_id'))
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('provinsi_id') }}</p>
                                     @endif
@@ -182,15 +175,9 @@
                                     <label class="inline-block mb-2 text-sm font-medium" for="entitas-create-kota">
                                         {{ __('Kota') }}
                                     </label>
-                                    <select class="form-input" id="entitas-create-kota" name="kota_id">
-                                        <option value="">{{ __('Pilih Kota') }}</option>
-                                        @foreach ($kotaOptions as $kotaOption)
-                                            <option value="{{ $kotaOption->id }}"
-                                                    @selected(old('_modal') === 'entitas-create-modal' && (int) old('kota_id') === $kotaOption->id)>
-                                                {{ $kotaOption->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <x-city-select depends-on="entitas-create-provinsi" id="entitas-create-kota"
+                                                    name="kota_id"
+                                                    :selected="old('_modal') === 'entitas-create-modal' ? old('kota_id') : null"/>
                                     @if (old('_modal') === 'entitas-create-modal' && $errors->has('kota_id'))
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('kota_id') }}</p>
                                     @endif
@@ -199,15 +186,9 @@
                                     <label class="inline-block mb-2 text-sm font-medium" for="entitas-create-kecamatan">
                                         {{ __('Kecamatan') }}
                                     </label>
-                                    <select class="form-input" id="entitas-create-kecamatan" name="kecamatan_id">
-                                        <option value="">{{ __('Pilih Kecamatan') }}</option>
-                                        @foreach ($kecamatanOptions as $kecamatanOption)
-                                            <option value="{{ $kecamatanOption->id }}"
-                                                    @selected(old('_modal') === 'entitas-create-modal' && (int) old('kecamatan_id') === $kecamatanOption->id)>
-                                                {{ $kecamatanOption->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <x-district-select depends-on="entitas-create-kota" id="entitas-create-kecamatan"
+                                                        name="kecamatan_id"
+                                                        :selected="old('_modal') === 'entitas-create-modal' ? old('kecamatan_id') : null"/>
                                     @if (old('_modal') === 'entitas-create-modal' && $errors->has('kecamatan_id'))
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('kecamatan_id') }}</p>
                                     @endif
@@ -216,15 +197,9 @@
                                     <label class="inline-block mb-2 text-sm font-medium" for="entitas-create-kelurahan">
                                         {{ __('Kelurahan') }}
                                     </label>
-                                    <select class="form-input" id="entitas-create-kelurahan" name="kelurahan_id">
-                                        <option value="">{{ __('Pilih Kelurahan') }}</option>
-                                        @foreach ($kelurahanOptions as $kelurahanOption)
-                                            <option value="{{ $kelurahanOption->id }}"
-                                                    @selected(old('_modal') === 'entitas-create-modal' && (int) old('kelurahan_id') === $kelurahanOption->id)>
-                                                {{ $kelurahanOption->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <x-subdistrict-select depends-on="entitas-create-kecamatan" id="entitas-create-kelurahan"
+                                                           name="kelurahan_id"
+                                                           :selected="old('_modal') === 'entitas-create-modal' ? old('kelurahan_id') : null"/>
                                     @if (old('_modal') === 'entitas-create-modal' && $errors->has('kelurahan_id'))
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('kelurahan_id') }}</p>
                                     @endif
@@ -316,16 +291,8 @@
                                                for="entitas-edit-provinsi-{{ $entity->id }}">
                                             {{ __('Provinsi') }}
                                         </label>
-                                        <select class="form-input" id="entitas-edit-provinsi-{{ $entity->id }}"
-                                                name="provinsi_id">
-                                            <option value="">{{ __('Pilih Provinsi') }}</option>
-                                            @foreach ($provinsiOptions as $provinsiOption)
-                                                <option value="{{ $provinsiOption->id }}"
-                                                        @selected(old('_modal') === 'entitas-edit-modal-'.$entity->id ? (int) old('provinsi_id') === $provinsiOption->id : $entity->provinsi_id === $provinsiOption->id)>
-                                                    {{ $provinsiOption->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <x-province-select id="entitas-edit-provinsi-{{ $entity->id }}" name="provinsi_id"
+                                                            :selected="old('_modal') === 'entitas-edit-modal-'.$entity->id ? old('provinsi_id') : $entity->provinsi_id"/>
                                         @if (old('_modal') === 'entitas-edit-modal-'.$entity->id && $errors->has('provinsi_id'))
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('provinsi_id') }}</p>
                                         @endif
@@ -335,16 +302,9 @@
                                                for="entitas-edit-kota-{{ $entity->id }}">
                                             {{ __('Kota') }}
                                         </label>
-                                        <select class="form-input" id="entitas-edit-kota-{{ $entity->id }}"
-                                                name="kota_id">
-                                            <option value="">{{ __('Pilih Kota') }}</option>
-                                            @foreach ($kotaOptions as $kotaOption)
-                                                <option value="{{ $kotaOption->id }}"
-                                                        @selected(old('_modal') === 'entitas-edit-modal-'.$entity->id ? (int) old('kota_id') === $kotaOption->id : $entity->kota_id === $kotaOption->id)>
-                                                    {{ $kotaOption->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <x-city-select depends-on="entitas-edit-provinsi-{{ $entity->id }}"
+                                                        id="entitas-edit-kota-{{ $entity->id }}" name="kota_id"
+                                                        :selected="old('_modal') === 'entitas-edit-modal-'.$entity->id ? old('kota_id') : $entity->kota_id"/>
                                         @if (old('_modal') === 'entitas-edit-modal-'.$entity->id && $errors->has('kota_id'))
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('kota_id') }}</p>
                                         @endif
@@ -354,16 +314,9 @@
                                                for="entitas-edit-kecamatan-{{ $entity->id }}">
                                             {{ __('Kecamatan') }}
                                         </label>
-                                        <select class="form-input" id="entitas-edit-kecamatan-{{ $entity->id }}"
-                                                name="kecamatan_id">
-                                            <option value="">{{ __('Pilih Kecamatan') }}</option>
-                                            @foreach ($kecamatanOptions as $kecamatanOption)
-                                                <option value="{{ $kecamatanOption->id }}"
-                                                        @selected(old('_modal') === 'entitas-edit-modal-'.$entity->id ? (int) old('kecamatan_id') === $kecamatanOption->id : $entity->kecamatan_id === $kecamatanOption->id)>
-                                                    {{ $kecamatanOption->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <x-district-select depends-on="entitas-edit-kota-{{ $entity->id }}"
+                                                            id="entitas-edit-kecamatan-{{ $entity->id }}" name="kecamatan_id"
+                                                            :selected="old('_modal') === 'entitas-edit-modal-'.$entity->id ? old('kecamatan_id') : $entity->kecamatan_id"/>
                                         @if (old('_modal') === 'entitas-edit-modal-'.$entity->id && $errors->has('kecamatan_id'))
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('kecamatan_id') }}</p>
                                         @endif
@@ -373,16 +326,9 @@
                                                for="entitas-edit-kelurahan-{{ $entity->id }}">
                                             {{ __('Kelurahan') }}
                                         </label>
-                                        <select class="form-input" id="entitas-edit-kelurahan-{{ $entity->id }}"
-                                                name="kelurahan_id">
-                                            <option value="">{{ __('Pilih Kelurahan') }}</option>
-                                            @foreach ($kelurahanOptions as $kelurahanOption)
-                                                <option value="{{ $kelurahanOption->id }}"
-                                                        @selected(old('_modal') === 'entitas-edit-modal-'.$entity->id ? (int) old('kelurahan_id') === $kelurahanOption->id : $entity->kelurahan_id === $kelurahanOption->id)>
-                                                    {{ $kelurahanOption->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <x-subdistrict-select depends-on="entitas-edit-kecamatan-{{ $entity->id }}"
+                                                               id="entitas-edit-kelurahan-{{ $entity->id }}" name="kelurahan_id"
+                                                               :selected="old('_modal') === 'entitas-edit-modal-'.$entity->id ? old('kelurahan_id') : $entity->kelurahan_id"/>
                                         @if (old('_modal') === 'entitas-edit-modal-'.$entity->id && $errors->has('kelurahan_id'))
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('kelurahan_id') }}</p>
                                         @endif

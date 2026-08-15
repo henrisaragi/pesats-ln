@@ -12,8 +12,24 @@
             </a>
         @endif
 
-        @foreach (range(1, $paginator->lastPage()) as $page)
-            <a class="btn size-7.5 {{ $page === $paginator->currentPage() ? 'bg-primary text-white' : 'bg-transparent border border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary hover:border-primary/10' }}"
+        @php
+            $onEachSide = 2;
+            $lastPage = $paginator->lastPage();
+            $currentPage = $paginator->currentPage();
+
+            $pages = collect([1])
+                ->when($lastPage > 1, fn ($collection) => $collection->push($lastPage))
+                ->concat(range(max(1, $currentPage - $onEachSide), min($lastPage, $currentPage + $onEachSide)))
+                ->unique()
+                ->sort()
+                ->values();
+        @endphp
+
+        @foreach ($pages as $index => $page)
+            @if ($index > 0 && $page - $pages[$index - 1] > 1)
+                <span class="btn size-7.5 bg-transparent border-0 text-default-400 pointer-events-none">&hellip;</span>
+            @endif
+            <a class="btn size-7.5 {{ $page === $currentPage ? 'bg-primary text-white' : 'bg-transparent border border-default-200 text-default-600 hover:bg-primary/10 hover:text-primary hover:border-primary/10' }}"
                href="{{ $paginator->url($page) }}">
                 {{ $page }}
             </a>

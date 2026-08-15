@@ -10,11 +10,22 @@
     <div class="card">
         <div class="card-header">
             <h6 class="card-title">{{ __('Daftar Kota') }}</h6>
-            @can('kota.create')
-                <button class="btn btn-sm bg-primary text-white" data-hs-overlay="#kota-create-modal" type="button">
-                    <i class="size-4 me-1" data-lucide="plus"></i>{{ __('Tambah Kota') }}
-                </button>
-            @endcan
+            <div class="flex items-center gap-2">
+                @can('kota.sync')
+                    <form action="{{ route('master.kota.sync') }}" id="kota-sync-form" method="POST">
+                        @csrf
+                        <button class="btn btn-sm bg-default-150 text-default-700 hover:bg-default-200"
+                                id="kota-sync-button" type="submit">
+                            <i class="size-4 me-1" data-lucide="refresh-cw" id="kota-sync-icon"></i>{{ __('Sinkron dari INSW') }}
+                        </button>
+                    </form>
+                @endcan
+                @can('kota.create')
+                    <button class="btn btn-sm bg-primary text-white" data-hs-overlay="#kota-create-modal" type="button">
+                        <i class="size-4 me-1" data-lucide="plus"></i>{{ __('Tambah Kota') }}
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-header">
             <form action="{{ route('master.kota.index') }}" class="md:flex items-center md:space-y-0 space-y-4 gap-3"
@@ -293,5 +304,13 @@
 @endsection
 
 @section('scripts')
-
+    <script>
+        document.getElementById('kota-sync-form')?.addEventListener('submit', function () {
+            const button = document.getElementById('kota-sync-button');
+            const icon = document.getElementById('kota-sync-icon');
+            button.disabled = true;
+            button.classList.add('opacity-70', 'cursor-not-allowed');
+            icon?.classList.add('animate-spin');
+        });
+    </script>
 @endsection

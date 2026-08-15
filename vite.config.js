@@ -17,6 +17,8 @@ export default defineConfig({
             'resources/js/pages/dashboard-ecommerce.js',
             'resources/js/pages/dashboard-email.js',
             'resources/js/pages/dashboard-hr.js',
+            'resources/js/pages/kecamatan-index.js',
+            'resources/js/pages/kelurahan-index.js',
             'resources/js/pages/landing.js',
             'resources/js/pages/pages-coming-soon.js',
             'resources/js/pages/users-index.js',

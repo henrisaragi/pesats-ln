@@ -10,11 +10,22 @@
     <div class="card">
         <div class="card-header">
             <h6 class="card-title">{{ __('Daftar Kelurahan') }}</h6>
-            @can('kelurahan.create')
-                <button class="btn btn-sm bg-primary text-white" data-hs-overlay="#kelurahan-create-modal" type="button">
-                    <i class="size-4 me-1" data-lucide="plus"></i>{{ __('Tambah Kelurahan') }}
-                </button>
-            @endcan
+            <div class="flex items-center gap-2">
+                @can('kelurahan.sync')
+                    <form action="{{ route('master.kelurahan.sync') }}" id="kelurahan-sync-form" method="POST">
+                        @csrf
+                        <button class="btn btn-sm bg-default-150 text-default-700 hover:bg-default-200"
+                                id="kelurahan-sync-button" type="submit">
+                            <i class="size-4 me-1" data-lucide="refresh-cw" id="kelurahan-sync-icon"></i>{{ __('Sinkron dari INSW') }}
+                        </button>
+                    </form>
+                @endcan
+                @can('kelurahan.create')
+                    <button class="btn btn-sm bg-primary text-white" data-hs-overlay="#kelurahan-create-modal" type="button">
+                        <i class="size-4 me-1" data-lucide="plus"></i>{{ __('Tambah Kelurahan') }}
+                    </button>
+                @endcan
+            </div>
         </div>
         <div class="card-header">
             <form action="{{ route('master.kelurahan.index') }}" class="md:flex items-center md:space-y-0 space-y-4 gap-3"
@@ -61,7 +72,9 @@
                                             @can('kelurahan.delete')
                                                 <button aria-label="{{ __('Hapus') }}"
                                                         class="btn size-7.5 bg-default-200 hover:bg-danger/10 hover:text-danger text-default-500"
-                                                        data-hs-overlay="#kelurahan-delete-modal-{{ $item->id }}"
+                                                        data-kelurahan-delete
+                                                        data-id="{{ $item->id }}"
+                                                        data-name="{{ $item->name }}"
                                                         type="button">
                                                     <i class="size-4" data-lucide="trash-2"></i>
                                                 </button>
@@ -114,18 +127,27 @@
                         <div class="p-4 overflow-y-auto">
                             <div class="flex flex-col gap-y-4">
                                 <div>
+                                    <label class="inline-block mb-2 text-sm font-medium" for="kelurahan-create-provinsi">
+                                        {{ __('Provinsi') }}
+                                    </label>
+                                    <x-province-select id="kelurahan-create-provinsi" name="provinsi_id"
+                                                        :selected="old('_modal') === 'kelurahan-create-modal' ? old('provinsi_id') : null"/>
+                                </div>
+                                <div>
+                                    <label class="inline-block mb-2 text-sm font-medium" for="kelurahan-create-kota">
+                                        {{ __('Kota') }}
+                                    </label>
+                                    <x-city-select depends-on="kelurahan-create-provinsi" id="kelurahan-create-kota"
+                                                    name="kota_id"
+                                                    :selected="old('_modal') === 'kelurahan-create-modal' ? old('kota_id') : null"/>
+                                </div>
+                                <div>
                                     <label class="inline-block mb-2 text-sm font-medium" for="kelurahan-create-kecamatan">
                                         {{ __('Kecamatan') }}
                                     </label>
-                                    <select class="form-input" id="kelurahan-create-kecamatan" name="kecamatan_id">
-                                        <option value="">{{ __('Pilih Kecamatan') }}</option>
-                                        @foreach ($kecamatanOptions as $kecamatanOption)
-                                            <option value="{{ $kecamatanOption->id }}"
-                                                    @selected(old('_modal') === 'kelurahan-create-modal' && (int) old('kecamatan_id') === $kecamatanOption->id)>
-                                                {{ $kecamatanOption->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <x-district-select depends-on="kelurahan-create-kota" id="kelurahan-create-kecamatan"
+                                                        name="kecamatan_id"
+                                                        :selected="old('_modal') === 'kelurahan-create-modal' ? old('kecamatan_id') : null"/>
                                     @if (old('_modal') === 'kelurahan-create-modal' && $errors->has('kecamatan_id'))
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('kecamatan_id') }}</p>
                                     @endif
@@ -164,6 +186,11 @@
         </div>
     @endcan
 
+    {{--
+        One edit modal per row (like Entitas). Each x-district-select instance only ever
+        renders its single currently-selected option server-side, so this stays cheap even
+        with the full Provinsi/Kota/Kecamatan cascade repeated per visible row.
+    --}}
     @can('kelurahan.update')
         @foreach ($kelurahan as $item)
             <div aria-labelledby="kelurahan-edit-modal-{{ $item->id }}-label" id="kelurahan-edit-modal-{{ $item->id }}"
@@ -173,8 +200,7 @@
                     class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
                     <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
                         <div class="card-header">
-                            <h3 class="font-bold text-default-800 text-base"
-                                id="kelurahan-edit-modal-{{ $item->id }}-label">
+                            <h3 class="font-bold text-default-800 text-base" id="kelurahan-edit-modal-{{ $item->id }}-label">
                                 {{ __('Ubah Kelurahan') }}
                             </h3>
                             <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
@@ -191,19 +217,29 @@
                                 <div class="flex flex-col gap-y-4">
                                     <div>
                                         <label class="inline-block mb-2 text-sm font-medium"
+                                               for="kelurahan-edit-provinsi-{{ $item->id }}">
+                                            {{ __('Provinsi') }}
+                                        </label>
+                                        <x-province-select id="kelurahan-edit-provinsi-{{ $item->id }}" name="provinsi_id"
+                                                            :selected="old('_modal') === 'kelurahan-edit-modal-'.$item->id ? old('provinsi_id') : $item->kecamatan?->kota?->provinsi_id"/>
+                                    </div>
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium"
+                                               for="kelurahan-edit-kota-{{ $item->id }}">
+                                            {{ __('Kota') }}
+                                        </label>
+                                        <x-city-select depends-on="kelurahan-edit-provinsi-{{ $item->id }}"
+                                                        id="kelurahan-edit-kota-{{ $item->id }}" name="kota_id"
+                                                        :selected="old('_modal') === 'kelurahan-edit-modal-'.$item->id ? old('kota_id') : $item->kecamatan?->kota_id"/>
+                                    </div>
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium"
                                                for="kelurahan-edit-kecamatan-{{ $item->id }}">
                                             {{ __('Kecamatan') }}
                                         </label>
-                                        <select class="form-input" id="kelurahan-edit-kecamatan-{{ $item->id }}"
-                                                name="kecamatan_id">
-                                            <option value="">{{ __('Pilih Kecamatan') }}</option>
-                                            @foreach ($kecamatanOptions as $kecamatanOption)
-                                                <option value="{{ $kecamatanOption->id }}"
-                                                        @selected(old('_modal') === 'kelurahan-edit-modal-'.$item->id ? (int) old('kecamatan_id') === $kecamatanOption->id : $item->kecamatan_id === $kecamatanOption->id)>
-                                                    {{ $kecamatanOption->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <x-district-select depends-on="kelurahan-edit-kota-{{ $item->id }}"
+                                                            id="kelurahan-edit-kecamatan-{{ $item->id }}" name="kecamatan_id"
+                                                            :selected="old('_modal') === 'kelurahan-edit-modal-'.$item->id ? old('kecamatan_id') : $item->kecamatan_id"/>
                                         @if (old('_modal') === 'kelurahan-edit-modal-'.$item->id && $errors->has('kecamatan_id'))
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('kecamatan_id') }}</p>
                                         @endif
@@ -249,50 +285,59 @@
     @endcan
 
     @can('kelurahan.delete')
-        @foreach ($kelurahan as $item)
-            <div aria-labelledby="kelurahan-delete-modal-{{ $item->id }}-label" id="kelurahan-delete-modal-{{ $item->id }}"
-                 class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
-                 role="dialog" tabindex="-1">
+        <div aria-labelledby="kelurahan-delete-modal-label" id="kelurahan-delete-modal"
+             class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+             role="dialog" tabindex="-1">
+            <div
+                class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 md:w-sm m-3 mx-auto min-h-[calc(100%-56px)] flex items-center">
                 <div
-                    class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 md:w-sm m-3 mx-auto min-h-[calc(100%-56px)] flex items-center">
-                    <div
-                        class="w-full flex flex-col card shadow-2xs border border-default-200 rounded-xl pointer-events-auto px-6 py-8 relative">
-                        <div class="absolute top-3 end-3">
-                            <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
-                                    data-hs-overlay="#kelurahan-delete-modal-{{ $item->id }}" type="button">
-                                <span class="sr-only">{{ __('Tutup') }}</span>
-                                <i class="size-5" data-lucide="x"></i>
-                            </button>
-                        </div>
-                        <div class="text-center">
-                            <img alt="" class="size-12 mx-auto" src="/images/delete.png"/>
-                            <div class="mt-5 text-center">
-                                <h5 class="mb-1 text-lg font-semibold text-default-800">{{ __('Anda yakin?') }}</h5>
-                                <p class="text-default-500 text-sm font-normal">
-                                    {{ __('Kelurahan ":name" akan dihapus permanen.', ['name' => $item->name]) }}
-                                </p>
-                                <div class="mt-5 flex gap-2 justify-center">
-                                    <button class="btn text-danger bg-transparent hover:bg-danger/10"
-                                            data-hs-overlay="#kelurahan-delete-modal-{{ $item->id }}" type="button">
-                                        {{ __('Batal') }}
+                    class="w-full flex flex-col card shadow-2xs border border-default-200 rounded-xl pointer-events-auto px-6 py-8 relative">
+                    <div class="absolute top-3 end-3">
+                        <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                data-hs-overlay="#kelurahan-delete-modal" type="button">
+                            <span class="sr-only">{{ __('Tutup') }}</span>
+                            <i class="size-5" data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="text-center">
+                        <img alt="" class="size-12 mx-auto" src="/images/delete.png"/>
+                        <div class="mt-5 text-center">
+                            <h5 class="mb-1 text-lg font-semibold text-default-800">{{ __('Anda yakin?') }}</h5>
+                            <p class="text-default-500 text-sm font-normal">
+                                {{ __('Kelurahan') }} "<span data-delete-name></span>" {{ __('akan dihapus permanen.') }}
+                            </p>
+                            <div class="mt-5 flex gap-2 justify-center">
+                                <button class="btn text-danger bg-transparent hover:bg-danger/10"
+                                        data-hs-overlay="#kelurahan-delete-modal" type="button">
+                                    {{ __('Batal') }}
+                                </button>
+                                <form action="{{ route('master.kelurahan.index') }}"
+                                      data-action-template="{{ route('master.kelurahan.destroy', ['kelurahan' => '__ID__']) }}"
+                                      id="kelurahan-delete-form" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="bg-danger text-white btn border-0 btn-sm" type="submit">
+                                        {{ __('Ya, Hapus!') }}
                                     </button>
-                                    <form action="{{ route('master.kelurahan.destroy', $item) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="bg-danger text-white btn border-0 btn-sm" type="submit">
-                                            {{ __('Ya, Hapus!') }}
-                                        </button>
-                                    </form>
-                                </div>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        @endforeach
+        </div>
     @endcan
 @endsection
 
 @section('scripts')
-
+    @vite(['resources/js/pages/kelurahan-index.js'])
+    <script>
+        document.getElementById('kelurahan-sync-form')?.addEventListener('submit', function () {
+            const button = document.getElementById('kelurahan-sync-button');
+            const icon = document.getElementById('kelurahan-sync-icon');
+            button.disabled = true;
+            button.classList.add('opacity-70', 'cursor-not-allowed');
+            icon?.classList.add('animate-spin');
+        });
+    </script>
 @endsection

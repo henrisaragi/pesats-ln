@@ -27,6 +27,7 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
     Route::prefix('provinsi')->name('provinsi.')->group(function (): void {
         Route::get('', [ProvinsiController::class, 'index'])->middleware('permission:provinsi.view')->name('index');
         Route::post('', [ProvinsiController::class, 'store'])->middleware('permission:provinsi.create')->name('store');
+        Route::post('sync', [ProvinsiController::class, 'sync'])->middleware('permission:provinsi.sync')->name('sync');
         Route::put('{provinsi}', [ProvinsiController::class, 'update'])->middleware('permission:provinsi.update')->name('update');
         Route::delete('{provinsi}', [ProvinsiController::class, 'destroy'])->middleware('permission:provinsi.delete')->name('destroy');
     });
@@ -35,6 +36,7 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
         Route::get('by-provinsi/{provinsi}', [KotaController::class, 'byProvinsi'])->name('by-provinsi');
         Route::get('', [KotaController::class, 'index'])->middleware('permission:kota.view')->name('index');
         Route::post('', [KotaController::class, 'store'])->middleware('permission:kota.create')->name('store');
+        Route::post('sync', [KotaController::class, 'sync'])->middleware('permission:kota.sync')->name('sync');
         Route::put('{kota}', [KotaController::class, 'update'])->middleware('permission:kota.update')->name('update');
         Route::delete('{kota}', [KotaController::class, 'destroy'])->middleware('permission:kota.delete')->name('destroy');
     });
@@ -43,6 +45,7 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
         Route::get('by-kota/{kota}', [KecamatanController::class, 'byKota'])->name('by-kota');
         Route::get('', [KecamatanController::class, 'index'])->middleware('permission:kecamatan.view')->name('index');
         Route::post('', [KecamatanController::class, 'store'])->middleware('permission:kecamatan.create')->name('store');
+        Route::post('sync', [KecamatanController::class, 'sync'])->middleware('permission:kecamatan.sync')->name('sync');
         Route::put('{kecamatan}', [KecamatanController::class, 'update'])->middleware('permission:kecamatan.update')->name('update');
         Route::delete('{kecamatan}', [KecamatanController::class, 'destroy'])->middleware('permission:kecamatan.delete')->name('destroy');
     });
@@ -51,6 +54,7 @@ Route::middleware('auth')->prefix('master')->name('master.')->group(function ():
         Route::get('by-kecamatan/{kecamatan}', [KelurahanController::class, 'byKecamatan'])->name('by-kecamatan');
         Route::get('', [KelurahanController::class, 'index'])->middleware('permission:kelurahan.view')->name('index');
         Route::post('', [KelurahanController::class, 'store'])->middleware('permission:kelurahan.create')->name('store');
+        Route::post('sync', [KelurahanController::class, 'sync'])->middleware('permission:kelurahan.sync')->name('sync');
         Route::put('{kelurahan}', [KelurahanController::class, 'update'])->middleware('permission:kelurahan.update')->name('update');
         Route::delete('{kelurahan}', [KelurahanController::class, 'destroy'])->middleware('permission:kelurahan.delete')->name('destroy');
     });

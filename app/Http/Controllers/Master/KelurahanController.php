@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\KelurahanRequest;
+use App\Jobs\SyncInswSubdistrictsForDistrictJob;
 use App\Models\Kecamatan;
 use App\Models\Kelurahan;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +26,7 @@ class KelurahanController extends Controller
     public function index(Request $request): View
     {
         $kelurahan = Kelurahan::query()
-            ->with('kecamatan')
+            ->with('kecamatan.kota.provinsi')
             ->when(
                 $request->filled('search'),
                 fn ($query) => $query->where('name', 'like', '%'.$request->string('search').'%')
@@ -36,7 +37,6 @@ class KelurahanController extends Controller
 
         return view('master.kelurahan.index', [
             'kelurahan' => $kelurahan,
-            'kecamatanOptions' => Kecamatan::query()->orderBy('name')->get(),
         ]);
     }
 
@@ -59,5 +59,24 @@ class KelurahanController extends Controller
         $kelurahan->delete();
 
         return redirect()->route('master.kelurahan.index')->with('success', __('Kelurahan berhasil dihapus.'));
+    }
+
+    public function sync(): RedirectResponse
+    {
+        $districts = Kecamatan::all();
+
+        if ($districts->isEmpty()) {
+            return redirect()->route('master.kelurahan.index')
+                ->with('error', __('Belum ada data Kecamatan. Sinkronkan Kecamatan terlebih dahulu.'));
+        }
+
+        foreach ($districts as $kecamatan) {
+            SyncInswSubdistrictsForDistrictJob::dispatch($kecamatan);
+        }
+
+        return redirect()->route('master.kelurahan.index')->with('success', __(
+            ':count tugas sinkronisasi kelurahan telah dijadwalkan di antrean. Pastikan `php artisan queue:work` berjalan agar prosesnya selesai.',
+            ['count' => $districts->count()]
+        ));
     }
 }

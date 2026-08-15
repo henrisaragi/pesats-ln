@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\KecamatanRequest;
+use App\Jobs\SyncInswDistrictsForCityJob;
 use App\Models\Kecamatan;
 use App\Models\Kota;
 use Illuminate\Database\QueryException;
@@ -65,5 +66,24 @@ class KecamatanController extends Controller
         }
 
         return redirect()->route('master.kecamatan.index')->with('success', __('Kecamatan berhasil dihapus.'));
+    }
+
+    public function sync(): RedirectResponse
+    {
+        $cities = Kota::all();
+
+        if ($cities->isEmpty()) {
+            return redirect()->route('master.kecamatan.index')
+                ->with('error', __('Belum ada data Kota. Sinkronkan Kota terlebih dahulu.'));
+        }
+
+        foreach ($cities as $kota) {
+            SyncInswDistrictsForCityJob::dispatch($kota);
+        }
+
+        return redirect()->route('master.kecamatan.index')->with('success', __(
+            ':count tugas sinkronisasi kecamatan telah dijadwalkan di antrean. Pastikan `php artisan queue:work` berjalan agar prosesnya selesai.',
+            ['count' => $cities->count()]
+        ));
     }
 }

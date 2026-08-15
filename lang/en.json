@@ -268,5 +268,22 @@
     "Data tidak ditemukan": "No matching records found",
     "Belum ada data.": "No data yet.",
     "Awal": "First",
-    "Akhir": "Last"
+    "Akhir": "Last",
+
+    "Sinkron dari INSW": "Sync from INSW",
+    ":created baru, :updated diperbarui, :skipped dilewati.": ":created new, :updated updated, :skipped skipped.",
+    ":count provinsi gagal disinkronkan.": ":count province(s) failed to sync.",
+    ":count provinsi gagal diproses.": ":count province(s) failed to process.",
+    ":count kota gagal diproses.": ":count city/regency(s) failed to process.",
+    ":count kecamatan gagal diproses.": ":count district(s) failed to process.",
+    "Tidak ada data provinsi yang berhasil disinkronkan.": "No province data was synced successfully.",
+    "Tidak ada data kota yang berhasil disinkronkan.": "No city/regency data was synced successfully.",
+    "Tidak ada data kecamatan yang berhasil disinkronkan.": "No district data was synced successfully.",
+    "Tidak ada data kelurahan yang berhasil disinkronkan.": "No sub-district data was synced successfully.",
+    "Belum ada data Provinsi. Sinkronkan Provinsi terlebih dahulu.": "No Province data yet. Sync Province first.",
+    "Belum ada data Kota. Sinkronkan Kota terlebih dahulu.": "No City/Regency data yet. Sync City/Regency first.",
+    "Belum ada data Kecamatan. Sinkronkan Kecamatan terlebih dahulu.": "No District data yet. Sync District first.",
+
+    ":count tugas sinkronisasi kecamatan telah dijadwalkan di antrean. Pastikan `php artisan queue:work` berjalan agar prosesnya selesai.": ":count district sync jobs have been queued. Make sure `php artisan queue:work` is running for them to complete.",
+    ":count tugas sinkronisasi kelurahan telah dijadwalkan di antrean. Pastikan `php artisan queue:work` berjalan agar prosesnya selesai.": ":count sub-district sync jobs have been queued. Make sure `php artisan queue:work` is running for them to complete."
 }
