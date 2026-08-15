@@ -13,6 +13,8 @@ require __DIR__.'/permissions.php';
 require __DIR__.'/master.php';
 require __DIR__.'/users.php';
 require __DIR__.'/komoditas-entitas.php';
+require __DIR__.'/kuota-perusahaan.php';
+require __DIR__.'/pesats-export.php';
 require __DIR__.'/notifications.php';
 require __DIR__.'/chat.php';
 

@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('code')->unique();
             $table->string('unit')->nullable();
+            $table->string('unit_name')->nullable();
+            $table->unsignedTinyInteger('decimal_places')->default(2);
+            $table->boolean('rounding_enabled')->default(true);
             $table->string('description')->nullable();
             $table->timestamps();
         });

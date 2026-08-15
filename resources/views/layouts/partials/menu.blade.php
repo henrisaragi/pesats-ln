@@ -37,6 +37,12 @@
             'title' => __('Layanan Entitas'),
             'items' => [
                 [
+                    'label' => __('Kuota'),
+                    'icon' => 'gauge',
+                    'route' => 'kuota-saya.index',
+                    'permission' => 'kuota-saya.view',
+                ],
+                [
                     'label' => __('Komoditas Entitas'),
                     'icon' => 'package',
                     'route' => 'komoditas-entitas.index',
@@ -47,6 +53,18 @@
                     'icon' => 'shield-check',
                     'route' => 'komoditas-entitas.verifikasi.index',
                     'permission' => 'komoditas-entitas.verify',
+                ],
+                [
+                    'label' => __('Permohonan SATS-LN Ekspor'),
+                    'icon' => 'file-text',
+                    'route' => 'pesats-export.index',
+                    'permission' => 'permohonan.view',
+                ],
+                [
+                    'label' => __('Verifikasi Permohonan Ekspor'),
+                    'icon' => 'shield-check',
+                    'route' => 'pesats-export.verifikasi.index',
+                    'permission' => 'permohonan.verify',
                 ],
                 [
                     'label' => __('Chat'),
@@ -129,6 +147,11 @@
                             'route' => 'master.kuota-nasional.index',
                             'permission' => 'kuota-nasional.view',
                         ],
+                        [
+                            'label' => __('Kuota Perusahaan'),
+                            'route' => 'kuota-perusahaan.index',
+                            'permission' => 'kuota-perusahaan.view',
+                        ],
                     ],
                 ],
             ],
@@ -140,7 +163,7 @@
             return true;
         }
 
-        if (! auth()->check()) {
+        if (!auth()->check()) {
             return false;
         }
 
@@ -148,7 +171,7 @@
     };
 
     $isMenuItemVisible = function (array $item) use (&$isMenuItemVisible, $userCanSeeMenu) {
-        if (! empty($item['children'])) {
+        if (!empty($item['children'])) {
             foreach ($item['children'] as $child) {
                 if ($isMenuItemVisible($child)) {
                     return true;
@@ -170,7 +193,7 @@
                 <span>{{ $section['title'] }}</span>
             </li>
             @foreach ($visibleItems as $item)
-                @if (! empty($item['children']))
+                @if (!empty($item['children']))
                     @php $visibleChildren = collect($item['children'])->filter($isMenuItemVisible); @endphp
                     <li class="menu-item hs-accordion">
                         <a class="hs-accordion-toggle menu-link" href="javascript:void(0)">

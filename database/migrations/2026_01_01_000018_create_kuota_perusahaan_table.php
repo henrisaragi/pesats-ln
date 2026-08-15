@@ -17,7 +17,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('entity_id');          // pemegang kuota
             $table->unsignedBigInteger('kuota_nasional_id');
-            $table->decimal('quota', 15, 2);
+            $table->decimal('quota', 15, 4);
             $table->smallInteger('year');
             $table->timestamps();
 

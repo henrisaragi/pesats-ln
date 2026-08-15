@@ -20,6 +20,33 @@ class TradeCode extends Model
         'name',
         'code',
         'unit',
+        'unit_name',
+        'decimal_places',
+        'rounding_enabled',
         'description',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'decimal_places' => 'integer',
+            'rounding_enabled' => 'boolean',
+        ];
+    }
+
+    /**
+     * Format a quota value using this trade code's configured decimal places and rounding mode.
+     */
+    public function formatQuota(float|string $quota): string
+    {
+        $decimals = $this->decimal_places;
+        $value = (float) $quota;
+
+        if (! $this->rounding_enabled) {
+            $factor = 10 ** $decimals;
+            $value = floor($value * $factor) / $factor;
+        }
+
+        return number_format($value, $decimals, ',', '.');
+    }
 }

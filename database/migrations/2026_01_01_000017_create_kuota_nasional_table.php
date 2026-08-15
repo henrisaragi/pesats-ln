@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('species_id');
             $table->unsignedBigInteger('source_id');
             $table->unsignedBigInteger('trade_code_id');
-            $table->decimal('quota', 15, 2);
+            $table->decimal('quota', 15, 4);
             $table->smallInteger('year');
             $table->timestamps();
             $table->foreign('komoditas_id')->references('id')->on('komoditas')->restrictOnDelete();

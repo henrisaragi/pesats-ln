@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Spesies'])
+@extends('layouts.vertical', ['title' => __('Spesies')])
 
 @section('css')
 
@@ -9,7 +9,7 @@
 @endphp
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Master Data', 'title' => 'Spesies'])
+    @include('layouts.partials/page-title', ['subtitle' => __('Master Data'), 'title' => __('Spesies')])
 
     <div class="card">
         <div class="card-header">

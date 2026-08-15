@@ -23,6 +23,7 @@ class MasterDataPermissionSeeder extends Seeder
         'species',
         'purpose-of-transactions',
         'kuota-nasional',
+        'kuota-perusahaan',
         'entitas',
         'entity-profiles',
     ];
@@ -58,6 +59,35 @@ class MasterDataPermissionSeeder extends Seeder
     private const KOMODITAS_ENTITAS_SUBMITTER_ROLES = ['perusahaan', 'penangkaran'];
 
     /**
+     * Permohonan (SATS-LN Ekspor): self-service submit by the entity (view/create own drafts) plus
+     * a single "verify" permission for staff, reused for verify/reject and for marking individual
+     * SATS-LN tabs printed/signed (all on the same staff-facing screen, no need to split further).
+     */
+    private const PERMOHONAN_PERMISSIONS = [
+        'permohonan.view',
+        'permohonan.create',
+        'permohonan.verify',
+    ];
+
+    /**
+     * Roles allowed to submit Permohonan SATS-LN Ekspor for their own entity.
+     */
+    private const PERMOHONAN_SUBMITTER_ROLES = ['perusahaan'];
+
+    /**
+     * Kuota Saya: read-only self-service view of the kuota_nasional an entity has been
+     * allocated (via its own kuota_perusahaan rows) - view only, no create/update/delete.
+     */
+    private const KUOTA_SAYA_PERMISSIONS = [
+        'kuota-saya.view',
+    ];
+
+    /**
+     * Roles allowed to view their own allocated Kuota Nasional.
+     */
+    private const KUOTA_SAYA_VIEWER_ROLES = ['perusahaan'];
+
+    /**
      * Chat: "start" lets an entity user open a new conversation, "respond" puts a user in the
      * staff pool that sees the unclaimed queue and can reply/claim - not a CRUD sweep, this
      * feature has no update/delete actions.
@@ -89,7 +119,7 @@ class MasterDataPermissionSeeder extends Seeder
             $permissions[] = "{$entity}.sync";
         }
 
-        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS);
+        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...self::KUOTA_SAYA_PERMISSIONS);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
@@ -110,10 +140,22 @@ class MasterDataPermissionSeeder extends Seeder
             $role?->givePermissionTo(['komoditas-entitas.view', 'komoditas-entitas.create']);
         }
 
+        foreach (self::PERMOHONAN_SUBMITTER_ROLES as $roleName) {
+            $role = Role::where('name', $roleName)->first();
+
+            $role?->givePermissionTo(['permohonan.view', 'permohonan.create']);
+        }
+
         foreach (self::CHAT_STARTER_ROLES as $roleName) {
             $role = Role::where('name', $roleName)->first();
 
             $role?->givePermissionTo('chat.start');
+        }
+
+        foreach (self::KUOTA_SAYA_VIEWER_ROLES as $roleName) {
+            $role = Role::where('name', $roleName)->first();
+
+            $role?->givePermissionTo('kuota-saya.view');
         }
     }
 }

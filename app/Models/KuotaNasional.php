@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KuotaNasional extends Model
 {
@@ -32,7 +33,7 @@ class KuotaNasional extends Model
     protected function casts(): array
     {
         return [
-            'quota' => 'decimal:2',
+            'quota' => 'decimal:4',
             'year' => 'integer',
         ];
     }
@@ -55,5 +56,10 @@ class KuotaNasional extends Model
     public function tradeCode(): BelongsTo
     {
         return $this->belongsTo(TradeCode::class);
+    }
+
+    public function kuotaPerusahaan(): HasMany
+    {
+        return $this->hasMany(KuotaPerusahaan::class);
     }
 }

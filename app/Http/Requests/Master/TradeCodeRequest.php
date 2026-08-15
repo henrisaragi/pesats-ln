@@ -14,6 +14,11 @@ class TradeCodeRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['rounding_enabled' => $this->boolean('rounding_enabled')]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -30,6 +35,9 @@ class TradeCodeRequest extends FormRequest
                 Rule::unique('trade_codes', 'code')->ignore($tradeCodeId),
             ],
             'unit' => ['nullable', 'string', 'max:50'],
+            'unit_name' => ['nullable', 'string', 'max:255'],
+            'decimal_places' => ['required', 'integer', Rule::in([0, 1, 2, 3, 4])],
+            'rounding_enabled' => ['boolean'],
             'description' => ['nullable', 'string', 'max:1000'],
         ];
     }

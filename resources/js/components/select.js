@@ -35,10 +35,10 @@ function initStatic(el) {
     return new Choices(el, baseOptions());
 }
 
-async function fetchOptions(url, parentValue) {
+async function fetchOptions(url) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    const response = await fetch(url.replace('__PARENT__', encodeURIComponent(parentValue)), {
+    const response = await fetch(url, {
         headers: {
             Accept: 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
@@ -53,15 +53,24 @@ async function fetchOptions(url, parentValue) {
     return response.json();
 }
 
+// Most cascading selects depend on a single parent (e.g. kota depends-on provinsi), substituted
+// into "__PARENT__" in data-choice-url. A select can optionally also declare data-choice-depends2
+// and data-choice-depends3 (up to 2 extra parent element ids) - their values are substituted into
+// "__PARENT2__" / "__PARENT3__" in the same URL, for the rare case a remote endpoint needs several
+// selected values at once (e.g. kuota-perusahaan's trade-code/species pickers, which narrow down
+// through komoditas + status asal (+ kode perdagangan) - see resources/views/kuota-perusahaan).
+const PARENT_KEYS = ['choiceDepends', 'choiceDepends2', 'choiceDepends3'];
+const PARENT_PLACEHOLDERS = ['__PARENT__', '__PARENT2__', '__PARENT3__'];
+
 function initCascading(el) {
-    const parent = document.getElementById(el.dataset.choiceDepends);
+    const parents = PARENT_KEYS.map((key) => (el.dataset[key] ? document.getElementById(el.dataset[key]) : null));
     const remoteUrlTemplate = el.dataset.choiceUrl;
     const placeholder = placeholderLabel(el);
     const hasPreselected = el.value !== '';
 
     const instance = new Choices(el, baseOptions());
 
-    if (!parent) {
+    if (!parents[0]) {
         return instance;
     }
 
@@ -69,8 +78,10 @@ function initCascading(el) {
         instance.disable();
     }
 
-    async function loadOptions(parentValue, { silent = false } = {}) {
-        if (!parentValue) {
+    async function loadOptions({ silent = false } = {}) {
+        const values = parents.map((parent) => parent?.value);
+
+        if (parents.some((parent, index) => parent && !values[index])) {
             instance.setChoices([{ value: '', label: placeholder, placeholder: true, selected: true }], 'value', 'label', true);
             instance.disable();
             if (!silent) {
@@ -88,7 +99,14 @@ function initCascading(el) {
             true,
         );
 
-        const items = await fetchOptions(remoteUrlTemplate, parentValue);
+        let url = remoteUrlTemplate;
+        parents.forEach((parent, index) => {
+            if (parent) {
+                url = url.replace(PARENT_PLACEHOLDERS[index], encodeURIComponent(values[index]));
+            }
+        });
+
+        const items = await fetchOptions(url);
         const choices = [
             { value: '', label: placeholder, placeholder: true, selected: true },
             ...items.map((item) => ({ value: String(item.id), label: item.name })),
@@ -102,7 +120,7 @@ function initCascading(el) {
         }
     }
 
-    parent.addEventListener('change', () => loadOptions(parent.value));
+    parents.forEach((parent) => parent?.addEventListener('change', () => loadOptions()));
 
     return instance;
 }

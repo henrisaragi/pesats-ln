@@ -1,11 +1,11 @@
-@extends('layouts.vertical', ['title' => 'Permission'])
+@extends('layouts.vertical', ['title' => __('Permission')])
 
 @section('css')
 
 @endsection
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Administrasi', 'title' => 'Permission'])
+    @include('layouts.partials/page-title', ['subtitle' => __('Administrasi'), 'title' => __('Permission')])
 
     <div class="card">
         <div class="card-header">

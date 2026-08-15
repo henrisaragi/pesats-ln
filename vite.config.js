@@ -23,6 +23,8 @@ export default defineConfig({
             'resources/js/pages/kelurahan-index.js',
             'resources/js/pages/komoditas-entitas-index.js',
             'resources/js/pages/kuota-nasional-index.js',
+            'resources/js/pages/kuota-perusahaan-index.js',
+            'resources/js/pages/kuota-saya-index.js',
             'resources/js/pages/landing.js',
             'resources/js/pages/pages-coming-soon.js',
             'resources/js/pages/ports-index.js',

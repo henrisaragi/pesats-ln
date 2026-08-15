@@ -1,19 +1,17 @@
-@extends('layouts.vertical', ['title' => 'Kuota Nasional'])
+@extends('layouts.vertical', ['title' => __('Kuota Nasional')])
 
 @section('css')
 
 @endsection
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Database Kuota', 'title' => 'Kuota Nasional'])
+    @include('layouts.partials/page-title', ['subtitle' => __('Database Kuota'), 'title' => __('Kuota Nasional')])
 
     <div class="card" data-kuota-nasional-page>
         <div class="card-header">
             <h6 class="card-title">
                 {{ __('Daftar Kuota Nasional') }}
-                @if ($activeYear !== null)
-                    <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.75 border border-primary/30 bg-primary/10 text-primary text-xs ms-1">{{ __('Tahun :year', ['year' => $activeYear]) }}</span>
-                @endif
+                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.75 border border-primary/30 bg-primary/10 text-primary text-xs ms-1">{{ __('Tahun :year', ['year' => $activeYear]) }}</span>
             </h6>
             @can('kuota-nasional.create')
                 <button class="btn btn-sm bg-primary text-white" data-hs-overlay="#kuota-nasional-create-modal"
@@ -48,6 +46,7 @@
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Spesies') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Status Asal') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Kode Perdagangan') }}</th>
+                                <th class="px-3.5 py-3 text-start" scope="col">{{ __('Satuan') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Kuota') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tahun') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Aksi') }}</th>
@@ -60,7 +59,8 @@
                                     <td class="px-3.5 py-3">{{ $item->species?->scientific_name }}</td>
                                     <td class="px-3.5 py-3">{{ $item->source?->code }}</td>
                                     <td class="px-3.5 py-3">{{ $item->tradeCode?->code }}</td>
-                                    <td class="px-3.5 py-3">{{ number_format((float) $item->quota, 2, ',', '.') }}</td>
+                                    <td class="px-3.5 py-3">{{ $item->tradeCode?->unit_name }}</td>
+                                    <td class="px-3.5 py-3">{{ $item->tradeCode?->formatQuota($item->quota) ?? number_format((float) $item->quota, 2, ',', '.') }}</td>
                                     <td class="px-3.5 py-3">{{ $item->year }}</td>
                                     <td class="px-3.5 py-3">
                                         <div class="flex items-center gap-2">
@@ -85,7 +85,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="7">
+                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="8">
                                         {{ __('Belum ada data kuota nasional.') }}
                                     </td>
                                 </tr>

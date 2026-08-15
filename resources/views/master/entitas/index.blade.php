@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Entitas'])
+@extends('layouts.vertical', ['title' => __('Entitas')])
 
 @section('css')
 
@@ -14,7 +14,7 @@
 @endphp
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Administrasi', 'title' => 'Entitas'])
+    @include('layouts.partials/page-title', ['subtitle' => __('Administrasi'), 'title' => __('Entitas')])
 
     <div class="card">
         <div class="card-header">

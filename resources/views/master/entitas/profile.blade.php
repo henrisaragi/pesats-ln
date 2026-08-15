@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Profil Entitas'])
+@extends('layouts.vertical', ['title' => __('Profil Entitas')])
 
 @section('css')
 
@@ -14,7 +14,7 @@
 @endphp
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Entitas', 'title' => 'Profil Entitas'])
+    @include('layouts.partials/page-title', ['subtitle' => __('Entitas'), 'title' => __('Profil Entitas')])
 
     <div class="mb-4">
         <a class="btn btn-sm bg-default-150 text-default-700 hover:bg-default-200" href="{{ route('master.entitas.index') }}">

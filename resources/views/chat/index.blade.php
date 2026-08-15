@@ -1,11 +1,11 @@
-@extends('layouts.vertical', ['title' => 'Chat'])
+@extends('layouts.vertical', ['title' => __('Chat')])
 
 @section('css')
 
 @endsection
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Layanan Entitas', 'title' => 'Chat'])
+    @include('layouts.partials/page-title', ['subtitle' => __('Layanan Entitas'), 'title' => __('Chat')])
 
     {{--
         Styling (sidebar list item, message bubbles, compose bar) mirrors

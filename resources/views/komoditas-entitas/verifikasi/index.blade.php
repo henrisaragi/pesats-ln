@@ -1,11 +1,11 @@
-@extends('layouts.vertical', ['title' => 'Verifikasi Komoditas Entitas'])
+@extends('layouts.vertical', ['title' => __('Verifikasi Komoditas Entitas')])
 
 @section('css')
 
 @endsection
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Layanan Entitas', 'title' => 'Verifikasi Komoditas'])
+    @include('layouts.partials/page-title', ['subtitle' => __('Layanan Entitas'), 'title' => __('Verifikasi Komoditas')])
 
     <div class="card">
         <div class="card-header">

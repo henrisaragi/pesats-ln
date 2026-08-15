@@ -6,6 +6,8 @@
     'placeholder' => null,
     'required' => false,
     'dependsOn' => null,
+    'dependsOn2' => null,
+    'dependsOn3' => null,
     'remoteUrl' => null,
 ])
 
@@ -25,6 +27,8 @@
     name="{{ $name }}"
     data-choice
     @if ($dependsOn) data-choice-depends="{{ $dependsOn }}" @endif
+    @if ($dependsOn2) data-choice-depends2="{{ $dependsOn2 }}" @endif
+    @if ($dependsOn3) data-choice-depends3="{{ $dependsOn3 }}" @endif
     @if ($remoteUrl) data-choice-url="{{ $remoteUrl }}" @endif
     @required($required)
 >

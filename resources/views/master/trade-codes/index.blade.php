@@ -1,11 +1,11 @@
-@extends('layouts.vertical', ['title' => 'Kode Perdagangan'])
+@extends('layouts.vertical', ['title' => __('Kode Perdagangan')])
 
 @section('css')
 
 @endsection
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Master Data', 'title' => 'Kode Perdagangan'])
+    @include('layouts.partials/page-title', ['subtitle' => __('Master Data'), 'title' => __('Kode Perdagangan')])
 
     <div class="card">
         <div class="card-header">
@@ -40,6 +40,8 @@
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Kode') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Nama') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Satuan') }}</th>
+                                <th class="px-3.5 py-3 text-start" scope="col">{{ __('Nama Satuan') }}</th>
+                                <th class="px-3.5 py-3 text-start" scope="col">{{ __('Desimal') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Deskripsi') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Aksi') }}</th>
                             </tr>
@@ -50,6 +52,13 @@
                                     <td class="px-3.5 py-3">{{ $item->code }}</td>
                                     <td class="px-3.5 py-3">{{ $item->name }}</td>
                                     <td class="px-3.5 py-3">{{ $item->unit }}</td>
+                                    <td class="px-3.5 py-3">{{ $item->unit_name }}</td>
+                                    <td class="px-3.5 py-3">
+                                        {{ $item->decimal_places === 0 ? __('Bilangan bulat') : __(':n koma', ['n' => $item->decimal_places]) }}
+                                        @if ($item->rounding_enabled)
+                                            <span class="text-default-400">({{ __('dibulatkan') }})</span>
+                                        @endif
+                                    </td>
                                     <td class="px-3.5 py-3">{{ $item->description }}</td>
                                     <td class="px-3.5 py-3">
                                         <div class="flex items-center gap-2">
@@ -74,7 +83,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="5">
+                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="7">
                                         {{ __('Belum ada data kode perdagangan.') }}
                                     </td>
                                 </tr>
@@ -145,6 +154,44 @@
                                     @if (old('_modal') === 'trade-code-create-modal' && $errors->has('unit'))
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('unit') }}</p>
                                     @endif
+                                </div>
+                                <div>
+                                    <label class="inline-block mb-2 text-sm font-medium"
+                                           for="trade-code-create-unit-name">
+                                        {{ __('Nama Satuan') }}
+                                    </label>
+                                    <input class="form-input" id="trade-code-create-unit-name" name="unit_name"
+                                           type="text"
+                                           value="{{ old('_modal') === 'trade-code-create-modal' ? old('unit_name') : '' }}"/>
+                                    @if (old('_modal') === 'trade-code-create-modal' && $errors->has('unit_name'))
+                                        <p class="mt-1 text-xs text-danger">{{ $errors->first('unit_name') }}</p>
+                                    @endif
+                                </div>
+                                <div>
+                                    <label class="inline-block mb-2 text-sm font-medium"
+                                           for="trade-code-create-decimal-places">
+                                        {{ __('Jumlah Desimal') }}
+                                    </label>
+                                    <select class="form-input" data-choice id="trade-code-create-decimal-places"
+                                            name="decimal_places">
+                                        @foreach ([0, 1, 2, 3, 4] as $option)
+                                            <option value="{{ $option }}"
+                                                    @selected((old('_modal') === 'trade-code-create-modal' ? (int) old('decimal_places') : 2) === $option)>
+                                                {{ $option === 0 ? __('Tanpa desimal (bilangan bulat)') : __(':n angka di belakang koma', ['n' => $option]) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @if (old('_modal') === 'trade-code-create-modal' && $errors->has('decimal_places'))
+                                        <p class="mt-1 text-xs text-danger">{{ $errors->first('decimal_places') }}</p>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input class="form-checkbox" id="trade-code-create-rounding" name="rounding_enabled"
+                                           type="checkbox" value="1"
+                                           @checked(old('_modal') === 'trade-code-create-modal' ? old('rounding_enabled') : true)/>
+                                    <label class="text-sm font-medium" for="trade-code-create-rounding">
+                                        {{ __('Aktifkan pembulatan') }}
+                                    </label>
                                 </div>
                                 <div>
                                     <label class="inline-block mb-2 text-sm font-medium"
@@ -231,6 +278,45 @@
                                         @if (old('_modal') === 'trade-code-edit-modal-'.$item->id && $errors->has('unit'))
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('unit') }}</p>
                                         @endif
+                                    </div>
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium"
+                                               for="trade-code-edit-unit-name-{{ $item->id }}">
+                                            {{ __('Nama Satuan') }}
+                                        </label>
+                                        <input class="form-input" id="trade-code-edit-unit-name-{{ $item->id }}"
+                                               name="unit_name" type="text"
+                                               value="{{ old('_modal') === 'trade-code-edit-modal-'.$item->id ? old('unit_name') : $item->unit_name }}"/>
+                                        @if (old('_modal') === 'trade-code-edit-modal-'.$item->id && $errors->has('unit_name'))
+                                            <p class="mt-1 text-xs text-danger">{{ $errors->first('unit_name') }}</p>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium"
+                                               for="trade-code-edit-decimal-places-{{ $item->id }}">
+                                            {{ __('Jumlah Desimal') }}
+                                        </label>
+                                        <select class="form-input" data-choice
+                                                id="trade-code-edit-decimal-places-{{ $item->id }}"
+                                                name="decimal_places">
+                                            @foreach ([0, 1, 2, 3, 4] as $option)
+                                                <option value="{{ $option }}"
+                                                        @selected((old('_modal') === 'trade-code-edit-modal-'.$item->id ? (int) old('decimal_places') : $item->decimal_places) === $option)>
+                                                    {{ $option === 0 ? __('Tanpa desimal (bilangan bulat)') : __(':n angka di belakang koma', ['n' => $option]) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @if (old('_modal') === 'trade-code-edit-modal-'.$item->id && $errors->has('decimal_places'))
+                                            <p class="mt-1 text-xs text-danger">{{ $errors->first('decimal_places') }}</p>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input class="form-checkbox" id="trade-code-edit-rounding-{{ $item->id }}"
+                                               name="rounding_enabled" type="checkbox" value="1"
+                                               @checked(old('_modal') === 'trade-code-edit-modal-'.$item->id ? old('rounding_enabled') : $item->rounding_enabled)/>
+                                        <label class="text-sm font-medium" for="trade-code-edit-rounding-{{ $item->id }}">
+                                            {{ __('Aktifkan pembulatan') }}
+                                        </label>
                                     </div>
                                     <div>
                                         <label class="inline-block mb-2 text-sm font-medium"

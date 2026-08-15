@@ -18,11 +18,11 @@ class KuotaNasionalController extends Controller
 {
     public function index(Request $request): View
     {
-        $activeYear = $request->filled('year') ? $request->integer('year') : null;
+        $activeYear = $request->filled('year') ? $request->integer('year') : now()->year;
 
         $kuotaNasional = KuotaNasional::query()
             ->with(['komoditas', 'species', 'source', 'tradeCode'])
-            ->when($activeYear !== null, fn ($query) => $query->where('year', $activeYear))
+            ->where('year', $activeYear)
             ->when($request->filled('search'), function ($query) use ($request) {
                 $term = $request->string('search');
 

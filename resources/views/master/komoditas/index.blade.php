@@ -1,11 +1,11 @@
-@extends('layouts.vertical', ['title' => 'Komoditas'])
+@extends('layouts.vertical', ['title' => __('Komoditas')])
 
 @section('css')
 
 @endsection
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Master Data', 'title' => 'Komoditas'])
+    @include('layouts.partials/page-title', ['subtitle' => __('Master Data'), 'title' => __('Komoditas')])
 
     <div class="card">
         <div class="card-header">
