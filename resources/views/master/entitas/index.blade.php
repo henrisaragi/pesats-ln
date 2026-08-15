@@ -28,6 +28,12 @@
         <div class="card-header">
             <form action="{{ route('master.entitas.index') }}" class="md:flex items-center md:space-y-0 space-y-4 gap-3"
                   method="GET">
+                <select class="form-input form-input-sm" name="entity_type" onchange="this.form.submit()">
+                    <option value="">{{ __('Semua Jenis') }}</option>
+                    @foreach ($entityTypeLabels as $value => $label)
+                        <option value="{{ $value }}" @selected(request('entity_type') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
                 <div class="relative">
                     <input class="form-input form-input-sm ps-9" name="search" placeholder="{{ __('Cari nama entitas') }}"
                            type="text" value="{{ request('search') }}"/>

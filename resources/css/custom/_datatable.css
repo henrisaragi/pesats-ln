@@ -24,7 +24,7 @@
     }
 
     .dt-length {
-        @apply order-2 text-sm text-default-600;
+        @apply order-1 text-sm text-default-600;
     }
 
     .dt-length label {
@@ -36,7 +36,7 @@
     }
 
     .dt-info {
-        @apply order-1 text-default-500 text-sm;
+        @apply order-2 text-default-500 text-sm;
     }
 
     .dt-paging {

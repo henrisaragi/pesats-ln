@@ -21,6 +21,10 @@ class EntitasController extends Controller
                 $request->filled('search'),
                 fn ($query) => $query->where('name', 'like', '%'.$request->string('search').'%')
             )
+            ->when(
+                $request->filled('entity_type'),
+                fn ($query) => $query->where('entity_type', $request->string('entity_type'))
+            )
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -46,7 +50,7 @@ class EntitasController extends Controller
     {
         $entity->update($request->validated());
 
-        return redirect()->route('master.entitas.index')->with('success', __('Entitas berhasil diperbarui.'));
+        return redirect()->route('master.entitas.index')->with('toast_success', __('Entitas berhasil diperbarui.'));
     }
 
     public function destroy(Entitas $entity): RedirectResponse

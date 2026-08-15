@@ -283,6 +283,10 @@
     "Belum ada data Provinsi. Sinkronkan Provinsi terlebih dahulu.": "No Province data yet. Sync Province first.",
     "Belum ada data Kota. Sinkronkan Kota terlebih dahulu.": "No City/Regency data yet. Sync City/Regency first.",
     "Belum ada data Kecamatan. Sinkronkan Kecamatan terlebih dahulu.": "No District data yet. Sync District first.",
+    "NPWP": "Tax Number",
+    "Nomor Induk Berusaha (NIB)": "Business Identification Number (NIB)",
+    "Ubah Profil": "Edit Profile",
+    "Hapus Profil": "Delete Profile",
 
     ":count tugas sinkronisasi kecamatan telah dijadwalkan di antrean. Pastikan `php artisan queue:work` berjalan agar prosesnya selesai.": ":count district sync jobs have been queued. Make sure `php artisan queue:work` is running for them to complete.",
     ":count tugas sinkronisasi kelurahan telah dijadwalkan di antrean. Pastikan `php artisan queue:work` berjalan agar prosesnya selesai.": ":count sub-district sync jobs have been queued. Make sure `php artisan queue:work` is running for them to complete."
