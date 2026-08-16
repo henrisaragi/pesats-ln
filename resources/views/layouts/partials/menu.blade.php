@@ -43,6 +43,12 @@
                     'permission' => 'kuota-saya.view',
                 ],
                 [
+                    'label' => __('Customer'),
+                    'icon' => 'contact',
+                    'route' => 'customer.index',
+                    'permission' => 'customer.view',
+                ],
+                [
                     'label' => __('Komoditas Entitas'),
                     'icon' => 'package',
                     'route' => 'komoditas-entitas.index',

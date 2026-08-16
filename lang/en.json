@@ -587,5 +587,17 @@
     "Dokumen berhasil diperbarui.": "Document updated successfully.",
     "Dokumen berhasil dihapus.": "Document deleted successfully.",
     "Dokumen \":nomor\" akan dihapus permanen.": "Document \":nomor\" will be permanently deleted.",
-    "Tidak ada entitas": "No entity"
+    "Tidak ada entitas": "No entity",
+
+    "Customer": "Customer",
+    "Daftar Customer": "Customer List",
+    "Belum ada data customer.": "No customer data yet.",
+    "Nama Customer": "Customer Name",
+    "Tambah Customer": "Add Customer",
+    "Ubah Customer": "Edit Customer",
+    "Milik entitas lain": "Belongs to another entity",
+    "Customer \":name\" akan dihapus permanen.": "Customer \":name\" will be permanently deleted.",
+    "Customer berhasil ditambahkan.": "Customer added successfully.",
+    "Customer berhasil diperbarui.": "Customer updated successfully.",
+    "Customer berhasil dihapus.": "Customer deleted successfully."
 }

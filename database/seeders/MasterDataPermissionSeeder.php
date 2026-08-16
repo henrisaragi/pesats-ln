@@ -46,10 +46,13 @@ class MasterDataPermissionSeeder extends Seeder
     /**
      * Komoditas Entitas only needs view/create (self-service submission by the entity)
      * plus verify (approve/reject) - not the generic CRUD sweep, since no UI uses
-     * update/delete for it.
+     * update/delete for it. view-all widens the index() scope from "own entity only" to
+     * every entity (same additive pattern as documents.view-all) - staff roles need both
+     * .view and .view-all granted via the Roles/Permissions UI to see cross-entity data.
      */
     private const KOMODITAS_ENTITAS_PERMISSIONS = [
         'komoditas-entitas.view',
+        'komoditas-entitas.view-all',
         'komoditas-entitas.create',
         'komoditas-entitas.verify',
     ];
@@ -120,6 +123,26 @@ class MasterDataPermissionSeeder extends Seeder
     ];
 
     /**
+     * Customer Entitas: data customer per entitas harus ketat (lihat claude/customer-task.md) -
+     * "edit" sengaja dipakai untuk create DAN update sekaligus (pola sama seperti
+     * komoditas-entitas.create yang juga dipakai untuk store() dan update()), tidak ada
+     * customer.create/update terpisah. customer.view-all hanya untuk melihat lintas entitas -
+     * ubah/hapus tetap selalu dibatasi ke entitas sendiri di controller, terlepas dari permission.
+     */
+    private const CUSTOMER_PERMISSIONS = [
+        'customer.view',
+        'customer.view-all',
+        'customer.edit',
+        'customer.delete',
+    ];
+
+    /**
+     * Roles allowed to manage their own entity's customer records (customer.view-all excluded -
+     * self-service only ever sees/edits their own entity's data anyway).
+     */
+    private const CUSTOMER_SELF_SERVICE_ROLES = ['perusahaan'];
+
+    /**
      * Seed the master data permissions.
      */
     public function run(): void
@@ -136,7 +159,7 @@ class MasterDataPermissionSeeder extends Seeder
             $permissions[] = "{$entity}.sync";
         }
 
-        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS, ...self::DOCUMENTS_PERMISSIONS);
+        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS, ...self::DOCUMENTS_PERMISSIONS, ...self::CUSTOMER_PERMISSIONS);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
@@ -173,6 +196,12 @@ class MasterDataPermissionSeeder extends Seeder
             $role = Role::where('name', $roleName)->first();
 
             $role?->givePermissionTo('kuota-saya.view');
+        }
+
+        foreach (self::CUSTOMER_SELF_SERVICE_ROLES as $roleName) {
+            $role = Role::where('name', $roleName)->first();
+
+            $role?->givePermissionTo(['customer.view', 'customer.edit', 'customer.delete']);
         }
     }
 }

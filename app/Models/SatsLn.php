@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Customer\Customer;
 use App\Models\Entitas\Entitas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -63,7 +64,7 @@ class SatsLn extends Model
 
     public function customerCompany(): BelongsTo
     {
-        return $this->belongsTo(CustomerCompany::class);
+        return $this->belongsTo(Customer::class, 'customer_company_id');
     }
 
     public function countryOfExportation(): BelongsTo

@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Models;
+namespace App\Models\Customer;
 
+use App\Models\Country;
 use App\Models\Entitas\Entitas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CustomerCompany extends Model
+class Customer extends Model
 {
     use HasFactory;
 

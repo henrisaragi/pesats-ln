@@ -34,17 +34,20 @@ class KomoditasEntitasController extends Controller
 
     public function index(): View
     {
-        $entity = $this->ownEntityOrAbort();
+        $viewer = Auth::user();
+        $canViewAll = $viewer->can('komoditas-entitas.view-all');
+        $entity = $canViewAll ? $viewer->entity : $this->ownEntityOrAbort();
 
         $items = KomoditasEntitas::query()
-            ->with('komoditas')
-            ->where('entitas_id', $entity->id)
+            ->with(['komoditas', 'entitas'])
+            ->when(! $canViewAll, fn ($query) => $query->where('entitas_id', $entity->id))
             ->latest()
             ->paginate(10);
 
         return view('komoditas-entitas.index', [
             'items' => $items,
             'komoditasOptions' => Komoditas::query()->orderBy('name')->get(),
+            'canViewAll' => $canViewAll,
         ]);
     }
 
@@ -156,7 +159,7 @@ class KomoditasEntitasController extends Controller
         $user = Auth::user();
         $isOwner = $user->entity_id !== null && $user->entity_id === $komoditasEntitas->entitas_id;
 
-        abort_unless($isOwner || $user->can('komoditas-entitas.verify'), 403);
+        abort_unless($isOwner || $user->can('komoditas-entitas.verify') || $user->can('komoditas-entitas.view-all'), 403);
     }
 
     /**

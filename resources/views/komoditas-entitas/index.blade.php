@@ -24,6 +24,9 @@
                         <table class="min-w-full divide-y divide-default-200">
                             <thead class="bg-default-150">
                             <tr class="text-sm font-normal text-default-700 whitespace-nowrap">
+                                @if ($canViewAll)
+                                    <th class="px-3.5 py-3 text-start" scope="col">{{ __('Entitas') }}</th>
+                                @endif
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Komoditas') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tanggal Terbit') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tanggal Berakhir') }}</th>
@@ -35,6 +38,9 @@
                             <tbody>
                             @forelse ($items as $item)
                                 <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
+                                    @if ($canViewAll)
+                                        <td class="px-3.5 py-3">{{ $item->entitas?->name }}</td>
+                                    @endif
                                     <td class="px-3.5 py-3">{{ $item->komoditas?->name }}</td>
                                     <td class="px-3.5 py-3">{{ $item->tanggal_terbit?->format('d/m/Y') }}</td>
                                     <td class="px-3.5 py-3">{{ $item->tanggal_berakhir?->format('d/m/Y') }}</td>
@@ -53,7 +59,7 @@
                                         </span>
                                     </td>
                                     <td class="px-3.5 py-3">
-                                        @if ($item->status === \App\Enums\KomoditasEntitasStatus::Rejected)
+                                        @if ($item->status === \App\Enums\KomoditasEntitasStatus::Rejected && $item->entitas_id === auth()->user()->entity_id)
                                             <div class="flex items-center gap-2">
                                                 <button aria-label="{{ __('Ubah') }}"
                                                         class="btn size-7.5 bg-default-200 hover:bg-primary/10 hover:text-primary text-default-500"
@@ -73,7 +79,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="6">
+                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="{{ $canViewAll ? 7 : 6 }}">
                                         {{ __('Belum ada komoditas entitas yang diajukan.') }}
                                     </td>
                                 </tr>
@@ -180,7 +186,7 @@
     @endcan
 
     @foreach ($items as $item)
-        @if ($item->status === \App\Enums\KomoditasEntitasStatus::Rejected)
+        @if ($item->status === \App\Enums\KomoditasEntitasStatus::Rejected && $item->entitas_id === auth()->user()->entity_id)
             <div aria-labelledby="komoditas-entitas-edit-modal-{{ $item->id }}-label"
                  id="komoditas-entitas-edit-modal-{{ $item->id }}"
                  class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"

@@ -8,7 +8,7 @@ use App\Enums\NotificationCategory;
 use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotificationJob;
-use App\Models\CustomerCompany;
+use App\Models\Customer\Customer;
 use App\Models\Entitas\Entitas;
 use App\Models\Permohonan;
 use App\Models\PurposeOfTransaction;
@@ -58,7 +58,7 @@ class PermohonanController extends Controller
             'permohonan' => $permohonan->load(['satsLn.items.species', 'satsLn.items.kuotaPerusahaan.kuotaNasional.source', 'satsLn.purposeOfTransaction', 'satsLn.customerCompany']),
             'entity' => $entity,
             'purposeOfTransactionOptions' => PurposeOfTransaction::query()->orderBy('name')->get(),
-            'customerCompanyOptions' => CustomerCompany::query()->where('entity_id', $entity->id)->orderBy('name')->get(),
+            'customerCompanyOptions' => Customer::query()->where('entity_id', $entity->id)->orderBy('name')->get(),
             'sourceStatusOptions' => $this->permohonanService->sourceStatusOptionsForEntitas($entity),
         ]);
     }
