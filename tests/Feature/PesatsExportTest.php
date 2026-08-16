@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\KomoditasEntitasStatus;
 use App\Enums\PermohonanStatus;
+use App\Jobs\SendWhatsAppNotificationJob;
 use App\Models\Entitas\Entitas;
 use App\Models\Komoditas;
 use App\Models\KomoditasEntitas;
@@ -20,6 +21,7 @@ use App\Models\User;
 use Database\Seeders\MasterDataPermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
 class PesatsExportTest extends TestCase
@@ -266,5 +268,41 @@ class PesatsExportTest extends TestCase
             ->assertRedirect(route('pesats-export.edit', $permohonan));
 
         $this->assertSame(25, $permohonan->satsLn()->count());
+    }
+
+    public function test_submit_dispatches_whatsapp_notification_to_verifiers_with_a_phone_number(): void
+    {
+        Bus::fake([SendWhatsAppNotificationJob::class]);
+
+        $user = $this->makeUser('perusahaan');
+        $verifier = $this->makeStaffVerifier();
+        $verifier->update(['phone_number' => '15551234567']);
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+
+        $this->actingAs($user)->post(route('pesats-export.store'));
+        $permohonan = Permohonan::firstOrFail();
+        $this->actingAs($user)->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('pesats-export.submit', $permohonan));
+
+        Bus::assertDispatched(SendWhatsAppNotificationJob::class, fn ($job) => $job->to === '15551234567');
+    }
+
+    public function test_verify_dispatches_whatsapp_notification_to_submitter_with_a_phone_number(): void
+    {
+        Bus::fake([SendWhatsAppNotificationJob::class]);
+
+        $user = $this->makeUser('perusahaan');
+        $user->update(['phone_number' => '15557654321']);
+        $verifier = $this->makeStaffVerifier();
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+
+        $this->actingAs($user)->post(route('pesats-export.store'));
+        $permohonan = Permohonan::firstOrFail();
+        $this->actingAs($user)->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('pesats-export.submit', $permohonan));
+
+        $this->actingAs($verifier)->post(route('pesats-export.verifikasi.verify', $permohonan));
+
+        Bus::assertDispatched(SendWhatsAppNotificationJob::class, fn ($job) => $job->to === '15557654321');
     }
 }

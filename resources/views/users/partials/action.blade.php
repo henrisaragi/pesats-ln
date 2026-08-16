@@ -18,6 +18,7 @@
                data-entity-id="{{ $user->entity_id }}"
                data-nip="{{ $user->nip }}"
                data-jabatan="{{ $user->jabatan }}"
+               data-phone-number="{{ $user->phone_number }}"
                data-role="{{ $primaryRole }}"
                data-is-active="{{ $user->is_active ? 1 : 0 }}">
                 <i class="size-3" data-lucide="edit"></i>

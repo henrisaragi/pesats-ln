@@ -7,6 +7,7 @@ namespace App\Http\Controllers\PesatsExport;
 use App\Enums\NotificationCategory;
 use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppNotificationJob;
 use App\Models\Permohonan;
 use App\Models\SatsLn;
 use App\Notifications\AppNotification;
@@ -125,5 +126,11 @@ class PermohonanVerifikasiController extends Controller
             $message,
             route('pesats-export.show', $permohonan),
         ));
+
+        // Contoh pemakaian lain KapsoWhatsAppService di titik notifikasi yang berbeda
+        // (lihat juga PermohonanController::notifyVerifiers()).
+        foreach ($recipients->whereNotNull('phone_number') as $recipient) {
+            SendWhatsAppNotificationJob::dispatch($recipient->phone_number, $message);
+        }
     }
 }

@@ -103,6 +103,14 @@ class MasterDataPermissionSeeder extends Seeder
     private const CHAT_STARTER_ROLES = ['perusahaan', 'penangkaran', 'perorangan'];
 
     /**
+     * Settings > Whatsapp: a single on/off toggle page, no separate view/update split since
+     * there's no scenario where a user should see the toggle but not be allowed to change it.
+     */
+    private const SETTINGS_PERMISSIONS = [
+        'settings.whatsapp.manage',
+    ];
+
+    /**
      * Seed the master data permissions.
      */
     public function run(): void
@@ -119,7 +127,7 @@ class MasterDataPermissionSeeder extends Seeder
             $permissions[] = "{$entity}.sync";
         }
 
-        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...self::KUOTA_SAYA_PERMISSIONS);
+        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([

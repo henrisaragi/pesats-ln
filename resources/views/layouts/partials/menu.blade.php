@@ -156,6 +156,17 @@
                 ],
             ],
         ],
+        [
+            'title' => __('Settings'),
+            'items' => [
+                [
+                    'label' => __('Whatsapp'),
+                    'icon' => 'message-circle',
+                    'route' => 'settings.whatsapp.index',
+                    'permission' => 'settings.whatsapp.manage',
+                ],
+            ],
+        ],
     ];
 
     $userCanSeeMenu = function (string|array|null $permission) {

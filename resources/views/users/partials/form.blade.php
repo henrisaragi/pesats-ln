@@ -86,6 +86,14 @@
             @endif
         </div>
         <div>
+            <label class="inline-block mb-2 text-sm font-medium" for="user-{{ $prefix }}-phone-number">{{ __('No. WhatsApp') }}</label>
+            <input class="form-input" id="user-{{ $prefix }}-phone-number" name="phone_number" type="text"
+                   value="{{ $isRedisplay ? old('phone_number') : '' }}"/>
+            @if ($isRedisplay && $errors->has('phone_number'))
+                <p class="mt-1 text-xs text-danger">{{ $errors->first('phone_number') }}</p>
+            @endif
+        </div>
+        <div>
             <label class="inline-block mb-2 text-sm font-medium" for="user-{{ $prefix }}-role">{{ __('Role') }}</label>
             @if ($isSuperAdmin)
                 <select class="form-input" id="user-{{ $prefix }}-role" name="role">

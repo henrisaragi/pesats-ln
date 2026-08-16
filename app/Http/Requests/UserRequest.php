@@ -49,6 +49,7 @@ class UserRequest extends FormRequest
             'entity_id' => ['nullable', 'integer', 'exists:entities,id'],
             'nip' => ['nullable', 'string', 'max:50'],
             'jabatan' => ['nullable', 'string', 'max:255'],
+            'phone_number' => ['nullable', 'string', 'max:20'],
             'is_active' => ['nullable', 'boolean'],
             'role' => ['required', 'string', Rule::exists('roles', 'name')],
         ];

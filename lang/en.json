@@ -546,5 +546,13 @@
     "Dicetak :tanggal": "Printed :tanggal",
     "Ditandatangani :tanggal": "Signed :tanggal",
     "SATS-LN ditandai sudah dicetak.": "SATS-LN marked as printed.",
-    "SATS-LN ditandai sudah ditandatangani.": "SATS-LN marked as signed."
+    "SATS-LN ditandai sudah ditandatangani.": "SATS-LN marked as signed.",
+
+    "Settings": "Settings",
+    "Whatsapp": "Whatsapp",
+    "Notifikasi WhatsApp": "WhatsApp Notifications",
+    "Aktifkan Notifikasi WhatsApp": "Enable WhatsApp Notifications",
+    "Jika diaktifkan, notifikasi tertentu (mis. permohonan baru, verifikasi) juga akan dikirim via WhatsApp ke nomor pengguna yang terdaftar.": "When enabled, certain notifications (e.g. new requests, verification) will also be sent via WhatsApp to users' registered numbers.",
+    "Pengaturan notifikasi WhatsApp berhasil disimpan.": "WhatsApp notification settings saved successfully.",
+    "No. WhatsApp": "WhatsApp No."
 }

@@ -33,6 +33,7 @@ class User extends Authenticatable
         'entity_id',
         'nip',
         'jabatan',
+        'phone_number',
         'signature_path',
         'is_active',
         'onboarding_completed',

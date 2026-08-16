@@ -46,4 +46,12 @@ return [
         'redirect_uri' => env('INSW_REDIRECT_URI'),
     ],
 
+    'kapso' => [
+        // Env var name is lowercase ("kapso_api_key") per the integration spec this project
+        // was given - kept as-is rather than renamed to the usual UPPER_SNAKE convention.
+        'api_key' => env('kapso_api_key'),
+        'base_url' => env('KAPSO_API_BASE_URL', 'https://api.kapso.ai'),
+        'phone_number_id' => env('KAPSO_PHONE_NUMBER_ID'),
+    ],
+
 ];

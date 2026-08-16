@@ -7,6 +7,7 @@ namespace App\Http\Controllers\PesatsExport;
 use App\Enums\NotificationCategory;
 use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppNotificationJob;
 use App\Models\CustomerCompany;
 use App\Models\Entitas\Entitas;
 use App\Models\Permohonan;
@@ -113,15 +114,24 @@ class PermohonanController extends Controller
             return;
         }
 
+        $message = __(':entitas mengajukan permohonan :nomor untuk diverifikasi.', [
+            'entitas' => $permohonan->entitas?->name,
+            'nomor' => $permohonan->nomor_permohonan,
+        ]);
+
         Notification::send($verifiers, new AppNotification(
             NotificationCategory::Permohonan,
             __('Permohonan SATS-LN Ekspor Baru'),
-            __(':entitas mengajukan permohonan :nomor untuk diverifikasi.', [
-                'entitas' => $permohonan->entitas?->name,
-                'nomor' => $permohonan->nomor_permohonan,
-            ]),
+            $message,
             route('pesats-export.verifikasi.show', $permohonan),
         ));
+
+        // Contoh pemakaian KapsoWhatsAppService (lewat SendWhatsAppNotificationJob, yang
+        // menangani cek on/off App\Models\WhatsAppSetting) - cukup dispatch, tidak perlu tahu
+        // soal toggle atau konfigurasi Kapso di sini.
+        foreach ($verifiers->whereNotNull('phone_number') as $verifier) {
+            SendWhatsAppNotificationJob::dispatch($verifier->phone_number, $message);
+        }
     }
 
     private function authorizeOwner(Permohonan $permohonan): Entitas

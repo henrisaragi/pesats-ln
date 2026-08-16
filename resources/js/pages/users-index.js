@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const editTrigger = event.target.closest('[data-user-edit]');
 
         if (editTrigger && editForm) {
-            const { id, name, username, email, entityId, nip, jabatan, role, isActive } = editTrigger.dataset;
+            const { id, name, username, email, entityId, nip, jabatan, phoneNumber, role, isActive } = editTrigger.dataset;
 
             editForm.action = editForm.dataset.actionTemplate.replace('__ID__', id);
             editForm.querySelector('[name="_modal_user_id"]').value = id;
@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             editForm.querySelector('[name="nip"]').value = nip || '';
             editForm.querySelector('[name="jabatan"]').value = jabatan || '';
+            editForm.querySelector('[name="phone_number"]').value = phoneNumber || '';
             editForm.querySelector('[name="password"]').value = '';
             editForm.querySelector('input[name="is_active"][type="checkbox"]').checked = isActive === '1';
             editForm.querySelector('[data-username-error]')?.classList.add('hidden');
