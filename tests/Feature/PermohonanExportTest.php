@@ -169,6 +169,8 @@ class PermohonanExportTest extends TestCase
         $this->assertSame(PermohonanStatus::Draft, $permohonan->status);
         $this->assertSame($user->entity_id, $permohonan->entity_id);
 
+        $this->actingAs($user)->get(route('permohonan-export.show', $permohonan))->assertOk();
+
         $this->actingAs($user)
             ->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10))
             ->assertRedirect(route('permohonan-export.edit', $permohonan));

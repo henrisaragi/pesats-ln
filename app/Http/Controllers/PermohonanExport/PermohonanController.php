@@ -91,7 +91,7 @@ class PermohonanController extends Controller
         $this->authorizeOwner($permohonan);
 
         return view('permohonan-export.show', [
-            'permohonan' => $permohonan->load(['entitas', 'document']),
+            'permohonan' => $permohonan->load(['entitas', 'document', 'satsLn' => fn ($query) => $query->oldest()]),
         ]);
     }
 

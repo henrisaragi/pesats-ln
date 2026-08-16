@@ -1,177 +1,77 @@
-@extends('layouts.vertical', ['title' => 'List View'])
+@extends('layouts.vertical', ['title' => __('Permohonan SATS-LN Ekspor')])
 
 @section('css')
 @endsection
 
 @section('content')
-    @include('layouts.partials/page-title', ['subtitle' => 'Menu', 'title' => 'Permohonan SATS-LN Ekspor'])
+    @include('layouts.partials/page-title', [
+        'subtitle' => __('Layanan Entitas'),
+        'title' => $permohonan->nomor_permohonan,
+    ])
 
     <div class="grid lg:grid-cols-4 grid-cols-1 gap-5">
-        <div class="lg:col-span-1 col-span-1 card print:hidden">
-            <div class="sticky top-24">
-                <div class="card-body">
-                    <h6 class="mb-4 card-title">Daftar SATS-LN</h6>
+        <div class="lg:col-span-1 col-span-1 card print:hidden flex flex-col">
+            <div class="sticky top-24 flex flex-col h-full">
+                <div class="card-body shrink-0">
+                    <h6 class="mb-4 card-title">{{ __('Daftar SATS-LN') }}</h6>
                     <div class="flex items-center gap-2">
                         <div class="relative w-full">
-                            <input class="ps-11 form-input form-input-sm" placeholder="Search for..." type="email" />
+                            <input class="ps-11 form-input form-input-sm" placeholder="{{ __('Cari...') }}" type="text" />
                             <div class="absolute inset-y-0 start-0 flex items-center ps-3">
                                 <i class="size-4 flex items-center fill-default-100 text-default-500"
                                     data-lucide="search"></i>
                             </div>
                         </div>
-                        <div>
-                            <button class="btn size-7.5 bg-info/15 text-primary hover:text-white hover:bg-sky-600"
-                                type="button">
-                                <i class="size-4" data-lucide="sliders-horizontal"></i>
-                            </button>
-                        </div>
+                        @can('permohonan-export.edit')
+                            @if ($permohonan->status->isEditable())
+                                <a class="btn size-7.5 bg-primary text-white shrink-0"
+                                    href="{{ route('permohonan-export.edit', $permohonan) }}"
+                                    aria-label="{{ __('Tambah SATS-LN') }}">
+                                    <i class="size-4" data-lucide="plus"></i>
+                                </a>
+                            @endif
+                        @endcan
                     </div>
                 </div>
-                <div class="overflow-x-auto h-150" data-simplebar="">
-                    <a class="block border-t p-5 bg-default-100 border-default-200 hover:bg-default-100 active"
-                        href="#">
-                        <div class="flex justify-between">
-                            <div class="w-full">
-                                <h6 class="font-semibold text-sm text-default-700">#TW15090251</h6>
-                                <div>
-                                    <h6 class="mt-3 mb-2 text-base font-semibold text-default-800">Paula Keenan</h6>
-                                    <div class="flex items-center justify-between gap-6">
-                                        <p class="text-default-500 text-sm">$873.96</p>
-                                        <button class="inline-flex text-sm items-center" type="button">
-                                            <i class="size-4 text-default-500 me-1.5" data-lucide="calendar-clock"></i>21
-                                            Jan, 2024
-                                        </button>
+                <div class="overflow-y-auto flex-1" data-simplebar="">
+                    @forelse ($permohonan->satsLn as $satsLn)
+                        @php
+                            $isSigned = $satsLn->signed_at !== null;
+                            $isPrinted = $satsLn->printed_at !== null;
+                            $satsLnStatusLabel = $isSigned
+                                ? __('Ditandatangani')
+                                : ($isPrinted
+                                    ? __('Dicetak')
+                                    : __('Menunggu Verifikasi'));
+                            $satsLnStatusClass = $isSigned
+                                ? 'inline-flex items-center gap-x-1.5 py-0.5 px-2.5 rounded text-xs font-medium bg-success/10 text-success'
+                                : ($isPrinted
+                                    ? 'inline-flex items-center gap-x-1.5 py-0.5 px-2.5 rounded text-xs font-medium bg-primary/10 text-primary'
+                                    : 'text-warning bg-warning/20 rounded text-xs py-0.5 px-2.5');
+                        @endphp
+                        <div class="block border-t p-5 border-default-200">
+                            <div class="flex justify-between">
+                                <div class="w-full">
+                                    <h6 class="font-semibold text-sm text-default-700">
+                                        {{ __('SATS-LN Ke #:nomor', ['nomor' => $loop->iteration]) }}
+                                    </h6>
+                                    <div>
+                                        <div class="flex items-center justify-between gap-6 mt-3">
+                                            <button class="inline-flex text-sm items-center" type="button">
+                                                <i class="size-4 text-default-500 me-1.5" data-lucide="calendar-clock"></i>
+                                                {{ $satsLn->publish_date?->translatedFormat('d M Y') ?? __('Menunggu...') }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div>
-                                <span class="text-warning bg-warning/20 rounded text-xs py-0.5 px-2.5">Unpaid</span>
-                            </div>
-                        </div>
-                    </a>
-                    <a class="block border-t p-5 border-default-200 hover:bg-default-100 active" href="#">
-                        <div class="flex justify-between">
-                            <div class="w-full">
-                                <h6 class="font-semibold text-sm text-default-700">#TW15090252</h6>
                                 <div>
-                                    <h6 class="mt-3 mb-2 text-base font-semibold text-default-800">Jaqueline Hammes</h6>
-                                    <div class="flex items-center justify-between gap-6">
-                                        <p class="text-default-500 text-sm">$1,203.74</p>
-                                        <button class="inline-flex text-sm items-center" type="button">
-                                            <i class="size-4 text-default-500 me-1.5" data-lucide="calendar-clock"></i>27
-                                            Oct, 2023
-                                        </button>
-                                    </div>
+                                    <span class="{{ $satsLnStatusClass }}">{{ $satsLnStatusLabel }}</span>
                                 </div>
                             </div>
-                            <div>
-                                <span
-                                    class="inline-flex items-center gap-x-1.5 py-0.5 px-2.5 rounded text-xs font-medium bg-success/10 text-success">Paid</span>
-                            </div>
                         </div>
-                    </a>
-                    <a class="block border-t p-5 border-default-200 hover:bg-default-100 active" href="#">
-                        <div class="flex justify-between">
-                            <div class="w-full">
-                                <h6 class="font-semibold text-sm text-default-700">#TW15090253</h6>
-                                <div>
-                                    <h6 class="mt-3 mb-2 text-base font-semibold text-default-800">Akeem Paucek</h6>
-                                    <div class="flex items-center justify-between gap-6">
-                                        <p class="text-default-500 text-sm">$1,423.10</p>
-                                        <button class="inline-flex text-sm items-center" type="button">
-                                            <i class="size-4 text-default-500 me-1.5" data-lucide="calendar-clock"></i>04
-                                            Feb, 2024
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <span
-                                    class="inline-flex items-center gap-x-1.5 py-0.5 px-2.5 rounded text-xs font-medium bg-success/10 text-success">Paid</span>
-                            </div>
-                        </div>
-                    </a>
-                    <a class="block border-t p-5 border-default-200 hover:bg-default-100 active" href="#">
-                        <div class="flex justify-between">
-                            <div class="w-full">
-                                <h6 class="font-semibold text-sm text-default-700">#TW15090254</h6>
-                                <div>
-                                    <h6 class="mt-3 mb-2 text-base font-semibold text-default-800">Stephon Trantow</h6>
-                                    <div class="flex items-center justify-between gap-6">
-                                        <p class="text-default-500 text-sm">$1,420.99</p>
-                                        <button class="inline-flex text-sm items-center" type="button">
-                                            <i class="size-4 text-default-500 me-1.5" data-lucide="calendar-clock"></i>14
-                                            July, 2023
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <span class="text-danger bg-danger/10 rounded text-xs py-0.5 px-2.5">Cancel</span>
-                            </div>
-                        </div>
-                    </a>
-                    <a class="block border-t p-5 border-default-200 hover:bg-default-100 active" href="#">
-                        <div class="flex justify-between">
-                            <div class="w-full">
-                                <h6 class="font-semibold text-sm text-default-700">#TW15090255</h6>
-                                <div>
-                                    <h6 class="mt-3 mb-2 text-base font-semibold text-default-800">Domenic Tromp</h6>
-                                    <div class="flex items-center justify-between gap-6">
-                                        <p class="text-default-500 text-sm">$247.18</p>
-                                        <button class="inline-flex text-sm items-center" type="button">
-                                            <i class="size-4 text-default-500 me-1.5" data-lucide="calendar-clock"></i>11
-                                            April, 2023
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <span class="text-default-600 bg-default-200 rounded text-xs py-0.5 px-2.5">Refund</span>
-                            </div>
-                        </div>
-                    </a>
-                    <a class="block border-t p-5 border-default-200 hover:bg-default-100 active" href="#">
-                        <div class="flex justify-between">
-                            <div class="w-full">
-                                <h6 class="font-semibold text-sm text-default-700">#TW15090256</h6>
-                                <div>
-                                    <h6 class="mt-3 mb-2 text-base font-semibold text-default-800">Marie Prohaska</h6>
-                                    <div class="flex items-center justify-between gap-6">
-                                        <p class="text-default-500 text-sm">$559.32</p>
-                                        <button class="inline-flex text-sm items-center" type="button">
-                                            <i class="size-4 text-default-500 me-1.5" data-lucide="calendar-clock"></i>03
-                                            Aug, 2023
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <span
-                                    class="inline-flex items-center gap-x-1.5 py-0.5 px-2.5 rounded text-xs font-medium bg-success/10 text-success">Paid</span>
-                            </div>
-                        </div>
-                    </a>
-                    <a class="block border-t p-5 border-default-200 hover:bg-default-100 active" href="#">
-                        <div class="flex justify-between">
-                            <div class="w-full">
-                                <h6 class="font-semibold text-sm text-default-700">#TW15090257</h6>
-                                <div>
-                                    <h6 class="mt-3 mb-2 text-base font-semibold text-default-800">Ethel Corwin</h6>
-                                    <div class="flex items-center justify-between gap-6">
-                                        <p class="text-default-500 text-sm">$2,147.65</p>
-                                        <button class="inline-flex text-sm items-center" type="button">
-                                            <i class="size-4 text-default-500 me-1.5" data-lucide="calendar-clock"></i>15
-                                            Dec, 2024
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <span class="text-warning bg-warning/10 rounded text-xs py-0.5 px-2.5">Unpaid</span>
-                            </div>
-                        </div>
-                    </a>
+                    @empty
+                        <p class="p-5 text-sm text-default-500">{{ __('Belum ada SATS-LN.') }}</p>
+                    @endforelse
                 </div>
             </div>
         </div>
