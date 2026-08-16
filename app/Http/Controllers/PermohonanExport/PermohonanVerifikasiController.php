@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\PesatsExport;
+namespace App\Http\Controllers\PermohonanExport;
 
 use App\Enums\NotificationCategory;
 use App\Enums\PermohonanStatus;
@@ -36,7 +36,7 @@ class PermohonanVerifikasiController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('pesats-export.verifikasi.index', [
+        return view('permohonan-export.verifikasi.index', [
             'permohonan' => $permohonan,
             'activeStatus' => $status,
         ]);
@@ -44,7 +44,7 @@ class PermohonanVerifikasiController extends Controller
 
     public function show(Permohonan $permohonan): View
     {
-        return view('pesats-export.verifikasi.show', [
+        return view('permohonan-export.verifikasi.show', [
             'permohonan' => $permohonan->load([
                 'entitas',
                 'satsLn.items.species',
@@ -69,7 +69,7 @@ class PermohonanVerifikasiController extends Controller
 
         $this->notifySubmitter($permohonan, __('Permohonan Diverifikasi'), __('Permohonan :nomor telah diverifikasi dan mulai diproses.', ['nomor' => $permohonan->nomor_permohonan]));
 
-        return redirect()->route('pesats-export.verifikasi.index')->with('success', __('Permohonan berhasil diverifikasi.'));
+        return redirect()->route('permohonan-export.verifikasi.index')->with('success', __('Permohonan berhasil diverifikasi.'));
     }
 
     public function reject(Request $request, Permohonan $permohonan): RedirectResponse
@@ -85,7 +85,7 @@ class PermohonanVerifikasiController extends Controller
 
         $this->notifySubmitter($permohonan, __('Permohonan Ditolak'), __('Permohonan :nomor ditolak.', ['nomor' => $permohonan->nomor_permohonan]));
 
-        return redirect()->route('pesats-export.verifikasi.index')->with('success', __('Permohonan berhasil ditolak.'));
+        return redirect()->route('permohonan-export.verifikasi.index')->with('success', __('Permohonan berhasil ditolak.'));
     }
 
     public function markPrinted(Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
@@ -96,7 +96,7 @@ class PermohonanVerifikasiController extends Controller
         $satsLn->update(['printed_at' => now(), 'printed_user_id' => Auth::id()]);
         $this->permohonanService->recomputeStatus($permohonan);
 
-        return redirect()->route('pesats-export.verifikasi.show', $permohonan)->with('success', __('SATS-LN ditandai sudah dicetak.'));
+        return redirect()->route('permohonan-export.verifikasi.show', $permohonan)->with('success', __('SATS-LN ditandai sudah dicetak.'));
     }
 
     public function markSigned(Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
@@ -107,7 +107,7 @@ class PermohonanVerifikasiController extends Controller
         $satsLn->update(['signed_at' => now(), 'issued_by_id' => Auth::id()]);
         $this->permohonanService->recomputeStatus($permohonan);
 
-        return redirect()->route('pesats-export.verifikasi.show', $permohonan)->with('success', __('SATS-LN ditandai sudah ditandatangani.'));
+        return redirect()->route('permohonan-export.verifikasi.show', $permohonan)->with('success', __('SATS-LN ditandai sudah ditandatangani.'));
     }
 
     private function notifySubmitter(Permohonan $permohonan, string $title, string $message): void
@@ -124,7 +124,7 @@ class PermohonanVerifikasiController extends Controller
             NotificationCategory::Permohonan,
             $title,
             $message,
-            route('pesats-export.show', $permohonan),
+            route('permohonan-export.show', $permohonan),
         ));
 
         // Contoh pemakaian lain KapsoWhatsAppService di titik notifikasi yang berbeda

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\PesatsExport;
+namespace App\Http\Controllers\PermohonanExport;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\PesatsExport\SatsLnRequest;
+use App\Http\Requests\PermohonanExport\SatsLnRequest;
 use App\Models\Entitas\Entitas;
 use App\Models\HargaPatokan;
 use App\Models\KuotaPerusahaan;
@@ -26,7 +26,7 @@ class SatsLnController extends Controller
         $this->authorizeEditable($permohonan);
 
         if ($permohonan->hasReachedMaxSatsLn()) {
-            return redirect()->route('pesats-export.edit', $permohonan)
+            return redirect()->route('permohonan-export.edit', $permohonan)
                 ->with('error', __('Maksimal 25 SATS-LN per permohonan.'));
         }
 
@@ -61,7 +61,7 @@ class SatsLnController extends Controller
             ]);
         });
 
-        return redirect()->route('pesats-export.edit', $permohonan)->with('success', __('SATS-LN berhasil ditambahkan.'));
+        return redirect()->route('permohonan-export.edit', $permohonan)->with('success', __('SATS-LN berhasil ditambahkan.'));
     }
 
     public function update(SatsLnRequest $request, Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
@@ -94,7 +94,7 @@ class SatsLnController extends Controller
             ]);
         });
 
-        return redirect()->route('pesats-export.edit', $permohonan)->with('success', __('SATS-LN berhasil diperbarui.'));
+        return redirect()->route('permohonan-export.edit', $permohonan)->with('success', __('SATS-LN berhasil diperbarui.'));
     }
 
     public function destroy(Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
@@ -104,7 +104,7 @@ class SatsLnController extends Controller
 
         $satsLn->delete();
 
-        return redirect()->route('pesats-export.edit', $permohonan)->with('success', __('SATS-LN berhasil dihapus.'));
+        return redirect()->route('permohonan-export.edit', $permohonan)->with('success', __('SATS-LN berhasil dihapus.'));
     }
 
     public function kuotaPerusahaanOptions(?int $source = null): JsonResponse

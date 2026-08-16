@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests\PesatsExport;
+namespace App\Http\Requests\PermohonanExport;
 
 use App\Models\Entitas\Entitas;
 use App\Models\KuotaPerusahaan;

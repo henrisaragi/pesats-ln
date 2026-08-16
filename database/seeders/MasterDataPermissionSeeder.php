@@ -63,14 +63,18 @@ class MasterDataPermissionSeeder extends Seeder
     private const KOMODITAS_ENTITAS_SUBMITTER_ROLES = ['perusahaan', 'penangkaran'];
 
     /**
-     * Permohonan (SATS-LN Ekspor): self-service submit by the entity (view/create own drafts) plus
-     * a single "verify" permission for staff, reused for verify/reject and for marking individual
-     * SATS-LN tabs printed/signed (all on the same staff-facing screen, no need to split further).
+     * Permohonan (SATS-LN Ekspor): self-service submit/manage own drafts (view/create/edit/delete)
+     * plus view-all (cross-entity oversight, additive like documents.view-all/customer.view-all)
+     * and verify for staff, reused for verify/reject and for marking individual SATS-LN tabs
+     * printed/signed (all on the same staff-facing screen, no need to split further).
      */
     private const PERMOHONAN_PERMISSIONS = [
-        'permohonan.view',
-        'permohonan.create',
-        'permohonan.verify',
+        'permohonan-export.view',
+        'permohonan-export.view-all',
+        'permohonan-export.create',
+        'permohonan-export.edit',
+        'permohonan-export.delete',
+        'permohonan-export.verify',
     ];
 
     /**
@@ -183,7 +187,7 @@ class MasterDataPermissionSeeder extends Seeder
         foreach (self::PERMOHONAN_SUBMITTER_ROLES as $roleName) {
             $role = Role::where('name', $roleName)->first();
 
-            $role?->givePermissionTo(['permohonan.view', 'permohonan.create']);
+            $role?->givePermissionTo(['permohonan-export.view', 'permohonan-export.create', 'permohonan-export.edit', 'permohonan-export.delete']);
         }
 
         foreach (self::CHAT_STARTER_ROLES as $roleName) {

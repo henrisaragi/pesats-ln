@@ -14,7 +14,7 @@
 
             @if ($permohonan->status === \App\Enums\PermohonanStatus::AntrianVerifikasi)
                 <div class="flex items-center gap-2">
-                    <form action="{{ route('pesats-export.verifikasi.verify', $permohonan) }}" method="POST">
+                    <form action="{{ route('permohonan-export.verifikasi.verify', $permohonan) }}" method="POST">
                         @csrf
                         <button class="btn btn-sm bg-success text-white" type="submit">
                             <i class="size-4 me-1" data-lucide="check"></i>{{ __('Verifikasi') }}
@@ -30,7 +30,7 @@
 
     <div class="flex flex-col gap-4">
         @foreach ($permohonan->satsLn as $satsLn)
-            @include('pesats-export.partials.sats-ln-detail', ['satsLn' => $satsLn, 'staffView' => true])
+            @include('permohonan-export.partials.sats-ln-detail', ['satsLn' => $satsLn, 'staffView' => true])
         @endforeach
     </div>
 
@@ -47,7 +47,7 @@
                         <i class="size-5" data-lucide="x"></i>
                     </button>
                 </div>
-                <form action="{{ route('pesats-export.verifikasi.reject', $permohonan) }}" method="POST">
+                <form action="{{ route('permohonan-export.verifikasi.reject', $permohonan) }}" method="POST">
                     @csrf
                     <div class="p-4">
                         <label class="inline-block mb-2 text-sm font-medium" for="catatan_verifikasi">{{ __('Catatan Penolakan') }}</label>

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\JenisPermohonan;
 use App\Enums\PermohonanStatus;
 use App\Models\Entitas\Entitas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Permohonan extends Model
@@ -23,6 +25,7 @@ class Permohonan extends Model
     protected $fillable = [
         'entity_id',
         'nomor_permohonan',
+        'jenis_permohonan',
         'status',
         'submitted_at',
         'verified_by',
@@ -33,6 +36,7 @@ class Permohonan extends Model
     protected function casts(): array
     {
         return [
+            'jenis_permohonan' => JenisPermohonan::class,
             'status' => PermohonanStatus::class,
             'submitted_at' => 'datetime',
             'verified_at' => 'datetime',
@@ -42,6 +46,11 @@ class Permohonan extends Model
     public function entitas(): BelongsTo
     {
         return $this->belongsTo(Entitas::class, 'entity_id');
+    }
+
+    public function document(): HasOne
+    {
+        return $this->hasOne(Document::class, 'permohonan_id');
     }
 
     public function verifiedBy(): BelongsTo

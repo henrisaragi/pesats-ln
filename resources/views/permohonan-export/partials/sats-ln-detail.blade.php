@@ -31,7 +31,7 @@
     @if ($staffView && in_array($permohonan->status, [\App\Enums\PermohonanStatus::DalamProsesVerifikasi, \App\Enums\PermohonanStatus::DicetakSebagian, \App\Enums\PermohonanStatus::DitandatanganiSebagian], true))
         <div class="card-footer flex gap-2">
             @unless ($satsLn->printed_at)
-                <form action="{{ route('pesats-export.verifikasi.mark-printed', [$permohonan, $satsLn]) }}" method="POST">
+                <form action="{{ route('permohonan-export.verifikasi.mark-printed', [$permohonan, $satsLn]) }}" method="POST">
                     @csrf
                     <button class="btn btn-sm bg-primary/10 text-primary" type="submit">
                         <i class="size-4 me-1" data-lucide="printer"></i>{{ __('Tandai Sudah Dicetak') }}
@@ -39,7 +39,7 @@
                 </form>
             @endunless
             @unless ($satsLn->signed_at)
-                <form action="{{ route('pesats-export.verifikasi.mark-signed', [$permohonan, $satsLn]) }}" method="POST">
+                <form action="{{ route('permohonan-export.verifikasi.mark-signed', [$permohonan, $satsLn]) }}" method="POST">
                     @csrf
                     <button class="btn btn-sm bg-success/10 text-success" type="submit">
                         <i class="size-4 me-1" data-lucide="pen-line"></i>{{ __('Tandai Sudah Ditandatangani') }}

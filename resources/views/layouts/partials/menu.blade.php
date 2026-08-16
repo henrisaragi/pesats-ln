@@ -63,14 +63,14 @@
                 [
                     'label' => __('Permohonan SATS-LN Ekspor'),
                     'icon' => 'file-text',
-                    'route' => 'pesats-export.index',
-                    'permission' => 'permohonan.view',
+                    'route' => 'permohonan-export.index',
+                    'permission' => 'permohonan-export.view',
                 ],
                 [
                     'label' => __('Verifikasi Permohonan Ekspor'),
                     'icon' => 'shield-check',
-                    'route' => 'pesats-export.verifikasi.index',
-                    'permission' => 'permohonan.verify',
+                    'route' => 'permohonan-export.verifikasi.index',
+                    'permission' => 'permohonan-export.verify',
                 ],
                 [
                     'label' => __('Chat'),

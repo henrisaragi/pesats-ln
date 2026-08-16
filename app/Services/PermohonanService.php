@@ -105,6 +105,8 @@ class PermohonanService
         }
     }
 
+    private const ROMAN_MONTHS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
     public function generateNomorPermohonan(): string
     {
         $year = now()->year;
@@ -120,6 +122,28 @@ class PermohonanService
                 ->count() + 1;
         });
 
-        return sprintf('PMH-%d-%06d', $year, $sequence);
+        return $this->formatNomorPermohonan($sequence, now()->month, $year);
+    }
+
+    /**
+     * Preview nomor yang AKAN dipakai kalau Permohonan dibuat sekarang - hanya untuk ditampilkan
+     * di modal create, bukan authoritative (tidak lockForUpdate). Nilai final tetap dihitung
+     * ulang oleh generateNomorPermohonan() di dalam transaction saat store() dipanggil.
+     */
+    public function nextNomorPermohonanPreview(): string
+    {
+        $year = now()->year;
+
+        $sequence = Permohonan::query()
+            ->withTrashed()
+            ->whereYear('created_at', $year)
+            ->count() + 1;
+
+        return $this->formatNomorPermohonan($sequence, now()->month, $year);
+    }
+
+    private function formatNomorPermohonan(int $sequence, int $month, int $year): string
+    {
+        return sprintf('%06d/EKS/%s/%d', $sequence, self::ROMAN_MONTHS[$month - 1], $year);
     }
 }

@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\PesatsExport;
+namespace App\Http\Controllers\PermohonanExport;
 
+use App\Enums\DocumentType;
+use App\Enums\JenisPermohonan;
 use App\Enums\NotificationCategory;
 use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PermohonanExport\PermohonanRequest;
 use App\Jobs\SendWhatsAppNotificationJob;
 use App\Models\Customer\Customer;
+use App\Models\Document;
 use App\Models\Entitas\Entitas;
 use App\Models\Permohonan;
 use App\Models\PurposeOfTransaction;
@@ -17,6 +21,7 @@ use App\Notifications\AppNotification;
 use App\Services\PermohonanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
@@ -34,27 +39,45 @@ class PermohonanController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('pesats-export.index', ['permohonan' => $permohonan]);
+        return view('permohonan-export.index', [
+            'permohonan' => $permohonan,
+            'documentOptions' => Document::query()
+                ->where('entity_id', $entity->id)
+                ->where('type_document', DocumentType::Permohonan)
+                ->whereNull('permohonan_id')
+                ->orderByDesc('id')
+                ->get(),
+            'jenisPermohonanOptions' => JenisPermohonan::cases(),
+            'nomorPermohonanPreview' => $this->permohonanService->nextNomorPermohonanPreview(),
+        ]);
     }
 
-    public function store(): RedirectResponse
+    public function store(PermohonanRequest $request): RedirectResponse
     {
         $entity = $this->ownEntityOrAbort();
 
-        $permohonan = Permohonan::create([
-            'entity_id' => $entity->id,
-            'nomor_permohonan' => $this->permohonanService->generateNomorPermohonan(),
-            'status' => PermohonanStatus::Draft,
-        ]);
+        $permohonan = DB::transaction(function () use ($entity, $request): Permohonan {
+            $permohonan = Permohonan::create([
+                'entity_id' => $entity->id,
+                'nomor_permohonan' => $this->permohonanService->generateNomorPermohonan(),
+                'jenis_permohonan' => $request->validated('jenis_permohonan'),
+                'status' => PermohonanStatus::Draft,
+            ]);
 
-        return redirect()->route('pesats-export.edit', $permohonan);
+            Document::whereKey($request->validated('document_id'))->update(['permohonan_id' => $permohonan->id]);
+
+            return $permohonan;
+        });
+
+        return redirect()->route('permohonan-export.show', $permohonan)
+            ->with('success', __('Permohonan berhasil dibuat.'));
     }
 
     public function edit(Permohonan $permohonan): View
     {
         $entity = $this->authorizeOwner($permohonan);
 
-        return view('pesats-export.edit', [
+        return view('permohonan-export.edit', [
             'permohonan' => $permohonan->load(['satsLn.items.species', 'satsLn.items.kuotaPerusahaan.kuotaNasional.source', 'satsLn.purposeOfTransaction', 'satsLn.customerCompany']),
             'entity' => $entity,
             'purposeOfTransactionOptions' => PurposeOfTransaction::query()->orderBy('name')->get(),
@@ -67,8 +90,8 @@ class PermohonanController extends Controller
     {
         $this->authorizeOwner($permohonan);
 
-        return view('pesats-export.show', [
-            'permohonan' => $permohonan->load(['satsLn.items.species', 'satsLn.items.kuotaPerusahaan.kuotaNasional.source', 'satsLn.purposeOfTransaction', 'satsLn.customerCompany']),
+        return view('permohonan-export.show', [
+            'permohonan' => $permohonan->load(['entitas', 'document']),
         ]);
     }
 
@@ -78,7 +101,7 @@ class PermohonanController extends Controller
         abort_unless($permohonan->status->isEditable(), 403);
 
         if ($permohonan->satsLn()->count() === 0) {
-            return redirect()->route('pesats-export.edit', $permohonan)
+            return redirect()->route('permohonan-export.edit', $permohonan)
                 ->with('error', __('Minimal 1 SATS-LN harus diisi sebelum permohonan diajukan.'));
         }
 
@@ -92,7 +115,7 @@ class PermohonanController extends Controller
 
         $this->notifyVerifiers($permohonan);
 
-        return redirect()->route('pesats-export.index')
+        return redirect()->route('permohonan-export.index')
             ->with('success', __('Permohonan berhasil diajukan, menunggu verifikasi.'));
     }
 
@@ -103,12 +126,12 @@ class PermohonanController extends Controller
 
         $permohonan->delete();
 
-        return redirect()->route('pesats-export.index')->with('success', __('Permohonan berhasil dihapus.'));
+        return redirect()->route('permohonan-export.index')->with('success', __('Permohonan berhasil dihapus.'));
     }
 
     private function notifyVerifiers(Permohonan $permohonan): void
     {
-        $verifiers = User::permission('permohonan.verify')->get();
+        $verifiers = User::permission('permohonan-export.verify')->get();
 
         if ($verifiers->isEmpty()) {
             return;
@@ -123,7 +146,7 @@ class PermohonanController extends Controller
             NotificationCategory::Permohonan,
             __('Permohonan SATS-LN Ekspor Baru'),
             $message,
-            route('pesats-export.verifikasi.show', $permohonan),
+            route('permohonan-export.verifikasi.show', $permohonan),
         ));
 
         // Contoh pemakaian KapsoWhatsAppService (lewat SendWhatsAppNotificationJob, yang

@@ -4,7 +4,7 @@
     $isNew = $satsLn === null;
 @endphp
 
-<form action="{{ $isNew ? route('pesats-export.sats-ln.store', $permohonan) : route('pesats-export.sats-ln.update', [$permohonan, $satsLn]) }}"
+<form action="{{ $isNew ? route('permohonan-export.sats-ln.store', $permohonan) : route('permohonan-export.sats-ln.update', [$permohonan, $satsLn]) }}"
       method="POST">
     @csrf
     @unless ($isNew)
@@ -31,7 +31,7 @@
                       :options="$item?->kuotaPerusahaan ? collect([(object) ['id' => $item->kuotaPerusahaan->id, 'name' => trim(($item->kuotaPerusahaan->kuotaNasional?->komoditas?->name ?? '').' - '.($item->kuotaPerusahaan->kuotaNasional?->species?->scientific_name ?? ''))]]) : collect()"
                       :selected="$item?->kuota_perusahaan_id"
                       :placeholder="__('Pilih Kuota Perusahaan')"
-                      :remote-url="route('pesats-export.kuota-perusahaan-options', ['source' => '__PARENT__'])"/>
+                      :remote-url="route('permohonan-export.kuota-perusahaan-options', ['source' => '__PARENT__'])"/>
         </div>
         <div>
             <label class="inline-block mb-2 text-sm font-medium"
@@ -121,7 +121,7 @@
 </form>
 
 @unless ($isNew)
-    <form action="{{ route('pesats-export.sats-ln.destroy', [$permohonan, $satsLn]) }}" class="mt-2" method="POST"
+    <form action="{{ route('permohonan-export.sats-ln.destroy', [$permohonan, $satsLn]) }}" class="mt-2" method="POST"
           onsubmit="return confirm('{{ __('Hapus SATS-LN ini?') }}');">
         @csrf
         @method('DELETE')

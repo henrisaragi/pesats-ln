@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\DocumentType;
+use App\Enums\JenisPermohonan;
 use App\Enums\KomoditasEntitasStatus;
 use App\Enums\PermohonanStatus;
 use App\Jobs\SendWhatsAppNotificationJob;
+use App\Models\Country;
+use App\Models\Document;
 use App\Models\Entitas\Entitas;
 use App\Models\Komoditas;
 use App\Models\KomoditasEntitas;
@@ -22,9 +26,10 @@ use Database\Seeders\MasterDataPermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
-class PesatsExportTest extends TestCase
+class PermohonanExportTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -70,9 +75,35 @@ class PesatsExportTest extends TestCase
             'onboarding_completed' => true,
         ]);
 
-        $user->givePermissionTo('permohonan.verify');
+        $user->givePermissionTo('permohonan-export.verify');
 
         return $user;
+    }
+
+    private function createPermohonanDocument(User $user): Document
+    {
+        return Document::create([
+            'entity_id' => $user->entity_id,
+            'created_by_id' => $user->id,
+            'nomor_document' => 'DOC-'.uniqid(),
+            'type_document' => DocumentType::Permohonan,
+            'issued_date' => '2026-01-10',
+            'issued_country_id' => Country::query()->firstOrCreate(
+                ['iso_code' => 'ID'],
+                ['name' => 'Indonesia', 'iso_code3' => 'IDN', 'phone_code' => '62']
+            )->id,
+            'path' => 'documents/dummy.pdf',
+        ]);
+    }
+
+    private function createPermohonan(User $user): TestResponse
+    {
+        $document = $this->createPermohonanDocument($user);
+
+        return $this->actingAs($user)->post(route('permohonan-export.store'), [
+            'document_id' => (string) $document->id,
+            'jenis_permohonan' => JenisPermohonan::Baru->value,
+        ]);
     }
 
     private function makeKuotaPerusahaan(Entitas $entitas, float $quota = 100): KuotaPerusahaan
@@ -124,16 +155,23 @@ class PesatsExportTest extends TestCase
         $user = $this->makeUser('perusahaan');
         $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity);
 
-        $store = $this->actingAs($user)->post(route('pesats-export.store'));
+        $document = $this->createPermohonanDocument($user);
+        $store = $this->actingAs($user)->post(route('permohonan-export.store'), [
+            'document_id' => (string) $document->id,
+            'jenis_permohonan' => JenisPermohonan::Baru->value,
+        ]);
         $permohonan = Permohonan::firstOrFail();
-        $store->assertRedirect(route('pesats-export.edit', $permohonan));
+        $store->assertRedirect(route('permohonan-export.show', $permohonan));
+
+        $this->assertSame(JenisPermohonan::Baru, $permohonan->jenis_permohonan);
+        $this->assertSame($document->id, $permohonan->document?->id);
 
         $this->assertSame(PermohonanStatus::Draft, $permohonan->status);
         $this->assertSame($user->entity_id, $permohonan->entity_id);
 
         $this->actingAs($user)
-            ->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10))
-            ->assertRedirect(route('pesats-export.edit', $permohonan));
+            ->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10))
+            ->assertRedirect(route('permohonan-export.edit', $permohonan));
 
         $this->assertSame(1, $permohonan->satsLn()->count());
         $item = $permohonan->satsLn()->first()->items->first();
@@ -146,11 +184,11 @@ class PesatsExportTest extends TestCase
         $user = $this->makeUser('perusahaan');
         $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 20);
 
-        $this->actingAs($user)->post(route('pesats-export.store'));
+        $this->createPermohonan($user);
         $permohonan = Permohonan::firstOrFail();
 
         $response = $this->actingAs($user)->post(
-            route('pesats-export.sats-ln.store', $permohonan),
+            route('permohonan-export.sats-ln.store', $permohonan),
             $this->satsLnPayload($kuotaPerusahaan, 30)
         );
 
@@ -164,20 +202,20 @@ class PesatsExportTest extends TestCase
         $verifier = $this->makeStaffVerifier();
         $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
 
-        $this->actingAs($user)->post(route('pesats-export.store'));
+        $this->createPermohonan($user);
         $permohonan = Permohonan::firstOrFail();
 
-        $this->actingAs($user)->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
 
-        $this->actingAs($user)->post(route('pesats-export.submit', $permohonan))
-            ->assertRedirect(route('pesats-export.index'));
+        $this->actingAs($user)->post(route('permohonan-export.submit', $permohonan))
+            ->assertRedirect(route('permohonan-export.index'));
 
         $permohonan->refresh();
         $this->assertSame(PermohonanStatus::AntrianVerifikasi, $permohonan->status);
         $this->assertNotNull($permohonan->submitted_at);
 
-        $this->actingAs($verifier)->post(route('pesats-export.verifikasi.verify', $permohonan))
-            ->assertRedirect(route('pesats-export.verifikasi.index'));
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.verify', $permohonan))
+            ->assertRedirect(route('permohonan-export.verifikasi.index'));
 
         $permohonan->refresh();
         $this->assertSame(PermohonanStatus::DalamProsesVerifikasi, $permohonan->status);
@@ -185,14 +223,14 @@ class PesatsExportTest extends TestCase
 
         $satsLn = $permohonan->satsLn()->firstOrFail();
 
-        $this->actingAs($verifier)->post(route('pesats-export.verifikasi.mark-printed', [$permohonan, $satsLn]))
-            ->assertRedirect(route('pesats-export.verifikasi.show', $permohonan));
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.mark-printed', [$permohonan, $satsLn]))
+            ->assertRedirect(route('permohonan-export.verifikasi.show', $permohonan));
 
         $permohonan->refresh();
         $this->assertSame(PermohonanStatus::DicetakSebagian, $permohonan->status);
 
-        $this->actingAs($verifier)->post(route('pesats-export.verifikasi.mark-signed', [$permohonan, $satsLn]))
-            ->assertRedirect(route('pesats-export.verifikasi.show', $permohonan));
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.mark-signed', [$permohonan, $satsLn]))
+            ->assertRedirect(route('permohonan-export.verifikasi.show', $permohonan));
 
         $permohonan->refresh();
         $this->assertSame(PermohonanStatus::SiapDiambil, $permohonan->status);
@@ -204,20 +242,20 @@ class PesatsExportTest extends TestCase
         $verifier = $this->makeStaffVerifier();
         $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
 
-        $this->actingAs($user)->post(route('pesats-export.store'));
+        $this->createPermohonan($user);
         $permohonan = Permohonan::firstOrFail();
-        $this->actingAs($user)->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
-        $this->actingAs($user)->post(route('pesats-export.submit', $permohonan));
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.submit', $permohonan));
 
-        $this->actingAs($verifier)->post(route('pesats-export.verifikasi.reject', $permohonan), [
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.reject', $permohonan), [
             'catatan_verifikasi' => 'Dokumen kurang lengkap.',
-        ])->assertRedirect(route('pesats-export.verifikasi.index'));
+        ])->assertRedirect(route('permohonan-export.verifikasi.index'));
 
         $permohonan->refresh();
         $this->assertSame(PermohonanStatus::Ditolak, $permohonan->status);
         $this->assertSame('Dokumen kurang lengkap.', $permohonan->catatan_verifikasi);
 
-        $this->actingAs($user)->get(route('pesats-export.edit', $permohonan))->assertOk();
+        $this->actingAs($user)->get(route('permohonan-export.edit', $permohonan))->assertOk();
     }
 
     public function test_stranger_cannot_access_another_entitys_permohonan(): void
@@ -225,10 +263,10 @@ class PesatsExportTest extends TestCase
         $owner = $this->makeUser('perusahaan');
         $stranger = $this->makeUser('perusahaan');
 
-        $this->actingAs($owner)->post(route('pesats-export.store'));
+        $this->createPermohonan($owner);
         $permohonan = Permohonan::firstOrFail();
 
-        $this->actingAs($stranger)->get(route('pesats-export.edit', $permohonan))->assertForbidden();
+        $this->actingAs($stranger)->get(route('permohonan-export.edit', $permohonan))->assertForbidden();
     }
 
     public function test_index_and_verifikasi_views_render(): void
@@ -237,17 +275,17 @@ class PesatsExportTest extends TestCase
         $verifier = $this->makeStaffVerifier();
         $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
 
-        $this->actingAs($user)->post(route('pesats-export.store'));
+        $this->createPermohonan($user);
         $permohonan = Permohonan::firstOrFail();
-        $this->actingAs($user)->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
-        $this->actingAs($user)->post(route('pesats-export.submit', $permohonan));
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.submit', $permohonan));
 
-        $this->actingAs($user)->get(route('pesats-export.index'))->assertOk();
-        $this->actingAs($verifier)->get(route('pesats-export.verifikasi.index'))->assertOk();
-        $this->actingAs($verifier)->get(route('pesats-export.verifikasi.show', $permohonan))->assertOk();
+        $this->actingAs($user)->get(route('permohonan-export.index'))->assertOk();
+        $this->actingAs($verifier)->get(route('permohonan-export.verifikasi.index'))->assertOk();
+        $this->actingAs($verifier)->get(route('permohonan-export.verifikasi.show', $permohonan))->assertOk();
 
-        $this->actingAs($verifier)->post(route('pesats-export.verifikasi.verify', $permohonan));
-        $this->actingAs($user)->get(route('pesats-export.show', $permohonan))->assertOk();
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.verify', $permohonan));
+        $this->actingAs($user)->get(route('permohonan-export.show', $permohonan))->assertOk();
     }
 
     public function test_cannot_exceed_max_25_sats_ln_per_permohonan(): void
@@ -255,17 +293,17 @@ class PesatsExportTest extends TestCase
         $user = $this->makeUser('perusahaan');
         $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 1000);
 
-        $this->actingAs($user)->post(route('pesats-export.store'));
+        $this->createPermohonan($user);
         $permohonan = Permohonan::firstOrFail();
 
         for ($i = 0; $i < 25; $i++) {
-            $this->actingAs($user)->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 1));
+            $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 1));
         }
 
         $this->assertSame(25, $permohonan->satsLn()->count());
 
-        $this->actingAs($user)->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 1))
-            ->assertRedirect(route('pesats-export.edit', $permohonan));
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 1))
+            ->assertRedirect(route('permohonan-export.edit', $permohonan));
 
         $this->assertSame(25, $permohonan->satsLn()->count());
     }
@@ -279,10 +317,10 @@ class PesatsExportTest extends TestCase
         $verifier->update(['phone_number' => '15551234567']);
         $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
 
-        $this->actingAs($user)->post(route('pesats-export.store'));
+        $this->createPermohonan($user);
         $permohonan = Permohonan::firstOrFail();
-        $this->actingAs($user)->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
-        $this->actingAs($user)->post(route('pesats-export.submit', $permohonan));
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.submit', $permohonan));
 
         Bus::assertDispatched(SendWhatsAppNotificationJob::class, fn ($job) => $job->to === '15551234567');
     }
@@ -296,13 +334,46 @@ class PesatsExportTest extends TestCase
         $verifier = $this->makeStaffVerifier();
         $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
 
-        $this->actingAs($user)->post(route('pesats-export.store'));
+        $this->createPermohonan($user);
         $permohonan = Permohonan::firstOrFail();
-        $this->actingAs($user)->post(route('pesats-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
-        $this->actingAs($user)->post(route('pesats-export.submit', $permohonan));
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.submit', $permohonan));
 
-        $this->actingAs($verifier)->post(route('pesats-export.verifikasi.verify', $permohonan));
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.verify', $permohonan));
 
         Bus::assertDispatched(SendWhatsAppNotificationJob::class, fn ($job) => $job->to === '15557654321');
+    }
+
+    public function test_store_rejects_document_belonging_to_another_entity(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $stranger = $this->makeUser('perusahaan');
+        $document = $this->createPermohonanDocument($stranger);
+
+        $this->actingAs($user)->post(route('permohonan-export.store'), [
+            'document_id' => (string) $document->id,
+            'jenis_permohonan' => JenisPermohonan::Baru->value,
+        ])->assertSessionHasErrors('document_id');
+
+        $this->assertSame(0, Permohonan::query()->count());
+    }
+
+    public function test_store_rejects_document_already_linked_to_another_permohonan(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $document = $this->createPermohonanDocument($user);
+
+        $this->actingAs($user)->post(route('permohonan-export.store'), [
+            'document_id' => (string) $document->id,
+            'jenis_permohonan' => JenisPermohonan::Baru->value,
+        ]);
+        $this->assertSame(1, Permohonan::query()->count());
+
+        $this->actingAs($user)->post(route('permohonan-export.store'), [
+            'document_id' => (string) $document->id,
+            'jenis_permohonan' => JenisPermohonan::Perubahan->value,
+        ])->assertSessionHasErrors('document_id');
+
+        $this->assertSame(1, Permohonan::query()->count());
     }
 }

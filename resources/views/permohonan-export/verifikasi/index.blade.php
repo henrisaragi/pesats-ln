@@ -8,7 +8,7 @@
             <h6 class="card-title">{{ __('Daftar Permohonan') }}</h6>
         </div>
         <div class="card-header">
-            <form action="{{ route('pesats-export.verifikasi.index') }}"
+            <form action="{{ route('permohonan-export.verifikasi.index') }}"
                   class="md:flex items-center md:space-y-0 space-y-4 gap-3" method="GET">
                 <select class="form-input form-input-sm" name="status" onchange="this.form.submit()">
                     @foreach (\App\Enums\PermohonanStatus::cases() as $status)
@@ -49,7 +49,7 @@
                                     <td class="px-3.5 py-3">{{ $item->submitted_at?->translatedFormat('d M Y H:i') ?? '-' }}</td>
                                     <td class="px-3.5 py-3">
                                         <a class="btn size-7.5 bg-default-200 hover:bg-primary/10 hover:text-primary text-default-500"
-                                           href="{{ route('pesats-export.verifikasi.show', $item) }}" aria-label="{{ __('Lihat Detail') }}">
+                                           href="{{ route('permohonan-export.verifikasi.show', $item) }}" aria-label="{{ __('Lihat Detail') }}">
                                             <i class="size-4" data-lucide="eye"></i>
                                         </a>
                                     </td>
