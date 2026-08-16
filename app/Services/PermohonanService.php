@@ -110,10 +110,13 @@ class PermohonanService
         $year = now()->year;
 
         $sequence = DB::transaction(function () use ($year): int {
+            // Postgres rejects "FOR UPDATE" combined with an aggregate (count()), so lock the
+            // matching rows via a plain select and count the resulting collection in PHP instead.
             return Permohonan::query()
                 ->withTrashed()
                 ->whereYear('created_at', $year)
                 ->lockForUpdate()
+                ->pluck('id')
                 ->count() + 1;
         });
 

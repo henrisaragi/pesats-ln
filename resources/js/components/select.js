@@ -129,11 +129,10 @@ export function initSelects(root = document) {
     root.querySelectorAll('[data-choice]:not([data-choice-initialized])').forEach((el) => {
         el.setAttribute('data-choice-initialized', 'true');
 
-        if (el.dataset.choiceDepends) {
-            initCascading(el);
-        } else {
-            initStatic(el);
-        }
+        // Stashed on the element so page-specific scripts can drive the Choices.js widget
+        // programmatically (enable/disable, setChoiceByValue) - see resources/js/pages/documents-index.js
+        // for the "lock country to Indonesia unless the document type allows a free choice" case.
+        el._choices = el.dataset.choiceDepends ? initCascading(el) : initStatic(el);
     });
 }
 

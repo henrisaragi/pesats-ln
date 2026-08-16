@@ -5,11 +5,16 @@
     'selected' => null,
     'placeholder' => null,
     'required' => false,
+    'multiple' => false,
     'dependsOn' => null,
     'dependsOn2' => null,
     'dependsOn3' => null,
     'remoteUrl' => null,
 ])
+
+@php
+    $selectedValues = is_array($selected) ? array_map('strval', $selected) : null;
+@endphp
 
 {{--
     Reusable searchable <select>. Any select with data-choice is auto-initialized by
@@ -26,19 +31,25 @@
     id="{{ $id }}"
     name="{{ $name }}"
     data-choice
+    @if ($multiple) multiple @endif
     @if ($dependsOn) data-choice-depends="{{ $dependsOn }}" @endif
     @if ($dependsOn2) data-choice-depends2="{{ $dependsOn2 }}" @endif
     @if ($dependsOn3) data-choice-depends3="{{ $dependsOn3 }}" @endif
     @if ($remoteUrl) data-choice-url="{{ $remoteUrl }}" @endif
     @required($required)
 >
-    <option value="">{{ $placeholder ?? __('Pilih') }}</option>
+    @unless ($multiple)
+        <option value="">{{ $placeholder ?? __('Pilih') }}</option>
+    @endunless
     @foreach ($options as $option)
         @php
             $optionValue = is_array($option) ? $option['id'] : $option->id;
             $optionLabel = is_array($option) ? $option['name'] : $option->name;
+            $isSelected = $selectedValues !== null
+                ? in_array((string) $optionValue, $selectedValues, true)
+                : (string) $selected === (string) $optionValue;
         @endphp
-        <option value="{{ $optionValue }}" @selected((string) $selected === (string) $optionValue)>
+        <option value="{{ $optionValue }}" @selected($isSelected)>
             {{ $optionLabel }}
         </option>
     @endforeach

@@ -26,6 +26,7 @@ class MasterDataPermissionSeeder extends Seeder
         'kuota-perusahaan',
         'entitas',
         'entity-profiles',
+        'documents',
     ];
 
     private const ACTIONS = ['view', 'create', 'update', 'delete'];
@@ -111,6 +112,14 @@ class MasterDataPermissionSeeder extends Seeder
     ];
 
     /**
+     * Dokumen: without this, the "Perusahaan" field is locked to the user's own entity (both in
+     * the create/edit form and the list) - same pattern as users.view-all in PermissionSeeder.
+     */
+    private const DOCUMENTS_PERMISSIONS = [
+        'documents.view-all',
+    ];
+
+    /**
      * Seed the master data permissions.
      */
     public function run(): void
@@ -127,7 +136,7 @@ class MasterDataPermissionSeeder extends Seeder
             $permissions[] = "{$entity}.sync";
         }
 
-        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS);
+        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS, ...self::DOCUMENTS_PERMISSIONS);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([

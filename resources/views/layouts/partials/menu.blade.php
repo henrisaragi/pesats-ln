@@ -157,6 +157,17 @@
             ],
         ],
         [
+            'title' => __('Dokumen'),
+            'items' => [
+                [
+                    'label' => __('Dokumen'),
+                    'icon' => 'file-text',
+                    'route' => 'documents.index',
+                    'permission' => 'documents.view',
+                ],
+            ],
+        ],
+        [
             'title' => __('Settings'),
             'items' => [
                 [
