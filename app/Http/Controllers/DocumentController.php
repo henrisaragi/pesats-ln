@@ -125,11 +125,11 @@ class DocumentController extends Controller
 
     public function satsLnOptions(Permohonan $permohonan): JsonResponse
     {
-        $satsLn = $permohonan->satsLn()->get(['id', 'satsln_number_issued']);
+        $satsLn = $permohonan->satsLn()->get(['id', 'nomor_urut', 'satsln_number_issued']);
 
         return response()->json($satsLn->map(fn ($item) => [
             'id' => $item->id,
-            'name' => $item->satsln_number_issued,
+            'name' => $item->satsln_number_issued ?? '#'.$item->nomor_urut,
         ])->values());
     }
 

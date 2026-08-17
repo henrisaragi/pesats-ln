@@ -21,6 +21,7 @@ class SatsLn extends Model
 
     protected $fillable = [
         'permohonan_id',
+        'nomor_urut',
         'entity_id',
         'customer_company_id',
         'type_satsln',
@@ -50,6 +51,7 @@ class SatsLn extends Model
             'printed_at' => 'datetime',
             'signed_at' => 'datetime',
             'year' => 'integer',
+            'nomor_urut' => 'integer',
         ];
     }
 

@@ -5,7 +5,13 @@
 
 <div class="card border border-default-200">
     <div class="card-header">
-        <h6 class="card-title">{{ $satsLn->satsln_number_issued }}</h6>
+        @if ($satsLn->satsln_number_issued)
+            <h6 class="card-title">{{ $satsLn->satsln_number_issued }}</h6>
+        @else
+            <h6 class="card-title inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">
+                {{ __('Nomor akan otomatis di-generate') }}
+            </h6>
+        @endif
         <div class="flex items-center gap-2 text-xs">
             @if ($satsLn->printed_at)
                 <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.75 border border-primary/30 bg-primary/10 text-primary">

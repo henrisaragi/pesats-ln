@@ -213,6 +213,7 @@ class DocumentTest extends TestCase
 
         $satsLnA = SatsLn::create([
             'permohonan_id' => $permohonan->id,
+            'nomor_urut' => 1,
             'entity_id' => $entitas->id,
             'type_satsln' => 'Export',
             'purpose_of_transaction_id' => $purpose->id,
@@ -223,6 +224,7 @@ class DocumentTest extends TestCase
 
         $satsLnB = SatsLn::create([
             'permohonan_id' => $permohonan->id,
+            'nomor_urut' => 2,
             'entity_id' => $entitas->id,
             'type_satsln' => 'Export',
             'purpose_of_transaction_id' => $purpose->id,

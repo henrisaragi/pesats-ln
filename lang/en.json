@@ -653,5 +653,7 @@
     "Customer \":name\" akan dihapus permanen.": "Customer \":name\" will be permanently deleted.",
     "Customer berhasil ditambahkan.": "Customer added successfully.",
     "Customer berhasil diperbarui.": "Customer updated successfully.",
-    "Customer berhasil dihapus.": "Customer deleted successfully."
+    "Customer berhasil dihapus.": "Customer deleted successfully.",
+
+    "Nomor akan otomatis di-generate": "Number will be generated automatically"
 }

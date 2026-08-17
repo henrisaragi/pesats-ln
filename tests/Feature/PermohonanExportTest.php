@@ -183,6 +183,17 @@ class PermohonanExportTest extends TestCase
         ]);
     }
 
+    /**
+     * Payload minimal untuk store SatsLn tanpa kuota/spesies (cuma header) - purpose_of_transaction_id
+     * satu-satunya field yang wajib diisi di SatsLnRequest.
+     */
+    private function minimalSatsLnPayload(array $overrides = []): array
+    {
+        $purpose = PurposeOfTransaction::create(['code' => 'COM-'.uniqid(), 'name' => 'Komersial']);
+
+        return array_merge(['purpose_of_transaction_id' => (string) $purpose->id], $overrides);
+    }
+
     private function satsLnPayload(KuotaPerusahaan $kuotaPerusahaan, float $qty = 10): array
     {
         $purpose = PurposeOfTransaction::create(['code' => 'COM-'.uniqid(), 'name' => 'Komersial']);
@@ -504,6 +515,101 @@ class PermohonanExportTest extends TestCase
         ]);
 
         $this->actingAs($user)->get(route('permohonan-export.show', $permohonan))->assertOk();
+    }
+
+    /**
+     * nomor_urut ditetapkan permanen saat SatsLn dibuat dan tidak boleh dipakai ulang meski
+     * SatsLn di tengah urutan dihapus - lihat claude/permohonan-task.md.
+     */
+    public function test_sats_ln_nomor_urut_is_assigned_sequentially_and_stable_after_deletion(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->minimalSatsLnPayload());
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->minimalSatsLnPayload());
+
+        $satsLn1 = $permohonan->satsLn()->orderBy('id')->first();
+        $satsLn2 = $permohonan->satsLn()->orderBy('id')->skip(1)->first();
+        $this->assertSame(1, $satsLn1->nomor_urut);
+        $this->assertSame(2, $satsLn2->nomor_urut);
+
+        $this->actingAs($user)->delete(route('permohonan-export.sats-ln.destroy', [$permohonan, $satsLn2]));
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->minimalSatsLnPayload());
+        $satsLn3 = $permohonan->satsLn()->whereNotIn('id', [$satsLn1->id, $satsLn2->id])->firstOrFail();
+
+        $this->assertSame(3, $satsLn3->nomor_urut);
+        $this->assertSame(1, $satsLn1->fresh()->nomor_urut);
+    }
+
+    /**
+     * satsln_number_issued sengaja null saat dibuat (belum di-generate) - halaman preview dan
+     * detail staf harus menampilkan hint bilingual, bukan nomor kosong - lihat
+     * claude/permohonan-task.md.
+     */
+    public function test_new_sats_ln_has_null_permit_number_and_show_page_displays_the_hint(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->minimalSatsLnPayload());
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+
+        $this->assertNull($satsLn->satsln_number_issued);
+
+        $this->actingAs($user)
+            ->get(route('permohonan-export.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertOk()
+            ->assertSee('Nomor akan otomatis di-generate');
+    }
+
+    /**
+     * Icon edit di daftar SATS-LN kiri dipindahkan ke tombol "Edit SATS-LN" di navbar (yang
+     * membuka modal untuk SatsLn yang sedang dipilih) - lihat claude/permohonan-task.md.
+     */
+    public function test_navbar_edit_button_opens_modal_for_selected_sats_ln_and_left_column_edit_icon_is_removed(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->minimalSatsLnPayload());
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+
+        $response = $this->actingAs($user)->get(route('permohonan-export.sats-ln.show', [$permohonan, $satsLn]));
+
+        $response->assertOk();
+        $response->assertDontSee('aria-label="Ubah"', false);
+        $response->assertSee('data-hs-overlay="#satsln-edit-modal-'.$satsLn->id.'"', false);
+        $response->assertSee(__('Edit SATS-LN'));
+    }
+
+    /**
+     * Fitur cari daftar SATS-LN kiri (client-side) butuh nomor urut, customer, dan nama spesies
+     * dirender ke data-search-haystack tiap baris - lihat claude/permohonan-task.md.
+     */
+    public function test_left_column_rows_expose_search_haystack_data_attribute(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $singapore = Country::create(['name' => 'Singapore', 'iso_code' => 'SG', 'iso_code3' => 'SGP', 'phone_code' => '65']);
+        $customer = Customer::create(['name' => 'Buyer Serpentes', 'country_id' => $singapore->id, 'address' => 'Jl. Buyer', 'entity_id' => $user->entity_id]);
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->minimalSatsLnPayload([
+            'customer_company_id' => (string) $customer->id,
+        ]));
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+
+        $response = $this->actingAs($user)->get(route('permohonan-export.show', $permohonan));
+
+        $response->assertOk();
+        $response->assertSee('data-satsln-search-item', false);
+        $response->assertSee('data-satsln-search-input', false);
+        $response->assertSee('data-search-haystack="1 buyer serpentes"', false);
     }
 
     public function test_show_page_displays_the_total_quota_spelled_out_in_the_users_active_locale(): void
@@ -1057,8 +1163,11 @@ class PermohonanExportTest extends TestCase
      */
     private function addSatsLnToPermohonan(SatsLn $existing): SatsLn
     {
+        $nomorUrut = (int) (SatsLn::query()->withTrashed()->where('permohonan_id', $existing->permohonan_id)->max('nomor_urut') ?? 0) + 1;
+
         return SatsLn::create([
             'permohonan_id' => $existing->permohonan_id,
+            'nomor_urut' => $nomorUrut,
             'entity_id' => $existing->entity_id,
             'type_satsln' => 'Export',
             'purpose_of_transaction_id' => PurposeOfTransaction::create(['code' => 'COM-'.uniqid(), 'name' => 'Komersial'])->id,

@@ -45,6 +45,7 @@ class SatsLnController extends Controller
         $satsLn = DB::transaction(function () use ($request, $permohonan, $kuotaPerusahaan): SatsLn {
             $satsLn = SatsLn::create([
                 'permohonan_id' => $permohonan->id,
+                'nomor_urut' => $this->nextNomorUrut($permohonan),
                 'entity_id' => $permohonan->entity_id,
                 'customer_company_id' => $request->validated('customer_company_id'),
                 'type_satsln' => 'Export',
@@ -56,7 +57,8 @@ class SatsLnController extends Controller
                 'valid_until' => $request->validated('valid_until'),
                 'special_conditions' => $request->validated('special_conditions'),
                 'satsln_issued_type' => 'P_0',
-                'satsln_number_issued' => $this->generateNomorSatsLn(),
+                // satsln_number_issued sengaja dibiarkan null dulu (belum di-generate saat
+                // dibuat) - lihat claude/permohonan-task.md.
                 'year' => now()->year,
             ]);
 
@@ -278,14 +280,9 @@ class SatsLnController extends Controller
             ->value('id');
     }
 
-    private function generateNomorSatsLn(): string
+    private function nextNomorUrut(Permohonan $permohonan): int
     {
-        $year = now()->year;
-        $yy = substr((string) $year, -2);
-
-        $sequence = SatsLn::query()->withTrashed()->where('year', $year)->count() + 1;
-
-        return $yy.str_pad((string) $sequence, 5, '0', STR_PAD_LEFT);
+        return (int) ($permohonan->satsLn()->withTrashed()->max('nomor_urut') ?? 0) + 1;
     }
 
     private function authorizeEditable(Permohonan $permohonan): void

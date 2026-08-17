@@ -16,7 +16,8 @@
                     <h6 class="mb-4 card-title">{{ __('Daftar SATS-LN') }}</h6>
                     <div class="flex items-center gap-2">
                         <div class="relative w-full">
-                            <input class="ps-11 form-input form-input-sm" placeholder="{{ __('Cari...') }}" type="text" />
+                            <input class="ps-11 form-input form-input-sm" data-satsln-search-input
+                                placeholder="{{ __('Cari...') }}" type="text" />
                             <div class="absolute inset-y-0 start-0 flex items-center ps-3">
                                 <i class="size-4 flex items-center fill-default-100 text-default-500"
                                     data-lucide="search"></i>
@@ -48,16 +49,24 @@
                                 : ($isPrinted
                                     ? 'inline-flex items-center gap-x-1.5 py-0.5 px-2.5 rounded text-xs font-medium bg-primary/10 text-primary'
                                     : 'text-warning bg-warning/20 rounded text-xs py-0.5 px-2.5');
+                            $searchHaystack = collect([
+                                $satsLn->nomor_urut,
+                                $satsLn->customerCompany?->name,
+                                ...$satsLn->items->flatMap(fn ($item) => [
+                                    $item->species?->scientific_name,
+                                    $item->species?->common_name,
+                                ]),
+                            ])->filter()->implode(' ');
                         @endphp
-                        <div
+                        <div data-satsln-search-item data-search-haystack="{{ \Illuminate\Support\Str::lower($searchHaystack) }}"
                             class="relative border-t p-5 border-default-200 hover:bg-default-50 transition-colors {{ $selectedSatsLn?->id === $satsLn->id ? 'bg-default-100' : '' }}">
                             <a class="absolute inset-0"
                                 href="{{ route('permohonan-export.sats-ln.show', [$permohonan, $satsLn]) }}"
-                                aria-label="{{ __('Lihat detail SATS-LN Ke #:nomor', ['nomor' => $loop->iteration]) }}"></a>
+                                aria-label="{{ __('Lihat detail SATS-LN Ke #:nomor', ['nomor' => $satsLn->nomor_urut]) }}"></a>
                             <div class="flex justify-between">
                                 <div class="w-full">
                                     <h6 class="font-semibold text-sm text-default-700">
-                                        {{ __('SATS-LN Ke #:nomor', ['nomor' => $loop->iteration]) }}
+                                        {{ __('SATS-LN Ke #:nomor', ['nomor' => $satsLn->nomor_urut]) }}
                                     </h6>
                                     <div>
                                         <div class="flex items-center justify-between gap-6 mt-3">
@@ -70,15 +79,6 @@
                                 </div>
                                 <div class="relative z-10 flex flex-col items-end gap-2">
                                     <span class="{{ $satsLnStatusClass }}">{{ $satsLnStatusLabel }}</span>
-                                    @can('permohonan-export.edit')
-                                        @if ($permohonan->status->isEditable())
-                                            <button class="text-default-500 hover:text-primary" type="button"
-                                                data-hs-overlay="#satsln-edit-modal-{{ $satsLn->id }}"
-                                                aria-label="{{ __('Ubah') }}">
-                                                <i class="size-3.5" data-lucide="edit"></i>
-                                            </button>
-                                        @endif
-                                    @endcan
                                 </div>
                             </div>
                         </div>
@@ -90,9 +90,6 @@
         </div>
         <div class="lg:col-span-3 col-span-1">
             @if ($selectedSatsLn)
-                {{-- Navbar aksi SATS-LN - Edit SATS-LN sementara pakai url="#" (placeholder,
-                     belum ada halaman/aksi di baliknya). Tambah Spesies, Lampiran Dokumen, dan
-                     Hapus sudah fungsional. --}}
                 @can('permohonan-export.edit')
                     @if ($permohonan->status->isEditable())
                         @php
@@ -101,9 +98,10 @@
                         @endphp
                         <nav class="card mb-4">
                             <div class="card-body flex flex-wrap items-center gap-2">
-                                <a class="btn btn-sm bg-default-150 hover:bg-default-200" href="#">
+                                <button class="btn btn-sm bg-default-150 hover:bg-default-200" type="button"
+                                        data-hs-overlay="#satsln-edit-modal-{{ $selectedSatsLn->id }}">
                                     <i class="size-4 me-1" data-lucide="edit"></i>{{ __('Edit SATS-LN') }}
-                                </a>
+                                </button>
                                 <button class="btn btn-sm bg-default-150 hover:bg-default-200"
                                         data-hs-overlay="#satsln-item-create-modal" type="button">
                                     <i class="size-4 me-1" data-lucide="leaf"></i>{{ __('Tambah Spesies') }}

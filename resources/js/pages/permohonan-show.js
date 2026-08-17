@@ -45,6 +45,24 @@ document.addEventListener('change', function (event) {
     }
 });
 
+// Fitur cari daftar SATS-LN di kolom kiri (lihat claude/permohonan-task.md) - filter murni di sisi
+// client karena semua data (nomor urut, customer, spesies) sudah dirender ke data-search-haystack
+// tiap baris lewat resources/views/permohonan-export/show.blade.php, jadi tidak perlu AJAX.
+document.addEventListener('input', function (event) {
+    const input = event.target.closest('[data-satsln-search-input]');
+
+    if (!input) {
+        return;
+    }
+
+    const term = input.value.trim().toLowerCase();
+
+    document.querySelectorAll('[data-satsln-search-item]').forEach((item) => {
+        const matches = term === '' || (item.dataset.searchHaystack || '').includes(term);
+        item.classList.toggle('hidden', !matches);
+    });
+});
+
 function syncChoicesDisplay(form) {
     form.querySelectorAll('select[data-choice]').forEach((select) => {
         select._choices?.setChoiceByValue(select.value || '');

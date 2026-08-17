@@ -33,7 +33,14 @@
             <p class="text-xs font-medium text-default-500 uppercase tracking-wide">
                 Surat Angkut Tumbuhan dan Satwa Liar <span class="italic normal-case">(Permit)</span>
             </p>
-            <p class="mt-1 text-lg font-semibold text-default-800">{{ $satsLn->satsln_number_issued }}</p>
+            @if ($satsLn->satsln_number_issued)
+                <p class="mt-1 text-lg font-semibold text-default-800">{{ $satsLn->satsln_number_issued }}</p>
+            @else
+                <p class="mt-1 inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">
+                    Nomor akan otomatis di-generate
+                    <span class="italic font-normal">(Number will be generated automatically)</span>
+                </p>
+            @endif
         </div>
         <span
             class="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
