@@ -37,8 +37,8 @@ class SatsLnRequest extends FormRequest
             'purpose_of_transaction_id' => ['required', 'integer', 'exists:purpose_of_transactions,id'],
             'valid_until' => ['nullable', 'date'],
             'special_conditions' => ['nullable', 'string'],
-            'kuota_perusahaan_id' => ['required', 'integer', 'exists:kuota_perusahaan,id'],
-            'qty' => ['required', 'numeric', 'min:0.01'],
+            'kuota_perusahaan_id' => ['nullable', 'integer', 'exists:kuota_perusahaan,id'],
+            'qty' => ['nullable', 'numeric', 'min:0.01'],
             'peb_or_pib' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
         ];
@@ -48,6 +48,13 @@ class SatsLnRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             if ($validator->errors()->has('kuota_perusahaan_id')) {
+                return;
+            }
+
+            // Kuota/qty (spesies) belum wajib diisi sejak modal "header" SATS-LN (Revisi Permohonan
+            // 3) - logikanya bakal jadi task terpisah nanti. Kalau memang tidak dikirim, tidak ada
+            // yang perlu divalidasi di sini.
+            if ($this->input('kuota_perusahaan_id') === null || $this->input('kuota_perusahaan_id') === '') {
                 return;
             }
 

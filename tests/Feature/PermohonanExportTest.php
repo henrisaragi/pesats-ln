@@ -10,6 +10,7 @@ use App\Enums\KomoditasEntitasStatus;
 use App\Enums\PermohonanStatus;
 use App\Jobs\SendWhatsAppNotificationJob;
 use App\Models\Country;
+use App\Models\Customer\Customer;
 use App\Models\Document;
 use App\Models\Entitas\Entitas;
 use App\Models\Komoditas;
@@ -17,7 +18,9 @@ use App\Models\KomoditasEntitas;
 use App\Models\KuotaNasional;
 use App\Models\KuotaPerusahaan;
 use App\Models\Permohonan;
+use App\Models\Port;
 use App\Models\PurposeOfTransaction;
+use App\Models\SatsLn;
 use App\Models\SourceStatus;
 use App\Models\Species;
 use App\Models\TradeCode;
@@ -377,5 +380,166 @@ class PermohonanExportTest extends TestCase
         ])->assertSessionHasErrors('document_id');
 
         $this->assertSame(1, Permohonan::query()->count());
+    }
+
+    public function test_sats_ln_can_be_created_without_kuota_and_qty(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $indonesia = Country::query()->firstOrCreate(['iso_code' => 'ID'], ['name' => 'Indonesia', 'iso_code3' => 'IDN', 'phone_code' => '62']);
+        $singapore = Country::create(['name' => 'Singapore', 'iso_code' => 'SG', 'iso_code3' => 'SGP', 'phone_code' => '65']);
+        $customer = Customer::create(['name' => 'Buyer Co', 'country_id' => $singapore->id, 'address' => 'Jl. Buyer', 'entity_id' => $user->entity_id]);
+        $purpose = PurposeOfTransaction::create(['code' => 'COM-'.uniqid(), 'name' => 'Komersial']);
+        $portExport = Port::create(['country_id' => $indonesia->id, 'code' => 'IDTPP', 'name' => 'Tanjung Priok', 'type' => 'sea']);
+        $portDestination = Port::create(['country_id' => $singapore->id, 'code' => 'SGSIN', 'name' => 'Singapore Port', 'type' => 'sea']);
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), [
+            'customer_company_id' => (string) $customer->id,
+            'purpose_of_transaction_id' => (string) $purpose->id,
+            'country_of_exportation' => (string) $indonesia->id,
+            'country_of_destination' => (string) $singapore->id,
+            'port_of_exportation' => (string) $portExport->id,
+            'port_of_destination' => (string) $portDestination->id,
+            'return_to' => 'show',
+        ]);
+
+        $this->assertSame(1, $permohonan->satsLn()->count());
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+        $response->assertRedirect(route('permohonan-export.sats-ln.show', [$permohonan, $satsLn]));
+        $this->assertSame($customer->id, $satsLn->customer_company_id);
+        $this->assertNull($satsLn->items()->first());
+    }
+
+    public function test_sats_ln_store_defaults_to_edit_redirect_when_return_to_is_not_sent(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity);
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $this->actingAs($user)
+            ->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10))
+            ->assertRedirect(route('permohonan-export.edit', $permohonan));
+    }
+
+    public function test_port_options_only_returns_ports_for_the_given_country(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $indonesia = Country::query()->firstOrCreate(['iso_code' => 'ID'], ['name' => 'Indonesia', 'iso_code3' => 'IDN', 'phone_code' => '62']);
+        $singapore = Country::create(['name' => 'Singapore', 'iso_code' => 'SG', 'iso_code3' => 'SGP', 'phone_code' => '65']);
+        Port::create(['country_id' => $indonesia->id, 'code' => 'IDTPP', 'name' => 'Tanjung Priok', 'type' => 'sea']);
+        $singaporePort = Port::create(['country_id' => $singapore->id, 'code' => 'SGSIN', 'name' => 'Singapore Port', 'type' => 'sea']);
+
+        $response = $this->actingAs($user)->getJson(route('permohonan-export.port-options', $singapore));
+
+        $response->assertOk();
+        $response->assertJson([['id' => $singaporePort->id, 'name' => 'Singapore Port']]);
+        $this->assertCount(1, $response->json());
+    }
+
+    public function test_show_page_renders_with_a_sats_ln_present(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $indonesia = Country::query()->firstOrCreate(['iso_code' => 'ID'], ['name' => 'Indonesia', 'iso_code3' => 'IDN', 'phone_code' => '62']);
+        $singapore = Country::create(['name' => 'Singapore', 'iso_code' => 'SG', 'iso_code3' => 'SGP', 'phone_code' => '65']);
+        $customer = Customer::create(['name' => 'Buyer Co', 'country_id' => $singapore->id, 'address' => 'Jl. Buyer', 'entity_id' => $user->entity_id]);
+        $purpose = PurposeOfTransaction::create(['code' => 'COM-'.uniqid(), 'name' => 'Komersial']);
+        $portExport = Port::create(['country_id' => $indonesia->id, 'code' => 'IDTPP', 'name' => 'Tanjung Priok', 'type' => 'sea']);
+        $portDestination = Port::create(['country_id' => $singapore->id, 'code' => 'SGSIN', 'name' => 'Singapore Port', 'type' => 'sea']);
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), [
+            'customer_company_id' => (string) $customer->id,
+            'purpose_of_transaction_id' => (string) $purpose->id,
+            'country_of_exportation' => (string) $indonesia->id,
+            'country_of_destination' => (string) $singapore->id,
+            'port_of_exportation' => (string) $portExport->id,
+            'port_of_destination' => (string) $portDestination->id,
+            'return_to' => 'show',
+        ]);
+
+        $this->actingAs($user)->get(route('permohonan-export.show', $permohonan))->assertOk();
+    }
+
+    public function test_sats_ln_detail_page_renders_for_a_specific_sats_ln(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 5));
+
+        $satsLnIds = $permohonan->satsLn()->orderBy('id')->pluck('id');
+        $this->assertSame(2, $satsLnIds->count());
+
+        $firstSatsLn = SatsLn::findOrFail($satsLnIds->first());
+
+        $this->actingAs($user)
+            ->get(route('permohonan-export.sats-ln.show', [$permohonan, $firstSatsLn]))
+            ->assertOk();
+    }
+
+    public function test_sats_ln_detail_page_404s_for_sats_ln_belonging_to_another_permohonan(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $this->createPermohonan($user);
+        $firstPermohonan = Permohonan::firstOrFail();
+
+        $document = $this->createPermohonanDocument($user);
+        $this->actingAs($user)->post(route('permohonan-export.store'), [
+            'document_id' => (string) $document->id,
+            'jenis_permohonan' => JenisPermohonan::Baru->value,
+        ]);
+        $secondPermohonan = Permohonan::query()->where('id', '!=', $firstPermohonan->id)->firstOrFail();
+
+        $indonesia = Country::query()->firstOrCreate(['iso_code' => 'ID'], ['name' => 'Indonesia', 'iso_code3' => 'IDN', 'phone_code' => '62']);
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $secondPermohonan), [
+            'customer_company_id' => null,
+            'purpose_of_transaction_id' => PurposeOfTransaction::create(['code' => 'COM-'.uniqid(), 'name' => 'Komersial'])->id,
+            'country_of_exportation' => $indonesia->id,
+        ]);
+        $satsLn = $secondPermohonan->satsLn()->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('permohonan-export.sats-ln.show', [$firstPermohonan, $satsLn]))
+            ->assertNotFound();
+    }
+
+    public function test_sats_ln_destroy_defaults_to_edit_redirect_when_return_to_is_not_sent(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity);
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+
+        $this->actingAs($user)
+            ->delete(route('permohonan-export.sats-ln.destroy', [$permohonan, $satsLn]))
+            ->assertRedirect(route('permohonan-export.edit', $permohonan));
+
+        $this->assertSame(0, $permohonan->satsLn()->count());
+    }
+
+    public function test_sats_ln_destroy_redirects_to_show_when_return_to_is_show(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity);
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+
+        $this->actingAs($user)
+            ->delete(route('permohonan-export.sats-ln.destroy', [$permohonan, $satsLn]), ['return_to' => 'show'])
+            ->assertRedirect(route('permohonan-export.show', $permohonan));
+
+        $this->assertSame(0, $permohonan->satsLn()->count());
     }
 }

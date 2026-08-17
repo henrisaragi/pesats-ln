@@ -6,14 +6,17 @@ namespace App\Http\Controllers\PermohonanExport;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PermohonanExport\SatsLnRequest;
+use App\Models\Country;
 use App\Models\Entitas\Entitas;
 use App\Models\HargaPatokan;
 use App\Models\KuotaPerusahaan;
 use App\Models\Permohonan;
+use App\Models\Port;
 use App\Models\SatsLn;
 use App\Services\PermohonanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -30,9 +33,10 @@ class SatsLnController extends Controller
                 ->with('error', __('Maksimal 25 SATS-LN per permohonan.'));
         }
 
-        $kuotaPerusahaan = KuotaPerusahaan::findOrFail($request->validated('kuota_perusahaan_id'));
+        $kuotaPerusahaanId = $request->validated('kuota_perusahaan_id');
+        $kuotaPerusahaan = $kuotaPerusahaanId !== null ? KuotaPerusahaan::findOrFail($kuotaPerusahaanId) : null;
 
-        DB::transaction(function () use ($request, $permohonan, $kuotaPerusahaan): void {
+        $satsLn = DB::transaction(function () use ($request, $permohonan, $kuotaPerusahaan): SatsLn {
             $satsLn = SatsLn::create([
                 'permohonan_id' => $permohonan->id,
                 'entity_id' => $permohonan->entity_id,
@@ -50,18 +54,23 @@ class SatsLnController extends Controller
                 'year' => now()->year,
             ]);
 
-            $satsLn->items()->create([
-                'kuota_nasional_id' => $kuotaPerusahaan->kuota_nasional_id,
-                'kuota_perusahaan_id' => $kuotaPerusahaan->id,
-                'species_id' => $kuotaPerusahaan->kuotaNasional->species_id,
-                'harga_patokan_id' => $this->resolveHargaPatokanId($kuotaPerusahaan),
-                'qty' => $request->validated('qty'),
-                'peb_or_pib' => $request->validated('peb_or_pib'),
-                'description' => $request->validated('description'),
-            ]);
+            if ($kuotaPerusahaan !== null) {
+                $satsLn->items()->create([
+                    'kuota_nasional_id' => $kuotaPerusahaan->kuota_nasional_id,
+                    'kuota_perusahaan_id' => $kuotaPerusahaan->id,
+                    'species_id' => $kuotaPerusahaan->kuotaNasional->species_id,
+                    'harga_patokan_id' => $this->resolveHargaPatokanId($kuotaPerusahaan),
+                    'qty' => $request->validated('qty'),
+                    'peb_or_pib' => $request->validated('peb_or_pib'),
+                    'description' => $request->validated('description'),
+                ]);
+            }
+
+            return $satsLn;
         });
 
-        return redirect()->route('permohonan-export.edit', $permohonan)->with('success', __('SATS-LN berhasil ditambahkan.'));
+        return $this->redirectAfterSave($request, $permohonan, $satsLn)
+            ->with('success', __('SATS-LN berhasil ditambahkan.'));
     }
 
     public function update(SatsLnRequest $request, Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
@@ -69,7 +78,8 @@ class SatsLnController extends Controller
         $this->authorizeEditable($permohonan);
         abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
 
-        $kuotaPerusahaan = KuotaPerusahaan::findOrFail($request->validated('kuota_perusahaan_id'));
+        $kuotaPerusahaanId = $request->validated('kuota_perusahaan_id');
+        $kuotaPerusahaan = $kuotaPerusahaanId !== null ? KuotaPerusahaan::findOrFail($kuotaPerusahaanId) : null;
 
         DB::transaction(function () use ($request, $satsLn, $kuotaPerusahaan): void {
             $satsLn->update([
@@ -83,26 +93,38 @@ class SatsLnController extends Controller
                 'special_conditions' => $request->validated('special_conditions'),
             ]);
 
-            $satsLn->items()->first()?->update([
-                'kuota_nasional_id' => $kuotaPerusahaan->kuota_nasional_id,
-                'kuota_perusahaan_id' => $kuotaPerusahaan->id,
-                'species_id' => $kuotaPerusahaan->kuotaNasional->species_id,
-                'harga_patokan_id' => $this->resolveHargaPatokanId($kuotaPerusahaan),
-                'qty' => $request->validated('qty'),
-                'peb_or_pib' => $request->validated('peb_or_pib'),
-                'description' => $request->validated('description'),
-            ]);
+            if ($kuotaPerusahaan !== null) {
+                $satsLn->items()->first()?->update([
+                    'kuota_nasional_id' => $kuotaPerusahaan->kuota_nasional_id,
+                    'kuota_perusahaan_id' => $kuotaPerusahaan->id,
+                    'species_id' => $kuotaPerusahaan->kuotaNasional->species_id,
+                    'harga_patokan_id' => $this->resolveHargaPatokanId($kuotaPerusahaan),
+                    'qty' => $request->validated('qty'),
+                    'peb_or_pib' => $request->validated('peb_or_pib'),
+                    'description' => $request->validated('description'),
+                ]);
+            }
         });
 
-        return redirect()->route('permohonan-export.edit', $permohonan)->with('success', __('SATS-LN berhasil diperbarui.'));
+        return $this->redirectAfterSave($request, $permohonan, $satsLn)
+            ->with('success', __('SATS-LN berhasil diperbarui.'));
     }
 
-    public function destroy(Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
+    public function destroy(Request $request, Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
     {
         $this->authorizeEditable($permohonan);
         abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
 
         $satsLn->delete();
+
+        // Satsln yang barusan dihapus sudah tidak ada lagi, jadi return_to=show (dipakai tombol
+        // Hapus di navbar halaman detail) selalu mengarah ke rute show umum (permohonan-export.show,
+        // otomatis jatuh ke SATS-LN sisa yang terbaru atau empty-state) - bukan ke sats-ln.show milik
+        // record yang sudah dihapus.
+        if ($request->input('return_to') === 'show') {
+            return redirect()->route('permohonan-export.show', $permohonan)
+                ->with('success', __('SATS-LN berhasil dihapus.'));
+        }
 
         return redirect()->route('permohonan-export.edit', $permohonan)->with('success', __('SATS-LN berhasil dihapus.'));
     }
@@ -122,6 +144,25 @@ class SatsLnController extends Controller
                 number_format($this->permohonanService->sisaKuotaPerusahaan($item), 2, ',', '.')
             ),
         ])->values());
+    }
+
+    public function portOptions(Country $country): JsonResponse
+    {
+        $ports = Port::query()->where('country_id', $country->id)->orderBy('name')->get(['id', 'name']);
+
+        return response()->json($ports->map(fn (Port $port) => [
+            'id' => $port->id,
+            'name' => $port->name,
+        ])->values());
+    }
+
+    private function redirectAfterSave(SatsLnRequest $request, Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
+    {
+        if ($request->input('return_to') === 'show') {
+            return redirect()->route('permohonan-export.sats-ln.show', [$permohonan, $satsLn]);
+        }
+
+        return redirect()->route('permohonan-export.edit', $permohonan);
     }
 
     private function resolveHargaPatokanId(KuotaPerusahaan $kuotaPerusahaan): ?int

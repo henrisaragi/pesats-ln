@@ -11,11 +11,14 @@ use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PermohonanExport\PermohonanRequest;
 use App\Jobs\SendWhatsAppNotificationJob;
+use App\Models\Country;
 use App\Models\Customer\Customer;
 use App\Models\Document;
 use App\Models\Entitas\Entitas;
 use App\Models\Permohonan;
+use App\Models\Port;
 use App\Models\PurposeOfTransaction;
+use App\Models\SatsLn;
 use App\Models\User;
 use App\Notifications\AppNotification;
 use App\Services\PermohonanService;
@@ -86,12 +89,34 @@ class PermohonanController extends Controller
         ]);
     }
 
-    public function show(Permohonan $permohonan): View
+    public function show(Permohonan $permohonan, ?SatsLn $satsLn = null): View
     {
-        $this->authorizeOwner($permohonan);
+        $entity = $this->authorizeOwner($permohonan);
+
+        if ($satsLn !== null) {
+            abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
+        }
+
+        $permohonan->load([
+            'entitas',
+            'document',
+            'satsLn' => fn ($query) => $query->oldest(),
+            'satsLn.customerCompany.country',
+            'satsLn.purposeOfTransaction',
+            'satsLn.portOfExportation',
+            'satsLn.portOfDestination',
+        ]);
+
+        $indonesiaCountry = Country::query()->where('iso_code', 'ID')->first();
 
         return view('permohonan-export.show', [
-            'permohonan' => $permohonan->load(['entitas', 'document', 'satsLn' => fn ($query) => $query->oldest()]),
+            'permohonan' => $permohonan,
+            'selectedSatsLn' => $satsLn ?? $permohonan->satsLn->last(),
+            'customerOptions' => Customer::query()->where('entity_id', $entity->id)->orderBy('name')->get(),
+            'purposeOfTransactionOptions' => PurposeOfTransaction::query()->orderBy('name')->get(),
+            'countryOptions' => Country::query()->orderBy('name')->get(),
+            'indonesiaCountry' => $indonesiaCountry,
+            'indonesiaPortOptions' => Port::query()->where('country_id', $indonesiaCountry?->id)->orderBy('name')->get(),
         ]);
     }
 

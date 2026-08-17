@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.')->group(function (): void {
     Route::get('kuota-perusahaan-options/{source?}', [SatsLnController::class, 'kuotaPerusahaanOptions'])->name('kuota-perusahaan-options');
+    Route::get('port-options/{country}', [SatsLnController::class, 'portOptions'])->name('port-options');
 
     Route::get('', [PermohonanController::class, 'index'])->middleware('permission:permohonan-export.view')->name('index');
     Route::post('', [PermohonanController::class, 'store'])->middleware('permission:permohonan-export.create')->name('store');
@@ -25,6 +26,7 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
     });
 
     Route::get('{permohonan}', [PermohonanController::class, 'show'])->middleware('permission:permohonan-export.view')->name('show');
+    Route::get('{permohonan}/sats-ln/{satsLn}', [PermohonanController::class, 'show'])->middleware('permission:permohonan-export.view')->name('sats-ln.show');
     Route::get('{permohonan}/edit', [PermohonanController::class, 'edit'])->middleware('permission:permohonan-export.edit')->name('edit');
     Route::post('{permohonan}/submit', [PermohonanController::class, 'submit'])->middleware('permission:permohonan-export.edit')->name('submit');
     Route::delete('{permohonan}', [PermohonanController::class, 'destroy'])->middleware('permission:permohonan-export.delete')->name('destroy');
