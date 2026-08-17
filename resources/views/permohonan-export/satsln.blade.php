@@ -139,6 +139,7 @@
                         @php
                             $itemTradeCode = $item->kuotaPerusahaan?->kuotaNasional?->tradeCode;
                             $itemSource = $item->kuotaPerusahaan?->kuotaNasional?->source;
+                            $itemRealisasiNasional = $realisasiNasionalRunningTotalByItemId[$item->id] ?? 0.0;
                         @endphp
                         <tr
                             @if ($itemsAreEditable) class="cursor-pointer hover:bg-default-50"
@@ -157,9 +158,9 @@
                                 ({{ $itemSource?->code }})
                             </td>
                             <td class="px-3 py-2 text-right">
-                                {{ number_format((float) $item->qty, 2, ',', '.') }} /
-                                {{ number_format((float) ($item->kuotaPerusahaan?->quota ?? 0), 2, ',', '.') }}
-                                ({{ $item->kuotaPerusahaan?->year }})
+                                {{ number_format($itemRealisasiNasional, 2, ',', '.') }} /
+                                {{ number_format((float) ($item->kuotaNasional?->quota ?? 0), 2, ',', '.') }}
+                                ({{ $item->kuotaNasional?->year }})
                             </td>
                         </tr>
                         @empty

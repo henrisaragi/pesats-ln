@@ -86,12 +86,26 @@ class SatsLnItemRequest extends FormRequest
                 return;
             }
 
-            $sisa = $this->permohonanService->sisaKuotaPerusahaan($kuotaPerusahaan, $editingItem?->id);
+            $sisaPerusahaan = $this->permohonanService->sisaKuotaPerusahaan($kuotaPerusahaan, $editingItem?->id);
 
-            if ($this->float('qty') > $sisa) {
+            if ($this->float('qty') > $sisaPerusahaan) {
                 $validator->errors()->add(
                     'qty',
-                    __('Jumlah melebihi sisa kuota perusahaan yang tersedia (:sisa).', ['sisa' => number_format($sisa, 2, ',', '.')])
+                    __('Jumlah melebihi sisa kuota perusahaan yang tersedia (:sisa).', ['sisa' => number_format($sisaPerusahaan, 2, ',', '.')])
+                );
+
+                return;
+            }
+
+            // Sisa kuota perusahaan cukup bukan berarti sisa kuota nasional (bersama entitas
+            // lain yang memakai kuota_nasional yang sama) juga masih cukup - lihat Revisi
+            // Permohonan 4 di claude/permohonan-task.md.
+            $sisaNasional = $this->permohonanService->sisaKuotaNasional($kuotaPerusahaan->kuotaNasional, $editingItem?->id);
+
+            if ($this->float('qty') > $sisaNasional) {
+                $validator->errors()->add(
+                    'qty',
+                    __('Jumlah melebihi sisa kuota nasional yang tersedia (:sisa).', ['sisa' => number_format($sisaNasional, 2, ',', '.')])
                 );
             }
         });

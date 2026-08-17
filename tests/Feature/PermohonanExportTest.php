@@ -25,6 +25,7 @@ use App\Models\SourceStatus;
 use App\Models\Species;
 use App\Models\TradeCode;
 use App\Models\User;
+use App\Services\PermohonanService;
 use Database\Seeders\MasterDataPermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -127,6 +128,30 @@ class PermohonanExportTest extends TestCase
 
         KomoditasEntitas::create([
             'komoditas_id' => $komoditas->id,
+            'entitas_id' => $entitas->id,
+            'file_path' => 'dummy.pdf',
+            'tanggal_terbit' => '2026-01-01',
+            'tanggal_berakhir' => '2031-01-01',
+            'status' => KomoditasEntitasStatus::Verified,
+        ]);
+
+        return KuotaPerusahaan::create([
+            'entity_id' => $entitas->id,
+            'kuota_nasional_id' => $kuotaNasional->id,
+            'quota' => $quota,
+            'year' => 2026,
+        ]);
+    }
+
+    /**
+     * Kuota perusahaan baru untuk entitas LAIN, menunjuk ke kuota_nasional yang SUDAH ADA -
+     * dipakai untuk menguji realisasi kuota nasional yang terakumulasi lintas entitas (Revisi
+     * Permohonan 4).
+     */
+    private function makeKuotaPerusahaanForNasional(Entitas $entitas, KuotaNasional $kuotaNasional, float $quota): KuotaPerusahaan
+    {
+        KomoditasEntitas::create([
+            'komoditas_id' => $kuotaNasional->komoditas_id,
             'entitas_id' => $entitas->id,
             'file_path' => 'dummy.pdf',
             'tanggal_terbit' => '2026-01-01',
@@ -565,7 +590,7 @@ class PermohonanExportTest extends TestCase
     private function makeSatsLnForItems(User $user): SatsLn
     {
         $this->createPermohonan($user);
-        $permohonan = Permohonan::firstOrFail();
+        $permohonan = Permohonan::where('entity_id', $user->entity_id)->latest('id')->firstOrFail();
 
         $indonesia = Country::query()->firstOrCreate(['iso_code' => 'ID'], ['name' => 'Indonesia', 'iso_code3' => 'IDN', 'phone_code' => '62']);
         $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), [
@@ -834,5 +859,227 @@ class PermohonanExportTest extends TestCase
         $response->assertSessionHasErrors('komoditas_id');
         $firstItem->refresh();
         $this->assertSame((int) $firstKuotaNasional->komoditas_id, (int) $firstItem->kuotaNasional->komoditas_id);
+    }
+
+    /**
+     * Tambah item lalu submit permohonan-nya. Item sudah dihitung terpakai sejak Draft (lihat
+     * PermohonanService - cuma Ditolak yang dikecualikan), jadi langkah submit() di sini bukan
+     * syarat realisasi bertambah - dipanggil supaya test yang butuh status lanjut (bukan Draft,
+     * mis. untuk menguji reject) punya alur yang realistis.
+     */
+    private function addItemAndSubmit(User $user, SatsLn $satsLn, KuotaNasional $kuotaNasional, float $qty): void
+    {
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.items.store', [$satsLn->permohonan, $satsLn]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => (string) $qty,
+        ])->assertSessionHasNoErrors();
+
+        $this->actingAs($user)->post(route('permohonan-export.submit', $satsLn->permohonan))->assertRedirect();
+    }
+
+    /**
+     * SatsLn baru menunjuk ke Permohonan yang SUDAH ADA (dipakai untuk menguji beberapa SatsLn
+     * dalam satu Permohonan, karena route store SATS-LN cuma bisa dipanggil sekali per Permohonan
+     * lewat helper makeSatsLnForItems()).
+     */
+    private function addSatsLnToPermohonan(SatsLn $existing): SatsLn
+    {
+        return SatsLn::create([
+            'permohonan_id' => $existing->permohonan_id,
+            'entity_id' => $existing->entity_id,
+            'type_satsln' => 'Export',
+            'purpose_of_transaction_id' => PurposeOfTransaction::create(['code' => 'COM-'.uniqid(), 'name' => 'Komersial'])->id,
+            'satsln_issued_type' => 'P_0',
+            'satsln_number_issued' => '26'.random_int(10000, 99999),
+            'year' => 2026,
+        ]);
+    }
+
+    /**
+     * Kolom "Realisasi Kuota" adalah saldo BERJALAN (seperti mutasi rekening), bukan satu total
+     * yang diulang di semua baris - reproduksi persis contoh yang diberikan user: SatsLn 1 qty 1
+     * -> tampil 1, SatsLn 2 qty 2 -> tampil 3 (1+2), SatsLn 3 qty 10 -> tampil 13 (1+2+10), lalu
+     * entitas lain qty 5 -> tampil 18 (1+2+10+5). Semua terjadi selagi Permohonan masih Draft.
+     */
+    public function test_realisasi_kuota_nasional_is_a_running_total_per_row_not_a_repeated_grand_total(): void
+    {
+        $service = app(PermohonanService::class);
+
+        $userA = $this->makeUser('perusahaan');
+        $kuotaPerusahaanA = $this->makeKuotaPerusahaan($userA->entity, 100);
+        $kuotaNasional = $kuotaPerusahaanA->kuotaNasional;
+
+        $satsLn1 = $this->makeSatsLnForItems($userA);
+        $this->assertSame(PermohonanStatus::Draft, $satsLn1->permohonan->fresh()->status);
+
+        $this->actingAs($userA)->post(route('permohonan-export.sats-ln.items.store', [$satsLn1->permohonan, $satsLn1]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '1',
+        ])->assertSessionHasNoErrors();
+
+        $satsLn2 = $this->addSatsLnToPermohonan($satsLn1);
+        $this->actingAs($userA)->post(route('permohonan-export.sats-ln.items.store', [$satsLn1->permohonan, $satsLn2]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '2',
+        ])->assertSessionHasNoErrors();
+
+        $satsLn3 = $this->addSatsLnToPermohonan($satsLn1);
+        $this->actingAs($userA)->post(route('permohonan-export.sats-ln.items.store', [$satsLn1->permohonan, $satsLn3]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '10',
+        ])->assertSessionHasNoErrors();
+
+        $userB = $this->makeUser('perusahaan');
+        $this->makeKuotaPerusahaanForNasional($userB->entity, $kuotaNasional, 100);
+        $satsLnB = $this->makeSatsLnForItems($userB);
+        $this->actingAs($userB)->post(route('permohonan-export.sats-ln.items.store', [$satsLnB->permohonan, $satsLnB]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '5',
+        ])->assertSessionHasNoErrors();
+
+        // Total keseluruhan tetap benar (dipakai validasi sisa kuota, bukan tampilan per-baris).
+        $this->assertSame(18.0, $service->realisasiKuotaNasional($kuotaNasional->fresh()));
+
+        $item1 = $satsLn1->items()->firstOrFail();
+        $item2 = $satsLn2->items()->firstOrFail();
+        $item3 = $satsLn3->items()->firstOrFail();
+        $itemB = $satsLnB->items()->firstOrFail();
+
+        $runningTotals = $service->realisasiKuotaNasionalRunningTotalForItems(
+            collect([$item1, $item2, $item3, $itemB])
+        );
+
+        $this->assertSame(1.0, $runningTotals[$item1->id]);
+        $this->assertSame(3.0, $runningTotals[$item2->id]);
+        $this->assertSame(13.0, $runningTotals[$item3->id]);
+        $this->assertSame(18.0, $runningTotals[$itemB->id]);
+
+        // Ditampilkan juga di halaman show masing-masing SatsLn (kolom "Realisasi Kuota") -
+        // kuota_nasional totalnya 150 (lihat makeKuotaPerusahaan: quota + 50).
+        $this->actingAs($userA)->get(route('permohonan-export.sats-ln.show', [$satsLn1->permohonan, $satsLn1]))
+            ->assertSee('1,00', false)->assertSee('150,00', false);
+        $this->actingAs($userA)->get(route('permohonan-export.sats-ln.show', [$satsLn1->permohonan, $satsLn2]))
+            ->assertSee('3,00', false);
+        $this->actingAs($userA)->get(route('permohonan-export.sats-ln.show', [$satsLn1->permohonan, $satsLn3]))
+            ->assertSee('13,00', false);
+        $this->actingAs($userB)->get(route('permohonan-export.sats-ln.show', [$satsLnB->permohonan, $satsLnB]))
+            ->assertSee('18,00', false);
+    }
+
+    public function test_realisasi_kuota_nasional_accumulates_across_different_entities(): void
+    {
+        $service = app(PermohonanService::class);
+
+        $userA = $this->makeUser('perusahaan');
+        $kuotaPerusahaanA = $this->makeKuotaPerusahaan($userA->entity, 100);
+        $kuotaNasional = $kuotaPerusahaanA->kuotaNasional;
+        $satsLnA1 = $this->makeSatsLnForItems($userA);
+
+        $this->addItemAndSubmit($userA, $satsLnA1, $kuotaNasional, 10);
+        $this->assertSame(10.0, $service->realisasiKuotaNasional($kuotaNasional->fresh()));
+
+        $userB = $this->makeUser('perusahaan');
+        $this->makeKuotaPerusahaanForNasional($userB->entity, $kuotaNasional, 100);
+        $satsLnB = $this->makeSatsLnForItems($userB);
+
+        $this->addItemAndSubmit($userB, $satsLnB, $kuotaNasional, 5);
+        $this->assertSame(15.0, $service->realisasiKuotaNasional($kuotaNasional->fresh()));
+
+        // Entitas A mengajukan Varanus salvator lagi lewat Permohonan BARU (kuota nasional yang
+        // sama) - rumus yang sama berlaku lagi (item 2 di Revisi Permohonan 4).
+        $satsLnA2 = $this->makeSatsLnForItems($userA);
+        $this->addItemAndSubmit($userA, $satsLnA2, $kuotaNasional, 3);
+
+        $this->assertSame(18.0, $service->realisasiKuotaNasional($kuotaNasional->fresh()));
+    }
+
+    public function test_sats_ln_item_fails_when_qty_exceeds_sisa_kuota_nasional_even_if_company_quota_allows(): void
+    {
+        $userA = $this->makeUser('perusahaan');
+        $kuotaPerusahaanA = $this->makeKuotaPerusahaan($userA->entity, 100);
+        $kuotaNasional = $kuotaPerusahaanA->kuotaNasional;
+        $satsLnA = $this->makeSatsLnForItems($userA);
+
+        // Kuota nasional totalnya 150 (lihat makeKuotaPerusahaan: quota + 50). Entitas B mengajukan
+        // & submit duluan sampai memakai 140 dari kuota nasional itu (kuota perusahaannya sendiri
+        // 200 - test ini dibuat supaya entitas B yang membatasi, bukan entitas A).
+        $userB = $this->makeUser('perusahaan');
+        $this->makeKuotaPerusahaanForNasional($userB->entity, $kuotaNasional, 200);
+        $satsLnB = $this->makeSatsLnForItems($userB);
+        $this->addItemAndSubmit($userB, $satsLnB, $kuotaNasional, 140);
+
+        // Sisa kuota nasional tinggal 10 (150 - 140). Kuota perusahaan A sendiri (100) masih jauh
+        // cukup untuk qty 50, tapi kuota nasional bersama sudah tidak cukup - harus tetap gagal.
+        $response = $this->actingAs($userA)->post(route('permohonan-export.sats-ln.items.store', [$satsLnA->permohonan, $satsLnA]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '50',
+        ]);
+
+        $response->assertSessionHasErrors('qty');
+        $this->assertSame(0, $satsLnA->items()->count());
+
+        // Qty dalam batas sisa kuota nasional (10) tetap berhasil.
+        $this->actingAs($userA)->post(route('permohonan-export.sats-ln.items.store', [$satsLnA->permohonan, $satsLnA]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '10',
+        ])->assertSessionHasNoErrors();
+        $this->assertSame(1, $satsLnA->items()->count());
+    }
+
+    public function test_rejecting_permohonan_returns_its_qty_to_the_national_quota_realization(): void
+    {
+        // "SATS-LN dibatalkan atau dihapus" (item 5, Revisi Permohonan 4): SatsLn cuma bisa
+        // dihapus selagi Permohonan-nya masih editable (Draft/Ditolak - lihat
+        // PermohonanStatus::isEditable()), dan Draft/Ditolak memang sudah tidak pernah dihitung
+        // "terpakai" sama sekali (lihat realisasiKuotaNasional()) - jadi jalur "kembali"-nya
+        // kuota di dunia nyata bukan lewat hapus data setelah submit (tidak mungkin, sudah
+        // read-only), melainkan lewat verifier MENOLAK permohonan yang sudah diajukan: begitu
+        // status pindah ke Ditolak, realisasinya otomatis hilang dari perhitungan nasional -
+        // tanpa perlu menghapus baris SatsLnItem apa pun.
+        $service = app(PermohonanService::class);
+
+        $user = $this->makeUser('perusahaan');
+        $verifier = $this->makeStaffVerifier();
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $kuotaNasional = $kuotaPerusahaan->kuotaNasional;
+        $satsLn = $this->makeSatsLnForItems($user);
+
+        $this->addItemAndSubmit($user, $satsLn, $kuotaNasional, 20);
+        $this->assertSame(20.0, $service->realisasiKuotaNasional($kuotaNasional->fresh()));
+
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.reject', $satsLn->permohonan), [
+            'catatan_verifikasi' => 'Dokumen kurang lengkap.',
+        ])->assertRedirect();
+
+        $this->assertSame(0.0, $service->realisasiKuotaNasional($kuotaNasional->fresh()));
+
+        // Permohonan yang ditolak kembali editable - SatsLn-nya sekarang bisa dihapus juga
+        // (realisasinya tetap 0, sudah tidak berubah karena memang sudah tidak terhitung sejak
+        // status jadi Ditolak).
+        $this->actingAs($user)->delete(route('permohonan-export.sats-ln.destroy', [$satsLn->permohonan, $satsLn]))
+            ->assertRedirect();
+
+        $this->assertSame(0.0, $service->realisasiKuotaNasional($kuotaNasional->fresh()));
     }
 }

@@ -124,10 +124,14 @@ class PermohonanController extends Controller
         // kosong) - query di controller, bukan di Blade (lihat CLAUDE.md). Berlaku utk modal create
         // ("satsln-item-create-modal") maupun tiap modal edit ("satsln-item-edit-modal-{id}").
         $itemModalRedisplay = str_starts_with((string) old('_modal'), 'satsln-item-');
+        $selectedSatsLn = $satsLn ?? $permohonan->satsLn->last();
 
         return view('permohonan-export.show', [
             'permohonan' => $permohonan,
-            'selectedSatsLn' => $satsLn ?? $permohonan->satsLn->last(),
+            'selectedSatsLn' => $selectedSatsLn,
+            'realisasiNasionalRunningTotalByItemId' => $this->permohonanService->realisasiKuotaNasionalRunningTotalForItems(
+                $selectedSatsLn?->items ?? collect()
+            ),
             'customerOptions' => Customer::query()->where('entity_id', $entity->id)->orderBy('name')->get(),
             'purposeOfTransactionOptions' => PurposeOfTransaction::query()->orderBy('name')->get(),
             'countryOptions' => Country::query()->orderBy('name')->get(),

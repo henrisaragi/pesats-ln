@@ -62,4 +62,9 @@ class KuotaNasional extends Model
     {
         return $this->hasMany(KuotaPerusahaan::class);
     }
+
+    public function satsLnItems(): HasMany
+    {
+        return $this->hasMany(SatsLnItem::class);
+    }
 }

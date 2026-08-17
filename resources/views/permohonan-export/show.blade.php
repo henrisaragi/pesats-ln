@@ -119,6 +119,7 @@
                     @include('permohonan-export.satsln', [
                         'satsLn' => $selectedSatsLn,
                         'permohonan' => $permohonan,
+                        'realisasiNasionalRunningTotalByItemId' => $realisasiNasionalRunningTotalByItemId,
                     ])
                 </div>
             @else

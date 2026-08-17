@@ -544,6 +544,7 @@
     "Kondisi Khusus": "Special Conditions",
     "Kuota perusahaan tidak valid untuk entitas ini.": "This company quota is not valid for this entity.",
     "Jumlah melebihi sisa kuota perusahaan yang tersedia (:sisa).": "Quantity exceeds the remaining available company quota (:sisa).",
+    "Jumlah melebihi sisa kuota nasional yang tersedia (:sisa).": "Quantity exceeds the remaining available national quota (:sisa).",
     "Maksimal 25 SATS-LN per permohonan.": "Maximum 25 SATS-LN per request.",
     "SATS-LN berhasil ditambahkan.": "SATS-LN added successfully.",
     "SATS-LN berhasil diperbarui.": "SATS-LN updated successfully.",

@@ -7,8 +7,10 @@ namespace App\Services;
 use App\Enums\PermohonanStatus;
 use App\Models\Entitas\Entitas;
 use App\Models\Komoditas;
+use App\Models\KuotaNasional;
 use App\Models\KuotaPerusahaan;
 use App\Models\Permohonan;
+use App\Models\SatsLnItem;
 use App\Models\SourceStatus;
 use App\Models\Species;
 use App\Models\TradeCode;
@@ -18,19 +20,75 @@ use Illuminate\Support\Facades\DB;
 class PermohonanService
 {
     /**
-     * Sisa kuota perusahaan yang belum dipakai di SATS-LN manapun (draft/ditolak tidak dihitung terpakai).
+     * Sisa kuota perusahaan yang belum dipakai di SATS-LN manapun. Item di Permohonan yang masih
+     * Draft TETAP dihitung terpakai (begitu qty diisi di sebuah item, langsung dianggap
+     * "dipesan"/reserved) - kalau Draft dikecualikan, dua SatsLn draft berbeda bisa sama-sama
+     * lolos validasi memakai kuota yang sama lebih dari sekali sebelum salah satunya di-submit.
+     * Cuma Ditolak yang dikecualikan (permohonan yang ditolak verifier memang harus melepas
+     * kuotanya).
      */
     public function sisaKuotaPerusahaan(KuotaPerusahaan $kuotaPerusahaan, ?int $exceptSatsLnItemId = null): float
     {
         $terpakai = (float) $kuotaPerusahaan->satsLnItems()
-            ->whereHas('satsLn.permohonan', fn ($query) => $query->whereNotIn('status', [
-                PermohonanStatus::Draft->value,
-                PermohonanStatus::Ditolak->value,
-            ]))
+            ->whereHas('satsLn.permohonan', fn ($query) => $query->where('status', '!=', PermohonanStatus::Ditolak->value))
             ->when($exceptSatsLnItemId !== null, fn ($query) => $query->where('id', '!=', $exceptSatsLnItemId))
             ->sum('qty');
 
         return (float) $kuotaPerusahaan->quota - $terpakai;
+    }
+
+    /**
+     * Realisasi kuota nasional: total qty SatsLnItem dari SEMUA entitas yang memakai baris
+     * kuota_nasional ini (bukan cuma entitas yang sedang login) - konsepnya sama seperti mutasi
+     * rekening bersama, setiap entitas yang mengajukan spesies dari kuota nasional yang sama
+     * menambah "terpakai"-nya, termasuk yang masih Draft (lihat catatan di sisaKuotaPerusahaan()).
+     * Cuma Ditolak yang dikecualikan, dan SATS-LN/Permohonan yang sudah dihapus (soft delete)
+     * otomatis tidak ikut lewat whereHas di bawah - jadi kuota otomatis "kembali" begitu SATS-LN
+     * dibatalkan/dihapus.
+     */
+    public function realisasiKuotaNasional(KuotaNasional $kuotaNasional, ?int $exceptSatsLnItemId = null): float
+    {
+        return (float) $kuotaNasional->satsLnItems()
+            ->whereHas('satsLn.permohonan', fn ($query) => $query->where('status', '!=', PermohonanStatus::Ditolak->value))
+            ->when($exceptSatsLnItemId !== null, fn ($query) => $query->where('id', '!=', $exceptSatsLnItemId))
+            ->sum('qty');
+    }
+
+    /**
+     * Sisa kuota nasional yang belum dipakai entitas manapun.
+     */
+    public function sisaKuotaNasional(KuotaNasional $kuotaNasional, ?int $exceptSatsLnItemId = null): float
+    {
+        return (float) $kuotaNasional->quota - $this->realisasiKuotaNasional($kuotaNasional, $exceptSatsLnItemId);
+    }
+
+    /**
+     * Realisasi kuota nasional per BARIS SatsLnItem, seperti saldo berjalan di mutasi rekening -
+     * bukan satu total yang sama diulang di semua baris. Item diurutkan kronologis (berdasarkan
+     * id, lintas SEMUA entitas yang memakai kuota_nasional yang sama) dan tiap baris menampilkan
+     * akumulasi SAMPAI DENGAN dirinya sendiri: SatsLn pertama qty 1 -> tampil 1, SatsLn kedua qty
+     * 2 -> tampil 3 (1+2), SatsLn ketiga qty 10 -> tampil 13 (1+2+10), lalu entitas lain qty 5 ->
+     * tampil 18 (1+2+10+5), dst. Satu query pakai window function (SUM ... OVER PARTITION BY
+     * kuota_nasional_id ORDER BY id), bukan N query per baris.
+     *
+     * @param  Collection<int, SatsLnItem>  $items
+     * @return array<int, float> sats_ln_item.id => realisasi berjalan sampai baris itu
+     */
+    public function realisasiKuotaNasionalRunningTotalForItems(Collection $items): array
+    {
+        $kuotaNasionalIds = $items->pluck('kuota_nasional_id')->filter()->unique()->values();
+
+        if ($kuotaNasionalIds->isEmpty()) {
+            return [];
+        }
+
+        return SatsLnItem::query()
+            ->whereIn('sats_ln_items.kuota_nasional_id', $kuotaNasionalIds)
+            ->whereHas('satsLn.permohonan', fn ($query) => $query->where('status', '!=', PermohonanStatus::Ditolak->value))
+            ->selectRaw('sats_ln_items.id, SUM(sats_ln_items.qty) OVER (PARTITION BY sats_ln_items.kuota_nasional_id ORDER BY sats_ln_items.id) as running_total')
+            ->get()
+            ->mapWithKeys(fn ($row) => [(int) $row->id => (float) $row->running_total])
+            ->all();
     }
 
     /**
@@ -140,6 +198,7 @@ class PermohonanService
         int $speciesId,
     ): ?KuotaPerusahaan {
         return KuotaPerusahaan::query()
+            ->with('kuotaNasional')
             ->where('entity_id', $entitas->id)
             ->whereHas('kuotaNasional', fn ($query) => $query
                 ->where('source_id', $sourceId)
