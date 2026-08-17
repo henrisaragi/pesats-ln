@@ -1,5 +1,6 @@
 <x-alert-modal />
 <x-alert-toast />
+<x-komoditas-entitas-expiry-alert />
 
 @if ($errors->any() && old('_modal'))
     <button class="hidden" data-hs-overlay="#{{ old('_modal') }}" id="flash-dialog-trigger" type="button"></button>

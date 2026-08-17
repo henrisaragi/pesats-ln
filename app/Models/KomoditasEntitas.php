@@ -22,6 +22,7 @@ class KomoditasEntitas extends Model
     protected $fillable = [
         'komoditas_id',
         'entitas_id',
+        'nomor_sertifikat',
         'file_path',
         'tanggal_terbit',
         'tanggal_berakhir',
@@ -56,5 +57,14 @@ class KomoditasEntitas extends Model
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    /**
+     * Sudah lewat tanggal_berakhir-nya, terlepas dari apakah status di database sudah sempat
+     * diperbarui jadi Expired oleh job harian atau belum (lihat KomoditasEntitasService).
+     */
+    public function isPastExpiryDate(): bool
+    {
+        return $this->tanggal_berakhir->isPast();
     }
 }

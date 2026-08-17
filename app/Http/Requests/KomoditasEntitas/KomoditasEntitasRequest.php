@@ -20,6 +20,7 @@ class KomoditasEntitasRequest extends FormRequest
     {
         return [
             'komoditas_id' => ['required', 'integer', 'exists:komoditas,id'],
+            'nomor_sertifikat' => ['required', 'string', 'max:255'],
             'file' => ['required', 'file', 'mimes:pdf', 'max:5120'],
             'tanggal_terbit' => ['required', 'date'],
         ];

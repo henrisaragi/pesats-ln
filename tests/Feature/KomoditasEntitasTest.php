@@ -77,6 +77,7 @@ class KomoditasEntitasTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('komoditas-entitas.store'), [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-01-10',
             'file' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
         ]);
@@ -109,6 +110,7 @@ class KomoditasEntitasTest extends TestCase
 
         $this->actingAs($submitter)->post(route('komoditas-entitas.store'), [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-01-10',
             'file' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
         ])->assertRedirect(route('komoditas-entitas.index'));
@@ -131,6 +133,7 @@ class KomoditasEntitasTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('komoditas-entitas.store'), [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-01-10',
             'file' => UploadedFile::fake()->create('dokumen.txt', 100, 'text/plain'),
         ]);
@@ -146,6 +149,7 @@ class KomoditasEntitasTest extends TestCase
 
         $this->actingAs($user)->post(route('komoditas-entitas.store'), [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-01-10',
             'file' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
         ])->assertForbidden();
@@ -325,6 +329,7 @@ class KomoditasEntitasTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('komoditas-entitas.store'), [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-02-01',
             'file' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
         ]);
@@ -350,11 +355,73 @@ class KomoditasEntitasTest extends TestCase
 
         $this->actingAs($user)->post(route('komoditas-entitas.store'), [
             'komoditas_id' => $mamalia->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-02-01',
             'file' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
         ])->assertRedirect(route('komoditas-entitas.index'));
 
         $this->assertSame(2, KomoditasEntitas::where('entitas_id', $user->entity_id)->count());
+    }
+
+    public function test_can_resubmit_an_expired_komoditas_without_touching_the_old_row(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+
+        $expired = KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $user->entity_id,
+            'nomor_sertifikat' => 'STD-OLD',
+            'file_path' => 'komoditas-entitas/expired.pdf',
+            'tanggal_terbit' => '2020-01-10',
+            'tanggal_berakhir' => '2025-01-10',
+            'status' => KomoditasEntitasStatus::Expired,
+        ]);
+
+        $this->actingAs($user)->post(route('komoditas-entitas.store'), [
+            'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-NEW',
+            'tanggal_terbit' => '2026-02-01',
+            'file' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
+        ])->assertRedirect(route('komoditas-entitas.index'));
+
+        // Baris expired lama tetap ada apa adanya (riwayat) - baris baru dibuat terpisah.
+        $expired->refresh();
+        $this->assertSame(KomoditasEntitasStatus::Expired, $expired->status);
+        $this->assertSame('STD-OLD', $expired->nomor_sertifikat);
+
+        $newest = KomoditasEntitas::where('entitas_id', $user->entity_id)
+            ->where('id', '!=', $expired->id)
+            ->firstOrFail();
+        $this->assertSame(KomoditasEntitasStatus::Pending, $newest->status);
+        $this->assertSame('STD-NEW', $newest->nomor_sertifikat);
+        $this->assertSame(2, KomoditasEntitas::where('entitas_id', $user->entity_id)->count());
+    }
+
+    public function test_expired_submission_cannot_be_resubmitted_via_edit(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+
+        $expired = KomoditasEntitas::create([
+            'komoditas_id' => $komoditas->id,
+            'entitas_id' => $user->entity_id,
+            'nomor_sertifikat' => 'STD-OLD',
+            'file_path' => 'komoditas-entitas/expired.pdf',
+            'tanggal_terbit' => '2020-01-10',
+            'tanggal_berakhir' => '2025-01-10',
+            'status' => KomoditasEntitasStatus::Expired,
+        ]);
+
+        // "Ubah" (edit) cuma diperbolehkan untuk pengajuan Rejected - Expired harus lewat
+        // pengajuan baru (store), bukan mengedit baris lama.
+        $this->actingAs($user)->put(route('komoditas-entitas.update', $expired), [
+            'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-OLD',
+            'tanggal_terbit' => '2026-03-05',
+        ])->assertForbidden();
+
+        $this->actingAs($user)->delete(route('komoditas-entitas.destroy', $expired))->assertForbidden();
     }
 
     public function test_rejected_submission_can_be_edited_and_resets_to_pending(): void
@@ -376,6 +443,7 @@ class KomoditasEntitasTest extends TestCase
 
         $response = $this->actingAs($user)->put(route('komoditas-entitas.update', $record), [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-03-05',
             'file' => UploadedFile::fake()->create('baru.pdf', 100, 'application/pdf'),
         ]);
@@ -409,6 +477,7 @@ class KomoditasEntitasTest extends TestCase
 
         $this->actingAs($user)->put(route('komoditas-entitas.update', $record), [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-03-05',
         ])->assertRedirect(route('komoditas-entitas.index'));
 
@@ -433,6 +502,7 @@ class KomoditasEntitasTest extends TestCase
 
         $this->actingAs($user)->put(route('komoditas-entitas.update', $record), [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-03-05',
         ])->assertForbidden();
 
@@ -480,6 +550,7 @@ class KomoditasEntitasTest extends TestCase
 
         $this->actingAs($stranger)->put(route('komoditas-entitas.update', $record), [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-001',
             'tanggal_terbit' => '2026-03-05',
         ])->assertForbidden();
 

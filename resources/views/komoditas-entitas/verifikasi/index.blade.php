@@ -33,6 +33,7 @@
                             <tr class="text-sm font-normal text-default-700 whitespace-nowrap">
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Entitas') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Komoditas') }}</th>
+                                <th class="px-3.5 py-3 text-start" scope="col">{{ __('Nomor Sertifikat') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tanggal Terbit') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tanggal Berakhir') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Dokumen') }}</th>
@@ -45,6 +46,7 @@
                                 <tr class="text-default-800 font-normal text-sm whitespace-nowrap">
                                     <td class="px-3.5 py-3">{{ $item->entitas?->name }}</td>
                                     <td class="px-3.5 py-3">{{ $item->komoditas?->name }}</td>
+                                    <td class="px-3.5 py-3">{{ $item->nomor_sertifikat ?? '-' }}</td>
                                     <td class="px-3.5 py-3">{{ $item->tanggal_terbit?->format('d/m/Y') }}</td>
                                     <td class="px-3.5 py-3">{{ $item->tanggal_berakhir?->format('d/m/Y') }}</td>
                                     <td class="px-3.5 py-3">
@@ -82,7 +84,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="7">
+                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="8">
                                         {{ __('Tidak ada pengajuan komoditas entitas.') }}
                                     </td>
                                 </tr>

@@ -17,6 +17,7 @@ use App\Models\User;
 use Database\Seeders\MasterDataPermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class KuotaPerusahaanTest extends TestCase
@@ -99,16 +100,46 @@ class KuotaPerusahaanTest extends TestCase
         ];
     }
 
-    private function verifyKomoditasFor(Entitas $entitas, int $komoditasId): void
+    private function verifyKomoditasFor(Entitas $entitas, int $komoditasId, ?string $tanggalBerakhir = null): void
     {
         KomoditasEntitas::create([
             'komoditas_id' => $komoditasId,
             'entitas_id' => $entitas->id,
             'file_path' => 'dummy.pdf',
             'tanggal_terbit' => '2026-01-01',
-            'tanggal_berakhir' => '2031-01-01',
+            'tanggal_berakhir' => $tanggalBerakhir ?? '2031-01-01',
             'status' => KomoditasEntitasStatus::Verified,
         ]);
+    }
+
+    /**
+     * entitasSubjectToMasaBerlaku() dicek lewat permission milik USER entitas (bukan entitas
+     * itu sendiri) - makePerusahaan() di atas sengaja tidak punya user sama sekali (supaya test
+     * lama yang tidak peduli soal masa berlaku tetap simpel), jadi butuh helper terpisah untuk
+     * test yang memang menguji perilaku expired. $subjectToMasaBerlaku=false mencabut permission
+     * dari ROLE-nya (bukan dari user) - persis skenario nyata task #8: admin mengatur lewat menu
+     * Role/Permission supaya sebagian role dikecualikan dari aturan masa berlaku ini.
+     */
+    private function makePerusahaanWithUser(bool $subjectToMasaBerlaku = true): Entitas
+    {
+        $entitas = $this->makePerusahaan();
+
+        $user = User::create([
+            'name' => 'Entity User',
+            'email' => uniqid('entity', true).'@example.test',
+            'username' => uniqid('entity', true),
+            'password' => bcrypt('password'),
+            'entity_id' => $entitas->id,
+            'is_active' => true,
+            'onboarding_completed' => true,
+        ]);
+        $user->assignRole('perusahaan');
+
+        if (! $subjectToMasaBerlaku) {
+            Role::findByName('perusahaan', 'web')->revokePermissionTo('komoditas-entitas.masa-berlaku');
+        }
+
+        return $entitas;
     }
 
     public function test_staff_can_view_index_with_existing_rows(): void
@@ -229,6 +260,32 @@ class KuotaPerusahaanTest extends TestCase
 
         $response->assertSessionHasErrors('komoditas_id');
         $this->assertDatabaseMissing('kuota_perusahaan', ['entity_id' => $entitas->id]);
+    }
+
+    public function test_cannot_create_when_komoditas_verified_but_expired_for_an_entity_subject_to_masa_berlaku(): void
+    {
+        $staff = $this->makeStaff();
+        $entitas = $this->makePerusahaanWithUser(subjectToMasaBerlaku: true);
+        $kuotaNasional = $this->makeKuotaNasional(100);
+        $this->verifyKomoditasFor($entitas, $kuotaNasional->komoditas_id, tanggalBerakhir: '2020-01-01');
+
+        $response = $this->actingAs($staff)->post(route('kuota-perusahaan.store'), $this->payload($entitas, $kuotaNasional, 40));
+
+        $response->assertSessionHasErrors('komoditas_id');
+        $this->assertDatabaseMissing('kuota_perusahaan', ['entity_id' => $entitas->id]);
+    }
+
+    public function test_can_create_when_komoditas_expired_but_entity_exempt_from_masa_berlaku(): void
+    {
+        $staff = $this->makeStaff();
+        $entitas = $this->makePerusahaanWithUser(subjectToMasaBerlaku: false);
+        $kuotaNasional = $this->makeKuotaNasional(100);
+        $this->verifyKomoditasFor($entitas, $kuotaNasional->komoditas_id, tanggalBerakhir: '2020-01-01');
+
+        $response = $this->actingAs($staff)->post(route('kuota-perusahaan.store'), $this->payload($entitas, $kuotaNasional, 40));
+
+        $response->assertRedirect(route('kuota-perusahaan.index'));
+        $this->assertDatabaseHas('kuota_perusahaan', ['entity_id' => $entitas->id, 'quota' => 40]);
     }
 
     public function test_cannot_create_when_quota_exceeds_sisa_kuota_nasional(): void

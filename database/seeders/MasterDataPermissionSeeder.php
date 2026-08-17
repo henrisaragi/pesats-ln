@@ -49,12 +49,17 @@ class MasterDataPermissionSeeder extends Seeder
      * update/delete for it. view-all widens the index() scope from "own entity only" to
      * every entity (same additive pattern as documents.view-all) - staff roles need both
      * .view and .view-all granted via the Roles/Permissions UI to see cross-entity data.
+     * masa-berlaku toggles the expiry feature (status Expired, blocked re-use in Kuota
+     * Perusahaan, expiry job, 3-months-left login alert) per role - a role WITHOUT this
+     * permission is entirely exempt, its Verified komoditas never expire no matter how old
+     * tanggal_berakhir gets (lihat claude/status-cek-task.md).
      */
     private const KOMODITAS_ENTITAS_PERMISSIONS = [
         'komoditas-entitas.view',
         'komoditas-entitas.view-all',
         'komoditas-entitas.create',
         'komoditas-entitas.verify',
+        'komoditas-entitas.masa-berlaku',
     ];
 
     /**
@@ -181,7 +186,7 @@ class MasterDataPermissionSeeder extends Seeder
         foreach (self::KOMODITAS_ENTITAS_SUBMITTER_ROLES as $roleName) {
             $role = Role::where('name', $roleName)->first();
 
-            $role?->givePermissionTo(['komoditas-entitas.view', 'komoditas-entitas.create']);
+            $role?->givePermissionTo(['komoditas-entitas.view', 'komoditas-entitas.create', 'komoditas-entitas.masa-berlaku']);
         }
 
         foreach (self::PERMOHONAN_SUBMITTER_ROLES as $roleName) {

@@ -28,6 +28,7 @@
                                     <th class="px-3.5 py-3 text-start" scope="col">{{ __('Entitas') }}</th>
                                 @endif
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Komoditas') }}</th>
+                                <th class="px-3.5 py-3 text-start" scope="col">{{ __('Nomor Sertifikat') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tanggal Terbit') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tanggal Berakhir') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Dokumen') }}</th>
@@ -42,6 +43,7 @@
                                         <td class="px-3.5 py-3">{{ $item->entitas?->name }}</td>
                                     @endif
                                     <td class="px-3.5 py-3">{{ $item->komoditas?->name }}</td>
+                                    <td class="px-3.5 py-3">{{ $item->nomor_sertifikat ?? '-' }}</td>
                                     <td class="px-3.5 py-3">{{ $item->tanggal_terbit?->format('d/m/Y') }}</td>
                                     <td class="px-3.5 py-3">{{ $item->tanggal_berakhir?->format('d/m/Y') }}</td>
                                     <td class="px-3.5 py-3">
@@ -79,7 +81,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="{{ $canViewAll ? 7 : 6 }}">
+                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="{{ $canViewAll ? 8 : 7 }}">
                                         {{ __('Belum ada komoditas entitas yang diajukan.') }}
                                     </td>
                                 </tr>
@@ -141,6 +143,18 @@
                                     </select>
                                     @if (old('_modal') === 'komoditas-entitas-create-modal' && $errors->has('komoditas_id'))
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('komoditas_id') }}</p>
+                                    @endif
+                                </div>
+                                <div>
+                                    <label class="inline-block mb-2 text-sm font-medium"
+                                           for="komoditas-entitas-create-nomor-sertifikat">
+                                        {{ __('Nomor Sertifikat Standar') }}
+                                    </label>
+                                    <input class="form-input" id="komoditas-entitas-create-nomor-sertifikat"
+                                           name="nomor_sertifikat" type="text"
+                                           value="{{ old('_modal') === 'komoditas-entitas-create-modal' ? old('nomor_sertifikat') : '' }}"/>
+                                    @if (old('_modal') === 'komoditas-entitas-create-modal' && $errors->has('nomor_sertifikat'))
+                                        <p class="mt-1 text-xs text-danger">{{ $errors->first('nomor_sertifikat') }}</p>
                                     @endif
                                 </div>
                                 <div>
@@ -232,6 +246,18 @@
                                         </select>
                                         @if (old('_modal') === 'komoditas-entitas-edit-modal-'.$item->id && $errors->has('komoditas_id'))
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('komoditas_id') }}</p>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium"
+                                               for="komoditas-entitas-edit-nomor-sertifikat-{{ $item->id }}">
+                                            {{ __('Nomor Sertifikat Standar') }}
+                                        </label>
+                                        <input class="form-input" id="komoditas-entitas-edit-nomor-sertifikat-{{ $item->id }}"
+                                               name="nomor_sertifikat" type="text"
+                                               value="{{ old('_modal') === 'komoditas-entitas-edit-modal-'.$item->id ? old('nomor_sertifikat') : $item->nomor_sertifikat }}"/>
+                                        @if (old('_modal') === 'komoditas-entitas-edit-modal-'.$item->id && $errors->has('nomor_sertifikat'))
+                                            <p class="mt-1 text-xs text-danger">{{ $errors->first('nomor_sertifikat') }}</p>
                                         @endif
                                     </div>
                                     <div>

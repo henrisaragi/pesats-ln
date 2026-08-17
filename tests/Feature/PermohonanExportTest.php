@@ -110,9 +110,9 @@ class PermohonanExportTest extends TestCase
         ]);
     }
 
-    private function makeKuotaPerusahaan(Entitas $entitas, float $quota = 100): KuotaPerusahaan
+    private function makeKuotaPerusahaan(Entitas $entitas, float $quota = 100, string $komoditasName = 'Reptil'): KuotaPerusahaan
     {
-        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT-'.uniqid()]);
+        $komoditas = Komoditas::create(['name' => $komoditasName, 'code' => 'RPT-'.uniqid()]);
         $species = Species::create(['komoditas_id' => $komoditas->id, 'scientific_name' => 'Varanus salvator', 'trade_status' => 'II']);
         $source = SourceStatus::create(['code' => 'W-'.rand(1000, 9999), 'description' => 'Wild']);
         $tradeCode = TradeCode::create(['name' => 'Kulit', 'code' => 'SKN-'.uniqid(), 'unit' => 'pcs']);
@@ -946,6 +946,73 @@ class PermohonanExportTest extends TestCase
         $response->assertSessionHasErrors('komoditas_id');
         $firstItem->refresh();
         $this->assertSame((int) $firstKuotaNasional->komoditas_id, (int) $firstItem->kuotaNasional->komoditas_id);
+    }
+
+    /**
+     * Regresi: $komoditasForOptions/$tradeCodeForOptions/$speciesForOptions di
+     * sats-ln-item-modal-form.blade.php sempat tidak dicek $isRedisplay - jadi begitu SATU modal
+     * edit gagal validasi, modal edit item LAIN di halaman yang sama ikut salah menampilkan
+     * opsi Komoditas/Trade Code/Species-nya (pakai old() milik modal yang gagal, bukan data
+     * item-nya sendiri) meski select-nya sendiri tidak sedang diedit.
+     */
+    public function test_a_failed_edit_does_not_corrupt_other_items_edit_modal_options(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $firstKuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100, 'Reptil A');
+        $secondKuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100, 'Reptil B');
+        $satsLn = $this->makeSatsLnForItems($user);
+        $firstKuotaNasional = $firstKuotaPerusahaan->kuotaNasional;
+
+        // Dua item, sama-sama komoditas "Reptil A" (sah).
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.items.store', [$satsLn->permohonan, $satsLn]), [
+            'source_id' => (string) $firstKuotaNasional->source_id,
+            'komoditas_id' => (string) $firstKuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $firstKuotaNasional->trade_code_id,
+            'species_id' => (string) $firstKuotaNasional->species_id,
+            'qty' => '10',
+        ]);
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.items.store', [$satsLn->permohonan, $satsLn]), [
+            'source_id' => (string) $firstKuotaNasional->source_id,
+            'komoditas_id' => (string) $firstKuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $firstKuotaNasional->trade_code_id,
+            'species_id' => (string) $firstKuotaNasional->species_id,
+            'qty' => '5',
+        ]);
+        [$firstItem, $secondItem] = $satsLn->items()->orderBy('id')->get();
+
+        // Coba ubah item PERTAMA ke komoditas "Reptil B" - gagal karena beda dari item KEDUA.
+        $secondKuotaNasional = $secondKuotaPerusahaan->kuotaNasional;
+        $this->actingAs($user)->from(route('permohonan-export.sats-ln.show', [$satsLn->permohonan, $satsLn]))
+            ->put(route('permohonan-export.sats-ln.items.update', [$satsLn->permohonan, $satsLn, $firstItem]), [
+                '_modal' => 'satsln-item-edit-modal-'.$firstItem->id,
+                'source_id' => (string) $secondKuotaNasional->source_id,
+                'komoditas_id' => (string) $secondKuotaNasional->komoditas_id,
+                'trade_code_id' => (string) $secondKuotaNasional->trade_code_id,
+                'species_id' => (string) $secondKuotaNasional->species_id,
+                'qty' => '5',
+            ])
+            ->assertSessionHasErrors('komoditas_id');
+
+        $response = $this->actingAs($user)->get(route('permohonan-export.sats-ln.show', [$satsLn->permohonan, $satsLn]));
+        $response->assertOk();
+        $content = $response->getContent();
+
+        // Modal item PERTAMA (yang gagal) benar menampilkan ulang percobaannya ("Reptil B").
+        $this->assertMatchesRegularExpression(
+            '/satsln-item-edit-modal-'.$firstItem->id.'-komoditas".{1,800}?<option value="'.$secondKuotaNasional->komoditas_id.'"/s',
+            $content
+        );
+
+        // Modal item KEDUA (bukan yang diedit) TETAP menampilkan komoditasnya sendiri ("Reptil
+        // A"), bukan ikut tercemar oleh percobaan gagal item pertama.
+        $this->assertMatchesRegularExpression(
+            '/satsln-item-edit-modal-'.$secondItem->id.'-komoditas".{1,800}?<option value="'.$firstKuotaNasional->komoditas_id.'"/s',
+            $content
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/satsln-item-edit-modal-'.$secondItem->id.'-komoditas".{1,800}?<option value="'.$secondKuotaNasional->komoditas_id.'"/s',
+            $content
+        );
     }
 
     /**

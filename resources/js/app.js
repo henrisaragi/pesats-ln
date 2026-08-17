@@ -8,6 +8,7 @@ File: App.js
 */
 
 import './alert.js';
+import './komoditas-entitas-expiry-alert.js';
 import './components/select.js';
 import './components/document-viewer.js';
 import './components/notification-dropdown.js';

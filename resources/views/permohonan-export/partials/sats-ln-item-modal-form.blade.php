@@ -11,9 +11,9 @@
     $selectedQty = $isRedisplay ? old('qty') : $item?->qty;
     $selectedDescription = $isRedisplay ? old('description') : $item?->description;
 
-    $komoditasForOptions = $oldKomoditas ?? $kuotaNasional?->komoditas;
-    $tradeCodeForOptions = $oldTradeCode ?? $kuotaNasional?->tradeCode;
-    $speciesForOptions = $oldSpecies ?? $kuotaNasional?->species;
+    $komoditasForOptions = $isRedisplay ? $oldKomoditas : $kuotaNasional?->komoditas;
+    $tradeCodeForOptions = $isRedisplay ? $oldTradeCode : $kuotaNasional?->tradeCode;
+    $speciesForOptions = $isRedisplay ? $oldSpecies : $kuotaNasional?->species;
 @endphp
 
 <form action="{{ $isNew ? route('permohonan-export.sats-ln.items.store', [$permohonan, $satsLn]) : route('permohonan-export.sats-ln.items.update', [$permohonan, $satsLn, $item]) }}"

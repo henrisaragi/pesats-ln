@@ -64,6 +64,7 @@ class KomoditasEntitasController extends Controller
         KomoditasEntitas::create([
             'komoditas_id' => $komoditas->id,
             'entitas_id' => $entity->id,
+            'nomor_sertifikat' => $request->validated('nomor_sertifikat'),
             'file_path' => $path,
             'tanggal_terbit' => $tanggalTerbit,
             'tanggal_berakhir' => $tanggalTerbit->addYears(5),
@@ -89,6 +90,7 @@ class KomoditasEntitasController extends Controller
 
         $data = [
             'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => $request->validated('nomor_sertifikat'),
             'tanggal_terbit' => $tanggalTerbit,
             'tanggal_berakhir' => $tanggalTerbit->addYears(5),
             'status' => KomoditasEntitasStatus::Pending,
@@ -181,16 +183,18 @@ class KomoditasEntitasController extends Controller
     }
 
     /**
-     * An entity may only have one non-rejected (pending/verified) submission per commodity at
-     * a time - a rejected submission must be edited or deleted before resubmitting the same
-     * commodity.
+     * Sebuah entitas cuma boleh punya SATU pengajuan yang masih "aktif" (Pending/Verified) per
+     * komoditas dalam satu waktu. Rejected maupun Expired TIDAK menghalangi pengajuan baru -
+     * pengajuan lama yang sudah Expired sengaja dibiarkan apa adanya (bukan diedit/ditimpa) supaya
+     * tetap ada riwayat kapan komoditas itu pernah kedaluwarsa, baris baru dibuat terpisah lewat
+     * store().
      */
     private function abortIfAlreadySubmitted(Entitas $entity, int $komoditasId, ?int $except = null): void
     {
         $exists = KomoditasEntitas::query()
             ->where('entitas_id', $entity->id)
             ->where('komoditas_id', $komoditasId)
-            ->where('status', '!=', KomoditasEntitasStatus::Rejected)
+            ->whereIn('status', [KomoditasEntitasStatus::Pending, KomoditasEntitasStatus::Verified])
             ->when($except !== null, fn ($query) => $query->where('id', '!=', $except))
             ->exists();
 

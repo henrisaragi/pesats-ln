@@ -12,10 +12,14 @@ use App\Models\KuotaNasional;
 use App\Models\SourceStatus;
 use App\Models\Species;
 use App\Models\TradeCode;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class KuotaPerusahaanService
 {
+    public function __construct(private readonly KomoditasEntitasService $komoditasEntitasService) {}
+
     /**
      * Sisa kuota nasional yang belum dialokasikan ke perusahaan mana pun.
      */
@@ -29,33 +33,50 @@ class KuotaPerusahaanService
     }
 
     /**
-     * Komoditas hanya bisa diberi kuota kalau entitas sudah punya izin komoditas yang terverifikasi.
+     * Komoditas hanya bisa diberi kuota kalau entitas sudah punya izin komoditas yang
+     * terverifikasi DAN (kalau entitasnya tunduk pada aturan masa berlaku - lihat
+     * KomoditasEntitasService) belum melewati tanggal_berakhir-nya. Dicek langsung dari
+     * tanggal_berakhir di sini (bukan cuma percaya status di database sudah Expired) supaya
+     * tetap benar walau job harian yang membalik status belum sempat jalan hari itu.
      */
     public function entitasBisaMengajukan(Entitas $entitas, int $komoditasId): bool
     {
-        return KomoditasEntitas::query()
-            ->where('entitas_id', $entitas->id)
+        return $this->komoditasEntitasQuery($entitas)
             ->where('komoditas_id', $komoditasId)
-            ->where('status', KomoditasEntitasStatus::Verified)
             ->exists();
     }
 
     /**
-     * Komoditas milik entitas yang sudah terverifikasi (untuk dropdown form Kuota Perusahaan).
+     * Komoditas milik entitas yang sudah terverifikasi dan (kalau tunduk masa berlaku) belum
+     * kedaluwarsa - untuk dropdown form Kuota Perusahaan.
      *
      * @return Collection<int, Komoditas>
      */
     public function komoditasVerifiedUntukEntitas(Entitas $entitas): Collection
     {
-        return KomoditasEntitas::query()
+        return $this->komoditasEntitasQuery($entitas)
             ->with('komoditas')
-            ->where('entitas_id', $entitas->id)
-            ->where('status', KomoditasEntitasStatus::Verified)
             ->get()
             ->pluck('komoditas')
             ->filter()
             ->unique('id')
             ->values();
+    }
+
+    /**
+     * @return Builder<KomoditasEntitas>
+     */
+    private function komoditasEntitasQuery(Entitas $entitas): Builder
+    {
+        $query = KomoditasEntitas::query()
+            ->where('entitas_id', $entitas->id)
+            ->where('status', KomoditasEntitasStatus::Verified);
+
+        if ($this->komoditasEntitasService->entitasSubjectToMasaBerlaku($entitas)) {
+            $query->where('tanggal_berakhir', '>=', Carbon::today());
+        }
+
+        return $query;
     }
 
     /**
