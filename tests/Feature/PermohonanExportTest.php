@@ -490,6 +490,40 @@ class PermohonanExportTest extends TestCase
         $this->actingAs($user)->get(route('permohonan-export.show', $permohonan))->assertOk();
     }
 
+    public function test_show_page_displays_the_total_quota_spelled_out_in_the_users_active_locale(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $kuotaPerusahaan->kuotaNasional->tradeCode->update(['unit_name' => 'Ekor']);
+
+        $satsLn = $this->makeSatsLnForItems($user);
+        $kuotaNasional = $kuotaPerusahaan->kuotaNasional;
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.items.store', [$satsLn->permohonan, $satsLn]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '20',
+        ])->assertSessionHasNoErrors();
+
+        // Default sesi (belum pernah pindah bahasa) mengikuti APP_LOCALE = id.
+        $defaultLocaleResponse = $this->actingAs($user)
+            ->get(route('permohonan-export.sats-ln.show', [$satsLn->permohonan, $satsLn]));
+        $defaultLocaleResponse->assertOk();
+        $defaultLocaleResponse->assertSee('Dua Puluh Ekor', false);
+        $defaultLocaleResponse->assertDontSee('Twenty Ekor', false);
+
+        // Setelah user pindah ke bahasa Inggris (route locale.switch, disimpan di session), baris
+        // Total ikut berubah - bukan lagi menampilkan kedua bahasa sekaligus.
+        $this->actingAs($user)->get(route('locale.switch', 'en'));
+        $englishLocaleResponse = $this->actingAs($user)
+            ->get(route('permohonan-export.sats-ln.show', [$satsLn->permohonan, $satsLn]));
+        $englishLocaleResponse->assertOk();
+        $englishLocaleResponse->assertSee('Twenty Ekor', false);
+        $englishLocaleResponse->assertDontSee('Dua Puluh Ekor', false);
+    }
+
     public function test_show_page_has_a_quick_add_customer_trigger_wired_to_the_satsln_customer_select(): void
     {
         $user = $this->makeUser('perusahaan');

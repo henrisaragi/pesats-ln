@@ -151,15 +151,17 @@
                                 @endif
                             </td>
                             <td class="px-3 py-2">
-                                {{ number_format((float) $item->qty, 2, ',', '.') }} {{ $itemTradeCode?->unit_name }}
+                                {{ $itemTradeCode ? $itemTradeCode->formatQuota($item->qty) : number_format((float) $item->qty, 2, ',', '.') }}
+                                {{ $itemTradeCode?->unit_name }}
                             </td>
                             <td class="px-3 py-2 text-default-500">{{ $item->description ?? '-' }}</td>
                             <td class="px-3 py-2 text-center">{{ $item->species?->trade_status }}
                                 ({{ $itemSource?->code }})
                             </td>
                             <td class="px-3 py-2 text-right">
-                                {{ number_format($itemRealisasiNasional, 2, ',', '.') }} /
-                                {{ number_format((float) ($item->kuotaNasional?->quota ?? 0), 2, ',', '.') }}
+                                {{ $itemTradeCode ? $itemTradeCode->formatQuota($itemRealisasiNasional) : number_format($itemRealisasiNasional, 2, ',', '.') }}
+                                /
+                                {{ $itemTradeCode ? $itemTradeCode->formatQuota($item->kuotaNasional?->quota ?? 0) : number_format((float) ($item->kuotaNasional?->quota ?? 0), 2, ',', '.') }}
                                 ({{ $item->kuotaNasional?->year }})
                             </td>
                         </tr>
@@ -174,9 +176,18 @@
                 </table>
             </div>
             @if ($satsLn->items->isNotEmpty())
+                @php
+                    $totalTradeCode = $satsLn->items->first()?->kuotaNasional?->tradeCode;
+                    $totalQty = (float) $satsLn->items->sum('qty');
+                @endphp
                 <p class="mt-2 text-sm font-medium text-default-700">
-                    {{ __('Total') }} {{ number_format((float) $satsLn->items->sum('qty'), 2, ',', '.') }}
+                    {{ __('Total') }} {{ $totalTradeCode ? $totalTradeCode->formatQuota($totalQty) : number_format($totalQty, 2, ',', '.') }}
                 </p>
+                @if ($totalTradeCode)
+                    <p class="text-xs text-default-500">
+                        {{ $totalTradeCode->quotaToWords($totalQty, app()->getLocale()) }}
+                    </p>
+                @endif
             @endif
         </div>
 

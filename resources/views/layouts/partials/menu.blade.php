@@ -61,7 +61,7 @@
                     'permission' => 'komoditas-entitas.verify',
                 ],
                 [
-                    'label' => __('Permohonan SATS-LN Ekspor'),
+                    'label' => __('SATS-LN Ekspor'),
                     'icon' => 'file-text',
                     'route' => 'permohonan-export.index',
                     'permission' => 'permohonan-export.view',
