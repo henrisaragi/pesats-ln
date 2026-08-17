@@ -61,6 +61,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'onboarding_completed' => 'boolean',
+            'otp_expires_at' => 'datetime',
+            'last_activity_at' => 'datetime',
         ];
     }
 

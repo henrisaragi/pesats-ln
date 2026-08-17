@@ -664,5 +664,26 @@
     "Refresh": "Refresh",
     "Tidak Aktif": "Inactive",
     "Tidak Diketahui": "Unknown",
-    "Status dicek langsung dari daftar proses server setiap halaman ini dimuat. Klik \"Refresh\" untuk memeriksa ulang.": "Status is checked directly from the server's process list every time this page loads. Click \"Refresh\" to check again."
+    "Status dicek langsung dari daftar proses server setiap halaman ini dimuat. Klik \"Refresh\" untuk memeriksa ulang.": "Status is checked directly from the server's process list every time this page loads. Click \"Refresh\" to check again.",
+
+    "Akun ini sedang digunakan di perangkat lain. Silakan coba lagi nanti atau logout dari perangkat tersebut.": "This account is currently in use on another device. Please try again later or log out from that device.",
+    "Kode OTP tidak valid atau sudah kedaluwarsa.": "The OTP code is invalid or has expired.",
+    "Kode OTP baru telah dikirim ke email Anda.": "A new OTP code has been sent to your email.",
+    "Sesi Anda diakhiri karena akun ini login di perangkat lain.": "Your session was ended because this account signed in on another device.",
+    "Password yang Anda masukkan salah.": "The password you entered is incorrect.",
+    "Kode Verifikasi Login PeSATS": "PeSATS Login Verification Code",
+    "Kode Verifikasi Login": "Login Verification Code",
+    "Gunakan kode berikut untuk menyelesaikan proses login Anda:": "Use the following code to complete your login:",
+    "Kode ini berlaku selama :minutes menit dan hanya bisa digunakan satu kali.": "This code is valid for :minutes minutes and can only be used once.",
+    "Jika Anda tidak meminta kode ini, abaikan email ini.": "If you did not request this code, please ignore this email.",
+    "Terima kasih,": "Thank you,",
+    "Verifikasi OTP": "Verify OTP",
+    "Konfirmasi Sesi": "Confirm Session",
+    "Verifikasi Kode OTP": "Verify OTP Code",
+    "Masukkan kode 6 digit yang dikirim ke :email": "Enter the 6-digit code sent to :email",
+    "Sesi Anda Berakhir": "Your Session Has Ended",
+    "Sesi Anda berakhir karena tidak ada aktivitas. Masukkan kembali password untuk melanjutkan, :name.": "Your session ended due to inactivity. Please re-enter your password to continue, :name.",
+    "Kirim ulang kode OTP": "Resend OTP code",
+    "Kembali ke halaman login": "Back to login page",
+    "Bukan Anda? Masuk dengan akun lain": "Not you? Sign in with a different account"
 }

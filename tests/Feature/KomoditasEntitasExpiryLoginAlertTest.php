@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\KomoditasEntitasStatus;
+use App\Mail\OtpMail;
 use App\Models\Entitas\Entitas;
 use App\Models\Komoditas;
 use App\Models\KomoditasEntitas;
@@ -12,6 +13,8 @@ use App\Models\User;
 use Database\Seeders\MasterDataPermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Testing\TestResponse;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -63,15 +66,32 @@ class KomoditasEntitasExpiryLoginAlertTest extends TestCase
         ]);
     }
 
+    /**
+     * Login sekarang 2 langkah (kredensial lalu OTP, lihat claude/auth-task.md) - flash alert
+     * kedaluwarsa komoditas baru terjadi setelah OTP diverifikasi, bukan lagi di POST /login.
+     */
+    private function completeOtpLogin(User $user, string $password = 'password'): TestResponse
+    {
+        Mail::fake();
+
+        $this->post('/login', ['login' => $user->email, 'password' => $password]);
+
+        $otpCode = null;
+        Mail::assertSent(OtpMail::class, function (OtpMail $mail) use (&$otpCode) {
+            $otpCode = $mail->otpCode;
+
+            return true;
+        });
+
+        return $this->post('/login/otp', ['otp' => $otpCode]);
+    }
+
     public function test_login_flashes_an_alert_when_komoditas_is_within_3_months_of_expiry(): void
     {
         $user = $this->makeUser();
         $this->makeKomoditasEntitas($user, now()->addMonths(2)->toDateString());
 
-        $response = $this->post('/login', [
-            'login' => $user->email,
-            'password' => 'password',
-        ]);
+        $response = $this->completeOtpLogin($user);
 
         $response->assertSessionHas('komoditas_entitas_expiring_alert');
         $items = session('komoditas_entitas_expiring_alert');
@@ -83,10 +103,7 @@ class KomoditasEntitasExpiryLoginAlertTest extends TestCase
         $user = $this->makeUser();
         $this->makeKomoditasEntitas($user, now()->addYear()->toDateString());
 
-        $response = $this->post('/login', [
-            'login' => $user->email,
-            'password' => 'password',
-        ]);
+        $response = $this->completeOtpLogin($user);
 
         $response->assertSessionMissing('komoditas_entitas_expiring_alert');
     }
@@ -96,10 +113,7 @@ class KomoditasEntitasExpiryLoginAlertTest extends TestCase
         $user = $this->makeUser(subjectToMasaBerlaku: false);
         $this->makeKomoditasEntitas($user, now()->addMonth()->toDateString());
 
-        $response = $this->post('/login', [
-            'login' => $user->email,
-            'password' => 'password',
-        ]);
+        $response = $this->completeOtpLogin($user);
 
         $response->assertSessionMissing('komoditas_entitas_expiring_alert');
     }

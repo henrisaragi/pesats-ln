@@ -15,6 +15,11 @@
 @endphp
 
 @section('content')
+    {{-- Modal "akun login di perangkat lain" (satu sesi aktif per akun, lihat claude/auth-task.md)
+         pakai mekanisme flash session('error') yang sudah ada, dipicu otomatis lewat
+         data-flash-* di bawah ini. --}}
+    <x-alert-modal/>
+
     <div
         class="relative flex flex-row w-full overflow-hidden bg-gradient-to-r from-blue-900 h-screen to-blue-800 dark:to-blue-900 dark:from-blue-950">
         <div class="absolute inset-0 opacity-20">

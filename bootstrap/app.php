@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAuthSessionIsFresh;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Application;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             SetLocale::class,
+            EnsureAuthSessionIsFresh::class,
         ]);
 
         $middleware->alias([
