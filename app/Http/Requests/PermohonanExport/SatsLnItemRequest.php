@@ -33,6 +33,7 @@ class SatsLnItemRequest extends FormRequest
             'trade_code_id' => ['required', 'integer', 'exists:trade_codes,id'],
             'species_id' => ['required', 'integer', 'exists:species,id'],
             'qty' => ['required', 'numeric', 'min:0.01'],
+            'description' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

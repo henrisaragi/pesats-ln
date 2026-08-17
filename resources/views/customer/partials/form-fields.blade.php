@@ -3,7 +3,8 @@
     $isRedisplay = old('_modal') === $modalId;
 @endphp
 
-<div class="p-4 overflow-y-auto max-h-[70vh]">
+{{-- Sengaja tanpa overflow-y-auto/max-h: itu meng-clip dropdown Choices.js, lihat claude/permohonan-task.md. --}}
+<div class="p-4">
     <div class="flex flex-col gap-y-4">
         <div>
             <label class="inline-block mb-2 text-sm font-medium" for="customer-{{ $formId }}-name">

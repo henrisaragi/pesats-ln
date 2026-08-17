@@ -79,6 +79,17 @@
     @apply text-primary font-medium;
 }
 
+/* itemSelectText dikosongkan di resources/js/components/select.js (hint "tekan untuk memilih"
+   dihapus atas permintaan user) - override ini menghapus juga padding-right kosong yang tadinya
+   disediakan choices.min.css bawaan untuk menampung teks itu, dan mematikan pseudo-element-nya. */
+.choices__list--dropdown .choices__item--selectable.is-highlighted[data-select-text] {
+    @apply pr-3;
+}
+
+.choices__list--dropdown .choices__item--selectable.is-highlighted[data-select-text]::after {
+    content: none;
+}
+
 .choices__list--dropdown .choices__list {
     @apply max-h-60;
 }

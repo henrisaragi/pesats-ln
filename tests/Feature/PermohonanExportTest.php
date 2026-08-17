@@ -660,6 +660,29 @@ class PermohonanExportTest extends TestCase
         $this->assertSame('10.00', $item->qty);
     }
 
+    public function test_sats_ln_item_saves_description_and_shows_it_in_the_species_table(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $satsLn = $this->makeSatsLnForItems($user);
+        $kuotaNasional = $kuotaPerusahaan->kuotaNasional;
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.items.store', [$satsLn->permohonan, $satsLn]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '10',
+            'description' => 'Hasil penangkaran generasi ke-2',
+        ])->assertSessionHasNoErrors();
+
+        $item = $satsLn->items()->firstOrFail();
+        $this->assertSame('Hasil penangkaran generasi ke-2', $item->description);
+
+        $this->actingAs($user)->get(route('permohonan-export.sats-ln.show', [$satsLn->permohonan, $satsLn]))
+            ->assertSee('Hasil penangkaran generasi ke-2');
+    }
+
     public function test_sats_ln_item_fails_when_combination_not_in_kuota_perusahaan(): void
     {
         $user = $this->makeUser('perusahaan');
@@ -792,6 +815,36 @@ class PermohonanExportTest extends TestCase
         $this->assertSame('Spesies berhasil diperbarui.', session('toast_success'));
         $item->refresh();
         $this->assertSame('20.00', $item->qty);
+    }
+
+    public function test_sats_ln_item_update_can_change_the_description(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $satsLn = $this->makeSatsLnForItems($user);
+        $kuotaNasional = $kuotaPerusahaan->kuotaNasional;
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.items.store', [$satsLn->permohonan, $satsLn]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '10',
+            'description' => 'Deskripsi awal',
+        ]);
+        $item = $satsLn->items()->firstOrFail();
+
+        $this->actingAs($user)->put(route('permohonan-export.sats-ln.items.update', [$satsLn->permohonan, $satsLn, $item]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '10',
+            'description' => 'Deskripsi diperbarui',
+        ])->assertSessionHasNoErrors();
+
+        $item->refresh();
+        $this->assertSame('Deskripsi diperbarui', $item->description);
     }
 
     public function test_sats_ln_item_update_excludes_its_own_qty_from_sisa_kuota_check(): void

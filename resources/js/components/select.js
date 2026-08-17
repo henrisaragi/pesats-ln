@@ -7,7 +7,10 @@ const CHOICES_I18N = {
     loadingText: 'Memuat...',
     noResultsText: 'Tidak ada hasil ditemukan',
     noChoicesText: 'Tidak ada pilihan tersedia',
-    itemSelectText: 'Tekan untuk memilih',
+    // Kosong sengaja - hint "tekan untuk memilih" yang muncul di sebelah kanan opsi yang
+    // di-highlight dihapus atas permintaan user (lihat juga override CSS di _choices.css yang
+    // menghapus padding kosong yang tadinya disediakan untuk teks ini).
+    itemSelectText: '',
     uniqueItemText: 'Nilai ini sudah dipilih',
     addItemText: (value) => `Tekan Enter untuk menambahkan "${value}"`,
 };
@@ -20,7 +23,6 @@ function baseOptions() {
         shouldSort: false,
         allowHTML: false,
         placeholder: true,
-        itemSelectText: CHOICES_I18N.itemSelectText,
         classNames: {
             containerOuter: ['choices', 'choices--pesats'],
         },

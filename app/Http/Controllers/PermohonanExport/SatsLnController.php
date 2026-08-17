@@ -154,6 +154,7 @@ class SatsLnController extends Controller
             'species_id' => $request->integer('species_id'),
             'harga_patokan_id' => $this->resolveHargaPatokanId($kuotaPerusahaan),
             'qty' => $request->validated('qty'),
+            'description' => $request->validated('description'),
         ]);
 
         return redirect()->route('permohonan-export.sats-ln.show', [$permohonan, $satsLn])
@@ -181,6 +182,7 @@ class SatsLnController extends Controller
             'species_id' => $request->integer('species_id'),
             'harga_patokan_id' => $this->resolveHargaPatokanId($kuotaPerusahaan),
             'qty' => $request->validated('qty'),
+            'description' => $request->validated('description'),
         ]);
 
         return redirect()->route('permohonan-export.sats-ln.show', [$permohonan, $satsLn])

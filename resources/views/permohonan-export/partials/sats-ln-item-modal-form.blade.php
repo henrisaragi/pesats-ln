@@ -9,6 +9,7 @@
     $selectedTradeCode = $isRedisplay ? old('trade_code_id') : $kuotaNasional?->trade_code_id;
     $selectedSpecies = $isRedisplay ? old('species_id') : $kuotaNasional?->species_id;
     $selectedQty = $isRedisplay ? old('qty') : $item?->qty;
+    $selectedDescription = $isRedisplay ? old('description') : $item?->description;
 
     $komoditasForOptions = $oldKomoditas ?? $kuotaNasional?->komoditas;
     $tradeCodeForOptions = $oldTradeCode ?? $kuotaNasional?->tradeCode;
@@ -83,6 +84,16 @@
                        value="{{ $selectedQty }}">
                 @if ($isRedisplay && $errors->has('qty'))
                     <p class="mt-1 text-xs text-danger">{{ $errors->first('qty') }}</p>
+                @endif
+            </div>
+            <div class="md:col-span-2">
+                <label class="inline-block mb-2 text-sm font-medium" for="satsln-item-{{ $modalId }}-description">
+                    {{ __('Deskripsi') }}
+                </label>
+                <textarea class="form-input" id="satsln-item-{{ $modalId }}-description" name="description"
+                          rows="2">{{ $selectedDescription }}</textarea>
+                @if ($isRedisplay && $errors->has('description'))
+                    <p class="mt-1 text-xs text-danger">{{ $errors->first('description') }}</p>
                 @endif
             </div>
         </div>

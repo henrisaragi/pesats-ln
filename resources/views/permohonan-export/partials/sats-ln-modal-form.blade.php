@@ -14,10 +14,11 @@
     <input name="return_to" type="hidden" value="show">
 
     {{--
-        Sengaja TIDAK diberi overflow-y-auto/max-h di sini (beda dari modal Documents/Customer):
-        field-nya cuma 6 (2 baris grid 3 kolom) jadi tidak butuh scroll internal - kalau dipaksa
-        overflow-y-auto, dropdown Choices.js (position:absolute) yang butuh ruang di bawah select
-        malah ikut ter-clip oleh batas scroll container ini, bikin daftar pilihan hilang/kepotong.
+        Sengaja TIDAK diberi overflow-y-auto/max-h di sini: overflow-y-auto pada wrapper field
+        meng-clip dropdown Choices.js (position:absolute) begitu daftar pilihannya butuh ruang di
+        luar batas tinggi wrapper - berlaku di SEMUA modal, bukan cuma yang field-nya sedikit
+        (lihat claude/permohonan-task.md untuk daftar modal lain yang kena bug sama & sudah
+        diperbaiki dengan cara yang sama - overlay terluar .hs-overlay sudah scroll sendiri).
     --}}
     <div class="p-4">
         <div class="grid md:grid-cols-3 gap-4">
