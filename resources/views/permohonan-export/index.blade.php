@@ -46,16 +46,12 @@
                                             </a>
                                             @can('permohonan-export.delete')
                                                 @if ($item->status->isEditable())
-                                                    <form action="{{ route('permohonan-export.destroy', $item) }}" method="POST"
-                                                          onsubmit="return confirm('{{ __('Hapus permohonan ini?') }}');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button aria-label="{{ __('Hapus') }}"
-                                                                class="btn size-7.5 bg-default-200 hover:bg-danger/10 hover:text-danger text-default-500"
-                                                                type="submit">
-                                                            <i class="size-4" data-lucide="trash-2"></i>
-                                                        </button>
-                                                    </form>
+                                                    <button aria-label="{{ __('Hapus') }}"
+                                                            class="btn size-7.5 bg-default-200 hover:bg-danger/10 hover:text-danger text-default-500"
+                                                            data-hs-overlay="#permohonan-delete-modal-{{ $item->id }}"
+                                                            type="button">
+                                                        <i class="size-4" data-lucide="trash-2"></i>
+                                                    </button>
                                                 @endif
                                             @endcan
                                         </div>
@@ -147,5 +143,50 @@
                 </div>
             </div>
         </div>
+    @endcan
+
+    @can('permohonan-export.delete')
+        @foreach ($permohonan as $item)
+            @if ($item->status->isEditable())
+                <div aria-labelledby="permohonan-delete-modal-{{ $item->id }}-label" id="permohonan-delete-modal-{{ $item->id }}"
+                     class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+                     role="dialog" tabindex="-1">
+                    <div
+                        class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 md:w-sm m-3 mx-auto min-h-[calc(100%-56px)] flex items-center">
+                        <div
+                            class="w-full flex flex-col card shadow-2xs border border-default-200 rounded-xl pointer-events-auto px-6 py-8 relative">
+                            <div class="absolute top-3 end-3">
+                                <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                        data-hs-overlay="#permohonan-delete-modal-{{ $item->id }}" type="button">
+                                    <span class="sr-only">{{ __('Tutup') }}</span>
+                                    <i class="size-5" data-lucide="x"></i>
+                                </button>
+                            </div>
+                            <div class="text-center">
+                                <img alt="" class="size-12 mx-auto" src="/images/delete.png"/>
+                                <div class="mt-5 text-center">
+                                    <h5 class="mb-1 text-lg font-semibold text-default-800">{{ __('Anda yakin?') }}</h5>
+                                    <p class="text-default-500 text-sm font-normal">
+                                        {{ __('Permohonan ini akan dihapus permanen.') }}
+                                    </p>
+                                    <div class="mt-5 flex gap-2 justify-center">
+                                        <button class="btn text-danger bg-transparent hover:bg-danger/10"
+                                                data-hs-overlay="#permohonan-delete-modal-{{ $item->id }}"
+                                                type="button">{{ __('Batal') }}</button>
+                                        <form action="{{ route('permohonan-export.destroy', $item) }}" method="POST">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="bg-danger text-white btn border-0 btn-sm" type="submit">
+                                                {{ __('Ya, Hapus!') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        @endforeach
     @endcan
 @endsection

@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.')->group(function (): void {
     Route::get('kuota-perusahaan-options/{source?}', [SatsLnController::class, 'kuotaPerusahaanOptions'])->name('kuota-perusahaan-options');
     Route::get('port-options/{country}', [SatsLnController::class, 'portOptions'])->name('port-options');
+    Route::get('item-komoditas-options/{source}', [SatsLnController::class, 'itemKomoditasOptions'])->name('item-komoditas-options');
+    Route::get('item-trade-code-options/{source}/{komoditas}', [SatsLnController::class, 'itemTradeCodeOptions'])->name('item-trade-code-options');
+    Route::get('item-species-options/{source}/{komoditas}/{tradeCode}', [SatsLnController::class, 'itemSpeciesOptions'])->name('item-species-options');
 
     Route::get('', [PermohonanController::class, 'index'])->middleware('permission:permohonan-export.view')->name('index');
     Route::post('', [PermohonanController::class, 'store'])->middleware('permission:permohonan-export.create')->name('store');
@@ -35,5 +38,7 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
         Route::post('{permohonan}/sats-ln', [SatsLnController::class, 'store'])->name('sats-ln.store');
         Route::put('{permohonan}/sats-ln/{satsLn}', [SatsLnController::class, 'update'])->name('sats-ln.update');
         Route::delete('{permohonan}/sats-ln/{satsLn}', [SatsLnController::class, 'destroy'])->name('sats-ln.destroy');
+        Route::post('{permohonan}/sats-ln/{satsLn}/items', [SatsLnController::class, 'storeItem'])->name('sats-ln.items.store');
+        Route::put('{permohonan}/sats-ln/{satsLn}/items/{item}', [SatsLnController::class, 'updateItem'])->name('sats-ln.items.update');
     });
 });

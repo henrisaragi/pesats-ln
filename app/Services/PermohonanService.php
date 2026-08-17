@@ -6,9 +6,12 @@ namespace App\Services;
 
 use App\Enums\PermohonanStatus;
 use App\Models\Entitas\Entitas;
+use App\Models\Komoditas;
 use App\Models\KuotaPerusahaan;
 use App\Models\Permohonan;
 use App\Models\SourceStatus;
+use App\Models\Species;
+use App\Models\TradeCode;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -66,6 +69,85 @@ class PermohonanService
             ->get()
             ->filter(fn (KuotaPerusahaan $kuotaPerusahaan) => $this->sisaKuotaPerusahaan($kuotaPerusahaan) > 0)
             ->values();
+    }
+
+    /**
+     * Komoditas yang tampil hanya dari kuota_perusahaan milik entitas untuk Status Asal terpilih -
+     * dipakai jenjang kedua modal "Tambah Spesies" (Source -> Komoditas -> Trade Code -> Species).
+     *
+     * @return Collection<int, Komoditas>
+     */
+    public function komoditasOptionsForEntitas(Entitas $entitas, int $sourceId): Collection
+    {
+        $komoditasIds = KuotaPerusahaan::query()
+            ->join('kuota_nasional', 'kuota_nasional.id', '=', 'kuota_perusahaan.kuota_nasional_id')
+            ->where('kuota_perusahaan.entity_id', $entitas->id)
+            ->where('kuota_nasional.source_id', $sourceId)
+            ->distinct()
+            ->pluck('kuota_nasional.komoditas_id');
+
+        return Komoditas::query()->whereIn('id', $komoditasIds)->orderBy('name')->get();
+    }
+
+    /**
+     * Trade Code yang tampil hanya dari kuota_perusahaan milik entitas untuk Status Asal + Komoditas
+     * terpilih - jenjang ketiga modal "Tambah Spesies".
+     *
+     * @return Collection<int, TradeCode>
+     */
+    public function tradeCodeOptionsForEntitas(Entitas $entitas, int $sourceId, int $komoditasId): Collection
+    {
+        $tradeCodeIds = KuotaPerusahaan::query()
+            ->join('kuota_nasional', 'kuota_nasional.id', '=', 'kuota_perusahaan.kuota_nasional_id')
+            ->where('kuota_perusahaan.entity_id', $entitas->id)
+            ->where('kuota_nasional.source_id', $sourceId)
+            ->where('kuota_nasional.komoditas_id', $komoditasId)
+            ->distinct()
+            ->pluck('kuota_nasional.trade_code_id');
+
+        return TradeCode::query()->whereIn('id', $tradeCodeIds)->orderBy('code')->get();
+    }
+
+    /**
+     * Species yang tampil hanya dari kuota_perusahaan milik entitas untuk Status Asal + Komoditas +
+     * Trade Code terpilih - jenjang terakhir modal "Tambah Spesies".
+     *
+     * @return Collection<int, Species>
+     */
+    public function speciesOptionsForEntitas(Entitas $entitas, int $sourceId, int $komoditasId, int $tradeCodeId): Collection
+    {
+        $speciesIds = KuotaPerusahaan::query()
+            ->join('kuota_nasional', 'kuota_nasional.id', '=', 'kuota_perusahaan.kuota_nasional_id')
+            ->where('kuota_perusahaan.entity_id', $entitas->id)
+            ->where('kuota_nasional.source_id', $sourceId)
+            ->where('kuota_nasional.komoditas_id', $komoditasId)
+            ->where('kuota_nasional.trade_code_id', $tradeCodeId)
+            ->distinct()
+            ->pluck('kuota_nasional.species_id');
+
+        return Species::query()->whereIn('id', $speciesIds)->orderBy('scientific_name')->get();
+    }
+
+    /**
+     * Resolve baris kuota_perusahaan milik entitas yang cocok dengan kombinasi 4 field modal
+     * "Tambah Spesies" - null kalau kombinasi itu tidak dimiliki entitas ini sama sekali.
+     */
+    public function resolveKuotaPerusahaanForEntitas(
+        Entitas $entitas,
+        int $sourceId,
+        int $komoditasId,
+        int $tradeCodeId,
+        int $speciesId,
+    ): ?KuotaPerusahaan {
+        return KuotaPerusahaan::query()
+            ->where('entity_id', $entitas->id)
+            ->whereHas('kuotaNasional', fn ($query) => $query
+                ->where('source_id', $sourceId)
+                ->where('komoditas_id', $komoditasId)
+                ->where('trade_code_id', $tradeCodeId)
+                ->where('species_id', $speciesId))
+            ->orderByDesc('year')
+            ->first();
     }
 
     /**

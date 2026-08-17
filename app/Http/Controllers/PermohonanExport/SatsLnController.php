@@ -5,14 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Controllers\PermohonanExport;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PermohonanExport\SatsLnItemRequest;
 use App\Http\Requests\PermohonanExport\SatsLnRequest;
 use App\Models\Country;
 use App\Models\Entitas\Entitas;
 use App\Models\HargaPatokan;
+use App\Models\Komoditas;
 use App\Models\KuotaPerusahaan;
 use App\Models\Permohonan;
 use App\Models\Port;
 use App\Models\SatsLn;
+use App\Models\SatsLnItem;
+use App\Models\Species;
+use App\Models\TradeCode;
 use App\Services\PermohonanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -129,6 +134,59 @@ class SatsLnController extends Controller
         return redirect()->route('permohonan-export.edit', $permohonan)->with('success', __('SATS-LN berhasil dihapus.'));
     }
 
+    public function storeItem(SatsLnItemRequest $request, Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
+    {
+        $this->authorizeEditable($permohonan);
+        abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
+
+        $kuotaPerusahaan = $this->permohonanService->resolveKuotaPerusahaanForEntitas(
+            $this->currentEntity(),
+            $request->integer('source_id'),
+            $request->integer('komoditas_id'),
+            $request->integer('trade_code_id'),
+            $request->integer('species_id'),
+        );
+        abort_if($kuotaPerusahaan === null, 404);
+
+        $satsLn->items()->create([
+            'kuota_nasional_id' => $kuotaPerusahaan->kuota_nasional_id,
+            'kuota_perusahaan_id' => $kuotaPerusahaan->id,
+            'species_id' => $request->integer('species_id'),
+            'harga_patokan_id' => $this->resolveHargaPatokanId($kuotaPerusahaan),
+            'qty' => $request->validated('qty'),
+        ]);
+
+        return redirect()->route('permohonan-export.sats-ln.show', [$permohonan, $satsLn])
+            ->with('toast_success', __('Spesies berhasil ditambahkan.'));
+    }
+
+    public function updateItem(SatsLnItemRequest $request, Permohonan $permohonan, SatsLn $satsLn, SatsLnItem $item): RedirectResponse
+    {
+        $this->authorizeEditable($permohonan);
+        abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
+        abort_unless($item->sats_ln_id === $satsLn->id, 404);
+
+        $kuotaPerusahaan = $this->permohonanService->resolveKuotaPerusahaanForEntitas(
+            $this->currentEntity(),
+            $request->integer('source_id'),
+            $request->integer('komoditas_id'),
+            $request->integer('trade_code_id'),
+            $request->integer('species_id'),
+        );
+        abort_if($kuotaPerusahaan === null, 404);
+
+        $item->update([
+            'kuota_nasional_id' => $kuotaPerusahaan->kuota_nasional_id,
+            'kuota_perusahaan_id' => $kuotaPerusahaan->id,
+            'species_id' => $request->integer('species_id'),
+            'harga_patokan_id' => $this->resolveHargaPatokanId($kuotaPerusahaan),
+            'qty' => $request->validated('qty'),
+        ]);
+
+        return redirect()->route('permohonan-export.sats-ln.show', [$permohonan, $satsLn])
+            ->with('toast_success', __('Spesies berhasil diperbarui.'));
+    }
+
     public function kuotaPerusahaanOptions(?int $source = null): JsonResponse
     {
         $entity = $this->currentEntity();
@@ -153,6 +211,36 @@ class SatsLnController extends Controller
         return response()->json($ports->map(fn (Port $port) => [
             'id' => $port->id,
             'name' => $port->name,
+        ])->values());
+    }
+
+    public function itemKomoditasOptions(int $source): JsonResponse
+    {
+        $options = $this->permohonanService->komoditasOptionsForEntitas($this->currentEntity(), $source);
+
+        return response()->json($options->map(fn (Komoditas $item) => [
+            'id' => $item->id,
+            'name' => $item->name,
+        ])->values());
+    }
+
+    public function itemTradeCodeOptions(int $source, int $komoditas): JsonResponse
+    {
+        $options = $this->permohonanService->tradeCodeOptionsForEntitas($this->currentEntity(), $source, $komoditas);
+
+        return response()->json($options->map(fn (TradeCode $item) => [
+            'id' => $item->id,
+            'name' => $item->code.' - '.$item->name,
+        ])->values());
+    }
+
+    public function itemSpeciesOptions(int $source, int $komoditas, int $tradeCode): JsonResponse
+    {
+        $options = $this->permohonanService->speciesOptionsForEntitas($this->currentEntity(), $source, $komoditas, $tradeCode);
+
+        return response()->json($options->map(fn (Species $item) => [
+            'id' => $item->id,
+            'name' => $item->scientific_name,
         ])->values());
     }
 

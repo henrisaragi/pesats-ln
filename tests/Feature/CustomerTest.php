@@ -171,6 +171,39 @@ class CustomerTest extends TestCase
         $this->assertDatabaseMissing('customer_companies', ['id' => $customer->id]);
     }
 
+    public function test_store_returns_json_with_the_new_customer_when_requested(): void
+    {
+        $user = $this->makeEntityUser();
+        $country = $this->makeCountry();
+
+        $response = $this->actingAs($user)->postJson(route('customer.store'), [
+            'name' => 'ACME Corp',
+            'country_id' => $country->id,
+            'address' => 'Somewhere',
+        ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('name', 'ACME Corp');
+        $response->assertJsonPath('country_id', $country->id);
+        $this->assertDatabaseHas('customer_companies', [
+            'id' => $response->json('id'),
+            'name' => 'ACME Corp',
+            'entity_id' => $user->entity_id,
+        ]);
+    }
+
+    public function test_store_returns_json_validation_errors_when_requested(): void
+    {
+        $user = $this->makeEntityUser();
+
+        $response = $this->actingAs($user)->postJson(route('customer.store'), [
+            'name' => '',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['name', 'country_id']);
+    }
+
     public function test_user_without_any_permission_cannot_view_index(): void
     {
         $user = User::create([

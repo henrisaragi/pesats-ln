@@ -24,16 +24,29 @@
             <div>
                 <label class="inline-block mb-2 text-sm font-medium"
                        for="satsln-modal-{{ $formId }}-customer">{{ __('Customer') }}</label>
-                <select class="form-input" data-choice data-satsln-customer-select
-                        id="satsln-modal-{{ $formId }}-customer" name="customer_company_id">
-                    <option value="">{{ __('Pilih Customer') }}</option>
-                    @foreach ($customerOptions as $option)
-                        <option data-country-id="{{ $option->country_id }}" value="{{ $option->id }}"
-                                @selected(($isRedisplay ? old('customer_company_id') : $satsLn?->customer_company_id) == $option->id)>
-                            {{ $option->name }}
-                        </option>
-                    @endforeach
-                </select>
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 min-w-0">
+                        <select class="form-input" data-choice data-satsln-customer-select
+                                id="satsln-modal-{{ $formId }}-customer" name="customer_company_id">
+                            <option value="">{{ __('Pilih Customer') }}</option>
+                            @foreach ($customerOptions as $option)
+                                <option data-country-id="{{ $option->country_id }}" value="{{ $option->id }}"
+                                        @selected(($isRedisplay ? old('customer_company_id') : $satsLn?->customer_company_id) == $option->id)>
+                                    {{ $option->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @can('customer.edit')
+                        <button aria-label="{{ __('Tambah Customer') }}"
+                                class="btn size-9.25 shrink-0 bg-default-150 hover:bg-default-200"
+                                data-hs-overlay="#customer-quick-create-modal" data-return-modal="{{ $modalId }}"
+                                data-satsln-add-customer data-target-select="satsln-modal-{{ $formId }}-customer"
+                                type="button">
+                            <i class="size-4" data-lucide="plus"></i>
+                        </button>
+                    @endcan
+                </div>
                 @if ($isRedisplay && $errors->has('customer_company_id'))
                     <p class="mt-1 text-xs text-danger">{{ $errors->first('customer_company_id') }}</p>
                 @endif

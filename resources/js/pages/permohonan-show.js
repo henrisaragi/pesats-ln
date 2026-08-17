@@ -65,3 +65,116 @@ document.addEventListener('click', function (event) {
     form.reset();
     syncChoicesDisplay(form);
 });
+
+// Tombol "+" di sebelah select Customer pada modal Tambah/Ubah SATS-LN: buka modal Tambah
+// Customer bersama (#customer-quick-create-modal), sambil menyimpan select tujuan dan modal
+// SATS-LN yang harus dibuka kembali setelah customer baru tersimpan. Preline otomatis menutup
+// modal SATS-LN yang sedang terbuka begitu modal Customer ini dibuka (default isClosePrev),
+// jadi tidak perlu menutupnya manual di sini.
+document.addEventListener('click', function (event) {
+    const trigger = event.target.closest('[data-satsln-add-customer]');
+
+    if (!trigger) {
+        return;
+    }
+
+    const quickCreateModal = document.getElementById('customer-quick-create-modal');
+
+    if (!quickCreateModal) {
+        return;
+    }
+
+    quickCreateModal.dataset.targetSelect = trigger.dataset.targetSelect;
+    quickCreateModal.dataset.returnModal = trigger.dataset.returnModal;
+});
+
+function clearQuickCustomerErrors(form) {
+    form.querySelectorAll('[data-error]').forEach((el) => {
+        el.textContent = '';
+        el.classList.add('hidden');
+    });
+}
+
+function showQuickCustomerErrors(form, errors) {
+    Object.entries(errors).forEach(([field, messages]) => {
+        const el = form.querySelector(`[data-error="${field}"]`);
+
+        if (el) {
+            el.textContent = messages[0];
+            el.classList.remove('hidden');
+        }
+    });
+}
+
+document.addEventListener('submit', function (event) {
+    const form = event.target.closest('[data-satsln-quick-customer-form]');
+
+    if (!form) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const quickCreateModal = document.getElementById('customer-quick-create-modal');
+    const targetSelectId = quickCreateModal?.dataset.targetSelect;
+    const returnModalId = quickCreateModal?.dataset.returnModal;
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    clearQuickCustomerErrors(form);
+    submitButton?.setAttribute('disabled', 'disabled');
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: new FormData(form),
+    })
+        .then(async (response) => {
+            if (response.status === 422) {
+                const { errors } = await response.json();
+                showQuickCustomerErrors(form, errors);
+
+                return;
+            }
+
+            if (!response.ok) {
+                const errorEl = form.querySelector('[data-error="general"]');
+
+                if (errorEl) {
+                    errorEl.textContent = errorEl.dataset.message || '';
+                    errorEl.classList.remove('hidden');
+                }
+
+                return;
+            }
+
+            const customer = await response.json();
+            const targetSelect = targetSelectId ? document.getElementById(targetSelectId) : null;
+
+            if (targetSelect?._choices) {
+                targetSelect._choices.setChoices(
+                    [{ value: String(customer.id), label: customer.name }],
+                    'value',
+                    'label',
+                    false,
+                );
+
+                const newOption = targetSelect.querySelector(`option[value="${customer.id}"]`);
+                if (newOption) {
+                    newOption.dataset.countryId = String(customer.country_id);
+                }
+
+                targetSelect._choices.setChoiceByValue(String(customer.id));
+                targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            form.reset();
+            syncChoicesDisplay(form);
+
+            if (returnModalId) {
+                window.HSOverlay?.open(`#${returnModalId}`);
+            }
+        })
+        .finally(() => {
+            submitButton?.removeAttribute('disabled');
+        });
+});

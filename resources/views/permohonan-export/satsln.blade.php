@@ -91,7 +91,7 @@
             <p class="mt-1 font-medium text-default-800">{{ $satsLn->portOfExportation?->name ?? '-' }}</p>
         </div>
         <div>
-            <p class="text-xs text-default-500">VII. Maksud Transaksi <span class="italic">(Purpose of
+            <p class="text-xs text-default-500">Maksud Transaksi <span class="italic">(Purpose of
                     transaction)</span></p>
             <p class="mt-1 font-medium text-default-800">{{ $satsLn->purposeOfTransaction?->name ?? '-' }}</p>
         </div>
@@ -131,47 +131,72 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-default-100 text-default-700">
-                    <tr>
-                        <td class="px-3 py-2 text-center text-default-500">1</td>
-                        <td class="px-3 py-2">Panthera tigris sumatrae, Harimau Sumatera</td>
-                        <td class="px-3 py-2">2 EKO</td>
-                        <td class="px-3 py-2 text-default-500">Sample description</td>
-                        <td class="px-3 py-2 text-center">I (C)</td>
-                        <td class="px-3 py-2 text-right">2 / 10 (2026)</td>
-                    </tr>
-                    <tr>
-                        <td class="px-3 py-2 text-center text-default-500">2</td>
-                        <td class="px-3 py-2">Helarctos malayanus, Beruang Madu</td>
-                        <td class="px-3 py-2">1 EKO</td>
-                        <td class="px-3 py-2 text-default-500">Sample description</td>
-                        <td class="px-3 py-2 text-center">I (C)</td>
-                        <td class="px-3 py-2 text-right">1 / 5 (2026)</td>
-                    </tr>
-                </tbody>
-            </table>
+                    @php
+                        $itemsAreEditable =
+                            $permohonan->status->isEditable() && auth()->user()->can('permohonan-export.edit');
+                    @endphp
+                    @forelse ($satsLn->items as $item)
+                        @php
+                            $itemTradeCode = $item->kuotaPerusahaan?->kuotaNasional?->tradeCode;
+                            $itemSource = $item->kuotaPerusahaan?->kuotaNasional?->source;
+                        @endphp
+                        <tr
+                            @if ($itemsAreEditable) class="cursor-pointer hover:bg-default-50"
+                                data-hs-overlay="#satsln-item-edit-modal-{{ $item->id }}" @endif>
+                            <td class="px-3 py-2 text-center text-default-500">{{ $loop->iteration }}</td>
+                            <td class="px-3 py-2">
+                                {{ $item->species?->scientific_name }}@if ($item->species?->common_name)
+                                    , {{ $item->species->common_name }}
+                                @endif
+                            </td>
+                            <td class="px-3 py-2">
+                                {{ number_format((float) $item->qty, 2, ',', '.') }} {{ $itemTradeCode?->unit_name }}
+                            </td>
+                            <td class="px-3 py-2 text-default-500">{{ $item->description ?? '-' }}</td>
+                            <td class="px-3 py-2 text-center">{{ $item->species?->trade_status }}
+                                ({{ $itemSource?->code }})
+                            </td>
+                            <td class="px-3 py-2 text-right">
+                                {{ number_format((float) $item->qty, 2, ',', '.') }} /
+                                {{ number_format((float) ($item->kuotaPerusahaan?->quota ?? 0), 2, ',', '.') }}
+                                ({{ $item->kuotaPerusahaan?->year }})
+                            </td>
+                        </tr>
+                        @empty
+                            <tr>
+                                <td class="px-3 py-2 text-center text-default-400" colspan="6">
+                                    {{ __('Belum ada spesies. Tambahkan lewat tombol "Tambah Spesies" di navbar.') }}
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if ($satsLn->items->isNotEmpty())
+                <p class="mt-2 text-sm font-medium text-default-700">
+                    {{ __('Total') }} {{ number_format((float) $satsLn->items->sum('qty'), 2, ',', '.') }}
+                </p>
+            @endif
         </div>
-        <p class="mt-2 text-sm font-medium text-default-700">Total 3 EKO <span class="italic text-default-400">(tiga
-                ekor)</span></p>
+
+        {{-- IX: syarat khusus --}}
+        <div class="rounded-lg border border-default-200 bg-default-50 p-4 text-xs text-default-500">
+            <p class="font-medium text-default-600">Syarat khusus <span class="italic font-normal">(Special
+                    conditions)</span></p>
+            <p>Security Stamp No: SN-000001, Captive breed specimen no quota allocated</p>
+        </div>
+
+
+
+        {{-- Footer disclaimer --}}
+        <div class="border-t border-dashed border-default-200 pt-3 text-xs text-default-400">
+            <p>
+                Dokumen ini hanya sah dan berlaku jika data yang dicetak pada kertas standar dari Kementerian
+                Kehutanan sesuai dengan data digital.
+            </p>
+            <p class="italic">
+                This document is only valid if the data printed on the standard paper from the Ministry of Forestry
+                matches the data presented herein.
+            </p>
+        </div>
     </div>
-
-    {{-- IX: syarat khusus --}}
-    <div class="rounded-lg border border-default-200 bg-default-50 p-4 text-xs text-default-500">
-        <p class="font-medium text-default-600">Syarat khusus <span class="italic font-normal">(Special
-                conditions)</span></p>
-        <p>Security Stamp No: SN-000001, Captive breed specimen no quota allocated</p>
-    </div>
-
-
-
-    {{-- Footer disclaimer --}}
-    <div class="border-t border-dashed border-default-200 pt-3 text-xs text-default-400">
-        <p>
-            Dokumen ini hanya sah dan berlaku jika data yang dicetak pada kertas standar dari Kementerian
-            Kehutanan sesuai dengan data digital.
-        </p>
-        <p class="italic">
-            This document is only valid if the data printed on the standard paper from the Ministry of Forestry
-            matches the data presented herein.
-        </p>
-    </div>
-</div>

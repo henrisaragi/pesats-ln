@@ -15,10 +15,13 @@ use App\Models\Country;
 use App\Models\Customer\Customer;
 use App\Models\Document;
 use App\Models\Entitas\Entitas;
+use App\Models\Komoditas;
 use App\Models\Permohonan;
 use App\Models\Port;
 use App\Models\PurposeOfTransaction;
 use App\Models\SatsLn;
+use App\Models\Species;
+use App\Models\TradeCode;
 use App\Models\User;
 use App\Notifications\AppNotification;
 use App\Services\PermohonanService;
@@ -105,9 +108,22 @@ class PermohonanController extends Controller
             'satsLn.purposeOfTransaction',
             'satsLn.portOfExportation',
             'satsLn.portOfDestination',
+            'satsLn.items.species',
+            'satsLn.items.kuotaNasional.komoditas',
+            'satsLn.items.kuotaNasional.source',
+            'satsLn.items.kuotaNasional.tradeCode',
+            'satsLn.items.kuotaNasional.species',
+            'satsLn.items.kuotaPerusahaan.kuotaNasional.tradeCode',
+            'satsLn.items.kuotaPerusahaan.kuotaNasional.source',
         ]);
 
         $indonesiaCountry = Country::query()->where('iso_code', 'ID')->first();
+
+        // Redisplay setelah validasi modal Tambah/Ubah Spesies gagal: cascading select Komoditas/
+        // Trade Code/Species butuh label dari nilai old() untuk ditampilkan lagi (bukan cuma id
+        // kosong) - query di controller, bukan di Blade (lihat CLAUDE.md). Berlaku utk modal create
+        // ("satsln-item-create-modal") maupun tiap modal edit ("satsln-item-edit-modal-{id}").
+        $itemModalRedisplay = str_starts_with((string) old('_modal'), 'satsln-item-');
 
         return view('permohonan-export.show', [
             'permohonan' => $permohonan,
@@ -117,6 +133,12 @@ class PermohonanController extends Controller
             'countryOptions' => Country::query()->orderBy('name')->get(),
             'indonesiaCountry' => $indonesiaCountry,
             'indonesiaPortOptions' => Port::query()->where('country_id', $indonesiaCountry?->id)->orderBy('name')->get(),
+            'sourceOptions' => $this->permohonanService->sourceStatusOptionsForEntitas($entity)
+                ->map(fn ($item) => (object) ['id' => $item->id, 'name' => $item->code.' - '.$item->description])
+                ->values(),
+            'oldKomoditas' => $itemModalRedisplay && old('komoditas_id') ? Komoditas::find(old('komoditas_id')) : null,
+            'oldTradeCode' => $itemModalRedisplay && old('trade_code_id') ? TradeCode::find(old('trade_code_id')) : null,
+            'oldSpecies' => $itemModalRedisplay && old('species_id') ? Species::find(old('species_id')) : null,
         ]);
     }
 

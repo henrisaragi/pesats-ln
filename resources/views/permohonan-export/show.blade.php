@@ -90,9 +90,9 @@
         </div>
         <div class="lg:col-span-3 col-span-1">
             @if ($selectedSatsLn)
-                {{-- Navbar aksi SATS-LN - Edit/Tambah Spesies/Lampiran Dokumen sementara pakai url="#"
-                     (placeholder, belum ada halaman/aksi di baliknya). Hapus sudah fungsional, pakai
-                     route sats-ln.destroy yang sudah ada (dipakai juga oleh form tab lama). --}}
+                {{-- Navbar aksi SATS-LN - Edit SATS-LN/Lampiran Dokumen sementara pakai url="#"
+                     (placeholder, belum ada halaman/aksi di baliknya). Tambah Spesies dan Hapus
+                     sudah fungsional. --}}
                 @can('permohonan-export.edit')
                     @if ($permohonan->status->isEditable())
                         <nav class="card mb-4">
@@ -100,21 +100,17 @@
                                 <a class="btn btn-sm bg-default-150 hover:bg-default-200" href="#">
                                     <i class="size-4 me-1" data-lucide="edit"></i>{{ __('Edit SATS-LN') }}
                                 </a>
-                                <a class="btn btn-sm bg-default-150 hover:bg-default-200" href="#">
+                                <button class="btn btn-sm bg-default-150 hover:bg-default-200"
+                                        data-hs-overlay="#satsln-item-create-modal" type="button">
                                     <i class="size-4 me-1" data-lucide="leaf"></i>{{ __('Tambah Spesies') }}
-                                </a>
+                                </button>
                                 <a class="btn btn-sm bg-default-150 hover:bg-default-200" href="#">
                                     <i class="size-4 me-1" data-lucide="paperclip"></i>{{ __('Lampiran Dokumen') }}
                                 </a>
-                                <form class="ms-auto" action="{{ route('permohonan-export.sats-ln.destroy', [$permohonan, $selectedSatsLn]) }}"
-                                      method="POST" onsubmit="return confirm('{{ __('Hapus SATS-LN ini?') }}');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <input name="return_to" type="hidden" value="show">
-                                    <button class="btn btn-sm bg-danger text-white hover:bg-danger/90" type="submit">
-                                        <i class="size-4 me-1" data-lucide="trash-2"></i>{{ __('Hapus') }}
-                                    </button>
-                                </form>
+                                <button class="btn btn-sm bg-danger text-white hover:bg-danger/90 ms-auto"
+                                        data-hs-overlay="#satsln-delete-modal-{{ $selectedSatsLn->id }}" type="button">
+                                    <i class="size-4 me-1" data-lucide="trash-2"></i>{{ __('Hapus') }}
+                                </button>
                             </div>
                         </nav>
                     @endif
@@ -132,6 +128,92 @@
             @endif
         </div>
     </div>
+
+    @can('permohonan-export.edit')
+        @if ($permohonan->status->isEditable() && $selectedSatsLn)
+            <div aria-labelledby="satsln-item-create-modal-label" id="satsln-item-create-modal"
+                class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none [--overlay-backdrop:static]"
+                data-hs-overlay-keyboard="false" role="dialog" tabindex="-1">
+                <div
+                    class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-2xl sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                    <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                        <div class="card-header">
+                            <h3 class="font-bold text-default-800 text-base" id="satsln-item-create-modal-label">
+                                {{ __('Tambah Spesies') }}
+                            </h3>
+                        </div>
+                        @include('permohonan-export.partials.sats-ln-item-modal-form', [
+                            'satsLn' => $selectedSatsLn,
+                            'item' => null,
+                            'modalId' => 'satsln-item-create-modal',
+                        ])
+                    </div>
+                </div>
+            </div>
+
+            @foreach ($selectedSatsLn->items as $satsLnItem)
+                <div aria-labelledby="satsln-item-edit-modal-{{ $satsLnItem->id }}-label" id="satsln-item-edit-modal-{{ $satsLnItem->id }}"
+                    class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none [--overlay-backdrop:static]"
+                    data-hs-overlay-keyboard="false" role="dialog" tabindex="-1">
+                    <div
+                        class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-2xl sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                        <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                            <div class="card-header">
+                                <h3 class="font-bold text-default-800 text-base" id="satsln-item-edit-modal-{{ $satsLnItem->id }}-label">
+                                    {{ __('Ubah Spesies') }}
+                                </h3>
+                            </div>
+                            @include('permohonan-export.partials.sats-ln-item-modal-form', [
+                                'satsLn' => $selectedSatsLn,
+                                'item' => $satsLnItem,
+                                'modalId' => 'satsln-item-edit-modal-'.$satsLnItem->id,
+                            ])
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+
+            <div aria-labelledby="satsln-delete-modal-{{ $selectedSatsLn->id }}-label" id="satsln-delete-modal-{{ $selectedSatsLn->id }}"
+                class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+                role="dialog" tabindex="-1">
+                <div
+                    class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 md:w-sm m-3 mx-auto min-h-[calc(100%-56px)] flex items-center">
+                    <div
+                        class="w-full flex flex-col card shadow-2xs border border-default-200 rounded-xl pointer-events-auto px-6 py-8 relative">
+                        <div class="absolute top-3 end-3">
+                            <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                    data-hs-overlay="#satsln-delete-modal-{{ $selectedSatsLn->id }}" type="button">
+                                <span class="sr-only">{{ __('Tutup') }}</span>
+                                <i class="size-5" data-lucide="x"></i>
+                            </button>
+                        </div>
+                        <div class="text-center">
+                            <img alt="" class="size-12 mx-auto" src="/images/delete.png"/>
+                            <div class="mt-5 text-center">
+                                <h5 class="mb-1 text-lg font-semibold text-default-800">{{ __('Anda yakin?') }}</h5>
+                                <p class="text-default-500 text-sm font-normal">
+                                    {{ __('SATS-LN ini akan dihapus permanen.') }}
+                                </p>
+                                <div class="mt-5 flex gap-2 justify-center">
+                                    <button class="btn text-danger bg-transparent hover:bg-danger/10"
+                                            data-hs-overlay="#satsln-delete-modal-{{ $selectedSatsLn->id }}"
+                                            type="button">{{ __('Batal') }}</button>
+                                    <form action="{{ route('permohonan-export.sats-ln.destroy', [$permohonan, $selectedSatsLn]) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input name="return_to" type="hidden" value="show">
+                                        <button class="bg-danger text-white btn border-0 btn-sm" type="submit">
+                                            {{ __('Ya, Hapus!') }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endcan
 
     @can('permohonan-export.edit')
         @if ($permohonan->status->isEditable())
@@ -176,6 +258,8 @@
                     </div>
                 </div>
             @endforeach
+
+            @include('permohonan-export.partials.customer-quick-create-modal')
         @endif
     @endcan
 @endsection
