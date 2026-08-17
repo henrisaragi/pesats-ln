@@ -118,9 +118,13 @@ class MasterDataPermissionSeeder extends Seeder
     /**
      * Settings > Whatsapp: a single on/off toggle page, no separate view/update split since
      * there's no scenario where a user should see the toggle but not be allowed to change it.
+     * Settings > Status Server: read-only monitoring page (queue workers/Reverb still running or
+     * not) - super-admin only, no other role gets it (matches the whatsapp.manage precedent of
+     * not being granted to any submitter role by default).
      */
     private const SETTINGS_PERMISSIONS = [
         'settings.whatsapp.manage',
+        'settings.server-status.view',
     ];
 
     /**

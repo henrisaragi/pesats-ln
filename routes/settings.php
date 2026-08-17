@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Settings\ServerStatusController;
 use App\Http\Controllers\Settings\WhatsAppSettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -10,4 +11,8 @@ Route::middleware('auth')->prefix('settings')->name('settings.')->group(function
         Route::get('', [WhatsAppSettingController::class, 'index'])->name('index');
         Route::put('', [WhatsAppSettingController::class, 'update'])->name('update');
     });
+
+    Route::get('server-status', [ServerStatusController::class, 'index'])
+        ->name('server-status.index')
+        ->middleware('permission:settings.server-status.view');
 });

@@ -182,6 +182,12 @@
                     'route' => 'settings.whatsapp.index',
                     'permission' => 'settings.whatsapp.manage',
                 ],
+                [
+                    'label' => __('Status Server'),
+                    'icon' => 'server',
+                    'route' => 'settings.server-status.index',
+                    'permission' => 'settings.server-status.view',
+                ],
             ],
         ],
     ];

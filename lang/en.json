@@ -655,5 +655,14 @@
     "Customer berhasil diperbarui.": "Customer updated successfully.",
     "Customer berhasil dihapus.": "Customer deleted successfully.",
 
-    "Nomor akan otomatis di-generate": "Number will be generated automatically"
+    "Nomor akan otomatis di-generate": "Number will be generated automatically",
+
+    "Status Server": "Server Status",
+    "Queue Worker (Default)": "Queue Worker (Default)",
+    "Queue Worker (Notifications)": "Queue Worker (Notifications)",
+    "Reverb Server": "Reverb Server",
+    "Refresh": "Refresh",
+    "Tidak Aktif": "Inactive",
+    "Tidak Diketahui": "Unknown",
+    "Status dicek langsung dari daftar proses server setiap halaman ini dimuat. Klik \"Refresh\" untuk memeriksa ulang.": "Status is checked directly from the server's process list every time this page loads. Click \"Refresh\" to check again."
 }
