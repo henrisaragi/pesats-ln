@@ -90,11 +90,15 @@
         </div>
         <div class="lg:col-span-3 col-span-1">
             @if ($selectedSatsLn)
-                {{-- Navbar aksi SATS-LN - Edit SATS-LN/Lampiran Dokumen sementara pakai url="#"
-                     (placeholder, belum ada halaman/aksi di baliknya). Tambah Spesies dan Hapus
-                     sudah fungsional. --}}
+                {{-- Navbar aksi SATS-LN - Edit SATS-LN sementara pakai url="#" (placeholder,
+                     belum ada halaman/aksi di baliknya). Tambah Spesies, Lampiran Dokumen, dan
+                     Hapus sudah fungsional. --}}
                 @can('permohonan-export.edit')
                     @if ($permohonan->status->isEditable())
+                        @php
+                            $satsLnDocuments = $selectedSatsLn->documents;
+                            $firstSatsLnDocument = $satsLnDocuments->first();
+                        @endphp
                         <nav class="card mb-4">
                             <div class="card-body flex flex-wrap items-center gap-2">
                                 <a class="btn btn-sm bg-default-150 hover:bg-default-200" href="#">
@@ -104,9 +108,37 @@
                                         data-hs-overlay="#satsln-item-create-modal" type="button">
                                     <i class="size-4 me-1" data-lucide="leaf"></i>{{ __('Tambah Spesies') }}
                                 </button>
-                                <a class="btn btn-sm bg-default-150 hover:bg-default-200" href="#">
-                                    <i class="size-4 me-1" data-lucide="paperclip"></i>{{ __('Lampiran Dokumen') }}
-                                </a>
+                                @if ($satsLnDocuments->isEmpty())
+                                    <button class="btn btn-sm bg-primary text-white hover:bg-primary/90"
+                                            data-hs-overlay="#satsln-document-attach-modal" type="button">
+                                        <i class="size-4 me-1" data-lucide="paperclip"></i>{{ __('Lampiran Dokumen') }}
+                                    </button>
+                                @else
+                                    <div class="hs-dropdown relative inline-flex">
+                                        <button aria-expanded="false" aria-haspopup="menu"
+                                                aria-label="{{ __('Lampiran Dokumen') }}"
+                                                class="hs-dropdown-toggle btn btn-sm bg-primary text-white hover:bg-primary/90"
+                                                hs-dropdown-placement="bottom-start" type="button">
+                                            <i class="size-4 me-1" data-lucide="paperclip"></i>{{ __('Lampiran Dokumen') }}
+                                            <i class="size-4 ms-1" data-lucide="chevron-down"></i>
+                                        </button>
+                                        <div class="hs-dropdown-menu" role="menu">
+                                            <button class="flex w-full items-center gap-1.5 py-1.5 font-medium px-3 text-sm text-default-600 hover:bg-default-150 rounded text-start"
+                                                    role="menuitem" type="button"
+                                                    data-hs-overlay="#satsln-document-view-modal"
+                                                    data-document-viewer-url="{{ route('documents.preview', $firstSatsLnDocument) }}"
+                                                    data-document-viewer-title="{{ $firstSatsLnDocument->nomor_document }}"
+                                                    data-document-viewer-download-url="{{ route('documents.download', $firstSatsLnDocument) }}">
+                                                <i class="size-3.5" data-lucide="eye"></i>{{ __('Lihat Lampiran') }}
+                                            </button>
+                                            <button class="flex w-full items-center gap-1.5 py-1.5 font-medium px-3 text-sm text-default-600 hover:bg-default-150 rounded text-start"
+                                                    role="menuitem" type="button"
+                                                    data-hs-overlay="#satsln-document-attach-modal">
+                                                <i class="size-3.5" data-lucide="plus"></i>{{ __('Tambah Lampiran') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
                                 <button class="btn btn-sm bg-danger text-white hover:bg-danger/90 ms-auto"
                                         data-hs-overlay="#satsln-delete-modal-{{ $selectedSatsLn->id }}" type="button">
                                     <i class="size-4 me-1" data-lucide="trash-2"></i>{{ __('Hapus') }}
@@ -213,6 +245,81 @@
                     </div>
                 </div>
             </div>
+
+            <div aria-labelledby="satsln-document-attach-modal-label" id="satsln-document-attach-modal"
+                class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+                role="dialog" tabindex="-1">
+                <div
+                    class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                    <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                        <div class="card-header">
+                            <h3 class="font-bold text-default-800 text-base" id="satsln-document-attach-modal-label">
+                                {{ __('Tambah Lampiran Dokumen') }}
+                            </h3>
+                            <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                    data-hs-overlay="#satsln-document-attach-modal" type="button">
+                                <span class="sr-only">{{ __('Tutup') }}</span>
+                                <i class="size-5" data-lucide="x"></i>
+                            </button>
+                        </div>
+                        <form action="{{ route('permohonan-export.sats-ln.documents.attach', [$permohonan, $selectedSatsLn]) }}"
+                              method="POST">
+                            @csrf
+                            <input name="_modal" type="hidden" value="satsln-document-attach-modal">
+                            @php
+                                $attachedDocumentIds = $satsLnDocuments->pluck('id');
+                                $availableDocuments = $satsLnDocumentOptions->reject(fn ($document) => $attachedDocumentIds->contains($document->id));
+                                $isDocumentModalRedisplay = old('_modal') === 'satsln-document-attach-modal';
+                            @endphp
+                            <div class="p-4">
+                                <div>
+                                    <label class="inline-block mb-2 text-sm font-medium" for="satsln-document-attach-select">
+                                        {{ __('Dokumen') }}
+                                    </label>
+                                    <select class="form-input" data-choice id="satsln-document-attach-select" name="document_id">
+                                        <option value="">{{ __('Pilih Dokumen') }}</option>
+                                        @foreach ($availableDocuments as $document)
+                                            <option value="{{ $document->id }}"
+                                                    @selected($isDocumentModalRedisplay && (int) old('document_id') === $document->id)>
+                                                {{ $document->nomor_document }} - {{ $document->type_document->label() }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class="mt-1 text-xs text-default-400">
+                                        {{ __('Hanya menampilkan dokumen milik entitas Anda yang belum dilampirkan ke SATS-LN ini (di luar tipe Permohonan).') }}
+                                    </p>
+                                    @if ($isDocumentModalRedisplay && $errors->has('document_id'))
+                                        <p class="mt-1 text-xs text-danger">{{ $errors->first('document_id') }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
+                                <button class="btn bg-default-150" data-hs-overlay="#satsln-document-attach-modal"
+                                        type="button">{{ __('Batal') }}</button>
+                                <button class="btn bg-primary text-white" type="submit">{{ __('Simpan') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <x-document-viewer-modal id="satsln-document-view-modal">
+                <x-slot:switcher>
+                    @if ($satsLnDocuments->count() > 1)
+                        <select class="form-input form-input-sm w-52" data-satsln-document-select>
+                            @foreach ($satsLnDocuments as $document)
+                                <option data-download-url="{{ route('documents.download', $document) }}"
+                                        data-preview-url="{{ route('documents.preview', $document) }}"
+                                        data-title="{{ $document->nomor_document }}"
+                                        value="{{ $document->id }}"
+                                        @selected($firstSatsLnDocument?->id === $document->id)>
+                                    {{ $document->nomor_document }} ({{ $document->type_document->label() }})
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
+                </x-slot:switcher>
+            </x-document-viewer-modal>
         @endif
     @endcan
 

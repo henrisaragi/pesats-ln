@@ -6,6 +6,45 @@
 //   modal edit karena "value" dirender server-side) lalu menyinkronkan ulang tampilan Choices.js,
 //   karena form.reset() native tidak otomatis mengupdate UI Choices.js.
 
+import { withToolbarHidden } from '../components/document-viewer.js';
+
+// Lampiran Dokumen SATS-LN: select "lihat lampiran lain" di dalam modal viewer fullscreen
+// (#satsln-document-view-modal, lihat resources/views/permohonan-export/show.blade.php) -
+// tiap <option> membawa data-preview-url/data-download-url/data-title lewat data attribute,
+// dibaca langsung di sini (bukan lewat mekanisme data-document-viewer-url punya trigger button,
+// karena itu cuma jalan sekali saat modal DIBUKA, bukan saat select di DALAM modal berubah).
+document.addEventListener('change', function (event) {
+    const select = event.target.closest('[data-satsln-document-select]');
+
+    if (!select) {
+        return;
+    }
+
+    const modal = document.getElementById('satsln-document-view-modal');
+    const option = select.options[select.selectedIndex];
+
+    if (!modal || !option) {
+        return;
+    }
+
+    const frame = modal.querySelector('[data-document-viewer-frame]');
+    const title = modal.querySelector('[data-document-viewer-title]');
+    const downloadLink = modal.querySelector('[data-document-viewer-download]');
+
+    if (frame) {
+        frame.src = withToolbarHidden(option.dataset.previewUrl) || 'about:blank';
+    }
+
+    if (title) {
+        title.textContent = option.dataset.title || '';
+    }
+
+    if (downloadLink) {
+        downloadLink.href = option.dataset.downloadUrl || '#';
+        downloadLink.classList.toggle('hidden', !option.dataset.downloadUrl);
+    }
+});
+
 function syncChoicesDisplay(form) {
     form.querySelectorAll('select[data-choice]').forEach((select) => {
         select._choices?.setChoiceByValue(select.value || '');

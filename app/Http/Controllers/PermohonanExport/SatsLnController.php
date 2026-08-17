@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\PermohonanExport;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PermohonanExport\SatsLnDocumentRequest;
 use App\Http\Requests\PermohonanExport\SatsLnItemRequest;
 use App\Http\Requests\PermohonanExport\SatsLnRequest;
 use App\Models\Country;
@@ -187,6 +188,17 @@ class SatsLnController extends Controller
 
         return redirect()->route('permohonan-export.sats-ln.show', [$permohonan, $satsLn])
             ->with('toast_success', __('Spesies berhasil diperbarui.'));
+    }
+
+    public function attachDocument(SatsLnDocumentRequest $request, Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
+    {
+        $this->authorizeEditable($permohonan);
+        abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
+
+        $satsLn->documents()->attach($request->validated('document_id'));
+
+        return redirect()->route('permohonan-export.sats-ln.show', [$permohonan, $satsLn])
+            ->with('toast_success', __('Lampiran berhasil ditambahkan.'));
     }
 
     public function kuotaPerusahaanOptions(?int $source = null): JsonResponse

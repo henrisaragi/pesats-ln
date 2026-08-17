@@ -115,6 +115,7 @@ class PermohonanController extends Controller
             'satsLn.items.kuotaNasional.species',
             'satsLn.items.kuotaPerusahaan.kuotaNasional.tradeCode',
             'satsLn.items.kuotaPerusahaan.kuotaNasional.source',
+            'satsLn.documents',
         ]);
 
         $indonesiaCountry = Country::query()->where('iso_code', 'ID')->first();
@@ -143,6 +144,13 @@ class PermohonanController extends Controller
             'oldKomoditas' => $itemModalRedisplay && old('komoditas_id') ? Komoditas::find(old('komoditas_id')) : null,
             'oldTradeCode' => $itemModalRedisplay && old('trade_code_id') ? TradeCode::find(old('trade_code_id')) : null,
             'oldSpecies' => $itemModalRedisplay && old('species_id') ? Species::find(old('species_id')) : null,
+            // Dokumen bertipe Permohonan dikecualikan - itu sudah dipilih di awal pembuatan
+            // Permohonan (Revisi Permohonan 1), bukan untuk dilampirkan ke SATS-LN.
+            'satsLnDocumentOptions' => Document::query()
+                ->where('entity_id', $entity->id)
+                ->where('type_document', '!=', DocumentType::Permohonan)
+                ->orderByDesc('id')
+                ->get(),
         ]);
     }
 

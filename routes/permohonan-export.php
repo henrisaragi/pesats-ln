@@ -40,5 +40,6 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
         Route::delete('{permohonan}/sats-ln/{satsLn}', [SatsLnController::class, 'destroy'])->name('sats-ln.destroy');
         Route::post('{permohonan}/sats-ln/{satsLn}/items', [SatsLnController::class, 'storeItem'])->name('sats-ln.items.store');
         Route::put('{permohonan}/sats-ln/{satsLn}/items/{item}', [SatsLnController::class, 'updateItem'])->name('sats-ln.items.update');
+        Route::post('{permohonan}/sats-ln/{satsLn}/documents', [SatsLnController::class, 'attachDocument'])->name('sats-ln.documents.attach');
     });
 });

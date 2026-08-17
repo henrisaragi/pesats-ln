@@ -11,7 +11,7 @@
 // iframe, which duplicates our modal's own header controls and includes Chrome's default
 // print button. #toolbar=0 is a PDF open parameter Chrome's viewer honors to hide it -
 // harmless no-op for non-PDF documents/browsers that ignore the hash.
-function withToolbarHidden(url) {
+export function withToolbarHidden(url) {
     if (!url || url === 'about:blank') {
         return url;
     }

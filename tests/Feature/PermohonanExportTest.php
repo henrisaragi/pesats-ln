@@ -100,6 +100,22 @@ class PermohonanExportTest extends TestCase
         ]);
     }
 
+    private function createLampiranDocument(User $user, DocumentType $type = DocumentType::SertifikatStandar): Document
+    {
+        return Document::create([
+            'entity_id' => $user->entity_id,
+            'created_by_id' => $user->id,
+            'nomor_document' => 'DOC-'.uniqid(),
+            'type_document' => $type,
+            'issued_date' => '2026-01-10',
+            'issued_country_id' => Country::query()->firstOrCreate(
+                ['iso_code' => 'ID'],
+                ['name' => 'Indonesia', 'iso_code3' => 'IDN', 'phone_code' => '62']
+            )->id,
+            'path' => 'documents/lampiran-'.uniqid().'.pdf',
+        ]);
+    }
+
     private function createPermohonan(User $user): TestResponse
     {
         $document = $this->createPermohonanDocument($user);
@@ -1235,5 +1251,95 @@ class PermohonanExportTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(0.0, $service->realisasiKuotaNasional($kuotaNasional->fresh()));
+    }
+
+    public function test_show_page_shows_a_single_lampiran_button_when_no_document_attached(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $satsLn = $this->makeSatsLnForItems($user);
+
+        $response = $this->actingAs($user)->get(route('permohonan-export.sats-ln.show', [$satsLn->permohonan, $satsLn]));
+
+        $response->assertOk();
+        $response->assertSee('data-hs-overlay="#satsln-document-attach-modal"', false);
+        $response->assertDontSee('aria-label="'.__('Lampiran Dokumen').'"', false);
+    }
+
+    public function test_can_attach_an_existing_document_to_a_sats_ln(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $satsLn = $this->makeSatsLnForItems($user);
+        $document = $this->createLampiranDocument($user);
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.documents.attach', [$satsLn->permohonan, $satsLn]), [
+            'document_id' => (string) $document->id,
+        ]);
+
+        $response->assertRedirect(route('permohonan-export.sats-ln.show', [$satsLn->permohonan, $satsLn]));
+        $this->assertSame('Lampiran berhasil ditambahkan.', session('toast_success'));
+        $this->assertTrue($satsLn->documents()->where('documents.id', $document->id)->exists());
+    }
+
+    public function test_cannot_attach_a_permohonan_type_document(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $satsLn = $this->makeSatsLnForItems($user);
+        $document = $this->createPermohonanDocument($user);
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.documents.attach', [$satsLn->permohonan, $satsLn]), [
+            'document_id' => (string) $document->id,
+        ]);
+
+        $response->assertSessionHasErrors('document_id');
+        $this->assertFalse($satsLn->documents()->where('documents.id', $document->id)->exists());
+    }
+
+    public function test_cannot_attach_a_document_belonging_to_another_entity(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $stranger = $this->makeUser('perusahaan');
+        $satsLn = $this->makeSatsLnForItems($user);
+        $document = $this->createLampiranDocument($stranger);
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.documents.attach', [$satsLn->permohonan, $satsLn]), [
+            'document_id' => (string) $document->id,
+        ]);
+
+        $response->assertSessionHasErrors('document_id');
+        $this->assertFalse($satsLn->documents()->where('documents.id', $document->id)->exists());
+    }
+
+    public function test_cannot_attach_the_same_document_twice(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $satsLn = $this->makeSatsLnForItems($user);
+        $document = $this->createLampiranDocument($user);
+        $satsLn->documents()->attach($document->id);
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.documents.attach', [$satsLn->permohonan, $satsLn]), [
+            'document_id' => (string) $document->id,
+        ]);
+
+        $response->assertSessionHasErrors('document_id');
+        $this->assertSame(1, $satsLn->documents()->where('documents.id', $document->id)->count());
+    }
+
+    public function test_show_page_shows_a_lampiran_dropdown_and_switcher_after_attaching_documents(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $satsLn = $this->makeSatsLnForItems($user);
+        $firstDocument = $this->createLampiranDocument($user);
+        $secondDocument = $this->createLampiranDocument($user, DocumentType::Bap);
+        $satsLn->documents()->attach([$firstDocument->id, $secondDocument->id]);
+
+        $response = $this->actingAs($user)->get(route('permohonan-export.sats-ln.show', [$satsLn->permohonan, $satsLn]));
+
+        $response->assertOk();
+        $response->assertSee('aria-label="'.__('Lampiran Dokumen').'"', false);
+        $response->assertSee('data-hs-overlay="#satsln-document-attach-modal"', false);
+        $response->assertSee('data-hs-overlay="#satsln-document-view-modal"', false);
+        $response->assertSee('data-satsln-document-select', false);
+        $response->assertSee(route('documents.preview', $firstDocument), false);
+        $response->assertSee(route('documents.preview', $secondDocument), false);
     }
 }

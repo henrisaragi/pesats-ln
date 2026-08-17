@@ -9,6 +9,7 @@ use App\Models\Entitas\Entitas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -110,5 +111,10 @@ class SatsLn extends Model
     public function items(): HasMany
     {
         return $this->hasMany(SatsLnItem::class);
+    }
+
+    public function documents(): BelongsToMany
+    {
+        return $this->belongsToMany(Document::class, 'document_sats_ln');
     }
 }
