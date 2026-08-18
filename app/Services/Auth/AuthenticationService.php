@@ -10,6 +10,7 @@ use App\Services\Mail\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthenticationService
 {
@@ -68,6 +69,12 @@ class AuthenticationService
         ])->save();
 
         $this->emailService->send($user->email, new OtpMail($code, self::OTP_TTL_MINUTES));
+
+        // Sementara, selama email service OTP belum terintegrasi (lihat config/logging.php
+        // channel 'otp') - hapus baris ini begitu pengiriman email OTP sungguhan sudah aktif.
+        Log::channel('otp')->info("OTP untuk {$user->email} ({$user->username}): {$code}", [
+            'expires_at' => $user->otp_expires_at?->toDateTimeString(),
+        ]);
     }
 
     public function verifyOtp(User $user, string $code): bool

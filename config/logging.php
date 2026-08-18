@@ -65,6 +65,16 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Sementara, selama email service OTP belum terintegrasi (lihat
+        // App\Services\Auth\AuthenticationService::sendOtp()) - hapus channel ini dan baris
+        // Log::channel('otp') di sana begitu pengiriman email OTP sungguhan sudah aktif.
+        'otp' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/otp.log'),
+            'level' => 'debug',
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

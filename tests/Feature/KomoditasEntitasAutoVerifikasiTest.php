@@ -21,10 +21,12 @@ use Tests\TestCase;
 
 /**
  * Dokumen PDF di sini dibuat manual lewat buildSertifikatPdf() (bukan file PDF asli) - berisi
- * xref table yang valid dan satu content stream teks biasa, ditambah object /Type /Sig kalau
- * $withSignature true. Cukup untuk PdfSignatureChecker (deteksi struktural lewat regex) dan
- * smalot/pdfparser (baca text layer) tanpa perlu sertifikat digital sungguhan - lihat
- * claude/otomatis-verifikasi.md.
+ * xref table yang valid dan satu content stream teks biasa, ditambah object /Type /Sig berisi
+ * PKCS7 SignedData SUNGGUHAN (dibuat lewat openssl_pkcs7_sign() dari sertifikat X.509 yang
+ * di-generate saat test jalan, lihat buildPkcs7SignatureHex()) kalau $withSignature true. Ini
+ * supaya PdfSignatureChecker::extractIssuers() betul-betul mem-parsing PKCS7/X.509 asli, bukan
+ * placeholder - lihat claude/otomatis-verifikasi.md bagian Revisi Fitur (DN Penerbit dicek dari
+ * hasil verifikasi https://tte.komdigi.go.id/verifyPDF).
  */
 class KomoditasEntitasAutoVerifikasiTest extends TestCase
 {
@@ -75,15 +77,18 @@ class KomoditasEntitasAutoVerifikasiTest extends TestCase
             "Jenis {$namaKomoditas} Rusa Timor (Cervus timorensis)",
             'Ruang Lingkup: Peredaran jenis tumbuhan dan satwa liar luar negeri',
             "Diterbitkan Tanggal: {$tanggalTerbitText}",
-            'Ditandatangani secara elektronik oleh Lembaga OSS',
         ];
     }
 
     /**
      * @param  list<string>  $lines
+     * @param  array{cn: string, o: string, c: string}  $issuer  DN Penerbit sertifikat penandatangan yang mau disematkan.
      */
-    private function buildSertifikatPdf(array $lines, bool $withSignature = true): string
-    {
+    private function buildSertifikatPdf(
+        array $lines,
+        bool $withSignature = true,
+        array $issuer = ['cn' => 'BSRE CA DS G1', 'o' => 'Badan Siber dan Sandi Negara', 'c' => 'ID'],
+    ): string {
         $content = "BT /F1 12 Tf 50 700 Td\n";
 
         foreach ($lines as $i => $line) {
@@ -103,7 +108,8 @@ class KomoditasEntitasAutoVerifikasiTest extends TestCase
         ];
 
         if ($withSignature) {
-            $objects[6] = '<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached /ByteRange [0 100 200 300] /Contents <00> >>';
+            $sigHex = $this->buildPkcs7SignatureHex($issuer['cn'], $issuer['o'], $issuer['c']);
+            $objects[6] = "<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached /ByteRange [0 100 200 300] /Contents <{$sigHex}> >>";
         }
 
         $pdf = "%PDF-1.4\n";
@@ -126,6 +132,51 @@ class KomoditasEntitasAutoVerifikasiTest extends TestCase
         $pdf .= "trailer\n<< /Size {$count} /Root 1 0 R >>\nstartxref\n{$xrefStart}\n%%EOF";
 
         return $pdf;
+    }
+
+    /**
+     * Bikin sertifikat CA "palsu" dengan Subject DN = $issuerCn/$issuerO/$issuerC, terbitkan
+     * sertifikat leaf yang ditandatangani CA itu (jadi Issuer-nya leaf = DN yang diminta), lalu
+     * PKCS7-sign data dummy pakai leaf itu. Hex dari DER PKCS7 SignedData yang dihasilkan
+     * ditaruh di /Contents dictionary /Sig - meniru struktur tanda tangan digital PDF asli
+     * secukupnya supaya PdfSignatureChecker::extractIssuers() bisa mem-parsingnya sungguhan.
+     */
+    private function buildPkcs7SignatureHex(string $issuerCn, string $issuerO, string $issuerC): string
+    {
+        $caKey = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+        $caCsr = openssl_csr_new([
+            'commonName' => $issuerCn,
+            'organizationName' => $issuerO,
+            'countryName' => $issuerC,
+        ], $caKey);
+        $caCert = openssl_csr_sign($caCsr, null, $caKey, 3650);
+
+        $leafKey = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+        $leafCsr = openssl_csr_new(['commonName' => 'Test Signer', 'organizationName' => 'Test', 'countryName' => 'ID'], $leafKey);
+        $leafCert = openssl_csr_sign($leafCsr, $caCert, $caKey, 365);
+
+        $leafCertPem = '';
+        openssl_x509_export($leafCert, $leafCertPem);
+        $leafKeyPem = '';
+        openssl_pkey_export($leafKey, $leafKeyPem);
+
+        $dataFile = tempnam(sys_get_temp_dir(), 'otomatis-verifikasi-test-data-');
+        $sigFile = tempnam(sys_get_temp_dir(), 'otomatis-verifikasi-test-sig-');
+
+        try {
+            file_put_contents($dataFile, 'dummy signed content');
+            openssl_pkcs7_sign($dataFile, $sigFile, $leafCertPem, $leafKeyPem, [], PKCS7_DETACHED | PKCS7_BINARY);
+
+            $smime = file_get_contents($sigFile);
+            preg_match_all('/\n\n([A-Za-z0-9+\/=\r\n]{100,})\n--/', (string) $smime, $matches);
+            $base64Body = end($matches[1]);
+            $der = base64_decode(str_replace(["\r", "\n"], '', (string) $base64Body));
+
+            return bin2hex($der);
+        } finally {
+            @unlink($dataFile);
+            @unlink($sigFile);
+        }
     }
 
     public function test_store_auto_verifies_when_all_checks_pass(): void
@@ -223,8 +274,34 @@ class KomoditasEntitasAutoVerifikasiTest extends TestCase
 
         $checks = collect($record->summary_cek['checks'])->keyBy('key');
         $this->assertSame('lolos', $checks['tanda_tangan_digital']['status']);
-        $this->assertSame('lolos', $checks['penandatangan_oss']['status']);
+        $this->assertSame('lolos', $checks['penerbit']['status']);
         $this->assertSame('gagal', $checks['nama_pelaku_usaha']['status']);
+    }
+
+    public function test_store_stays_pending_when_penerbit_is_not_bsre(): void
+    {
+        $user = $this->makeUser('perusahaan', 'PT Sylva Restu Abadi');
+        $komoditas = Komoditas::create(['name' => 'Mamalia', 'code' => 'MML']);
+
+        $pdf = $this->buildSertifikatPdf(
+            $this->validSertifikatLines('PT Sylva Restu Abadi', 'Mamalia', 'STD-005/OSS/2026', '13 Januari 2026'),
+            issuer: ['cn' => 'CA Abal-Abal', 'o' => 'Perusahaan Sendiri', 'c' => 'ID'],
+        );
+
+        $this->actingAs($user)->post(route('komoditas-entitas.store'), [
+            'komoditas_id' => $komoditas->id,
+            'nomor_sertifikat' => 'STD-005/OSS/2026',
+            'tanggal_terbit' => '2026-01-13',
+            'file' => UploadedFile::fake()->createWithContent('sertifikat.pdf', $pdf),
+        ])->assertRedirect(route('komoditas-entitas.index'));
+
+        $record = KomoditasEntitas::where('entitas_id', $user->entity_id)->firstOrFail();
+        $this->assertSame(KomoditasEntitasStatus::Pending, $record->status);
+
+        $checks = collect($record->summary_cek['checks'])->keyBy('key');
+        $this->assertSame('lolos', $checks['tanda_tangan_digital']['status']);
+        $this->assertSame('gagal', $checks['penerbit']['status']);
+        $this->assertSame('dilewati', $checks['nama_pelaku_usaha']['status']);
     }
 
     public function test_update_auto_verifies_when_all_checks_pass(): void

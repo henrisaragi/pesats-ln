@@ -62,23 +62,29 @@ class KomoditasEntitasAutoVerifikasiService
 
         $text = $hasSignature ? $this->normalize($this->extractText($absolutePath)) : '';
 
-        $signedByOss = $hasSignature && $this->containsAny($text, $this->ossSignerKeywords());
+        $penerbitValid = $hasSignature && $this->isPenerbitValid($absolutePath);
         $checks[] = $this->buildCheck(
-            'penandatangan_oss',
-            __('Penandatangan oleh Lembaga OSS'),
+            'penerbit',
+            __('Penerbit'),
             match (true) {
                 ! $hasSignature => DokumenPemeriksaanStatus::Dilewati,
-                $signedByOss => DokumenPemeriksaanStatus::Lolos,
+                $penerbitValid => DokumenPemeriksaanStatus::Lolos,
                 default => DokumenPemeriksaanStatus::Gagal,
             },
             match (true) {
                 ! $hasSignature => __('Dilewati karena dokumen tidak memiliki tanda tangan digital.'),
-                $signedByOss => __('Dokumen ditandatangani oleh Lembaga OSS.'),
-                default => __('Tidak ditemukan penanda tangan Lembaga OSS pada dokumen.'),
+                $penerbitValid => __('Penerbit sertifikat elektronik sesuai (:cn, :o).', [
+                    'cn' => config('services.document_verification.penerbit_issuer_cn'),
+                    'o' => config('services.document_verification.penerbit_issuer_o'),
+                ]),
+                default => __('Penerbit sertifikat elektronik tidak sesuai dengan yang diharapkan (:cn, :o).', [
+                    'cn' => config('services.document_verification.penerbit_issuer_cn'),
+                    'o' => config('services.document_verification.penerbit_issuer_o'),
+                ]),
             },
         );
 
-        $canCheckIsi = $signedByOss;
+        $canCheckIsi = $penerbitValid;
 
         $checks[] = $this->checkNamaPelakuUsaha($text, $komoditasEntitas, $canCheckIsi);
         $checks[] = $this->checkNomorSertifikat($text, $komoditasEntitas, $canCheckIsi);
@@ -270,26 +276,34 @@ class KomoditasEntitasAutoVerifikasiService
         return false;
     }
 
-    private function containsAny(string $text, array $needles): bool
+    /**
+     * DN Penerbit (issuer) sertifikat penandatangan harus BSrE (Balai Sertifikasi Elektronik) -
+     * dicek dari hasil verifikasi manual lewat https://tte.komdigi.go.id/verifyPDF, lihat
+     * claude/otomatis-verifikasi.md bagian Revisi Fitur. Sertifikat penandatangan bisa muncul di
+     * posisi mana pun dalam rantai PKCS7 (leaf + CA), jadi dicek ADA salah satu yang cocok, bukan
+     * cuma cert pertama.
+     */
+    private function isPenerbitValid(string $absolutePath): bool
     {
-        foreach ($needles as $needle) {
-            if (str_contains($text, $needle)) {
+        $expectedCn = $this->normalize((string) config('services.document_verification.penerbit_issuer_cn', ''));
+        $expectedO = $this->normalize((string) config('services.document_verification.penerbit_issuer_o', ''));
+        $expectedC = $this->normalize((string) config('services.document_verification.penerbit_issuer_c', ''));
+
+        if ($expectedCn === '') {
+            return false;
+        }
+
+        foreach ($this->signatureChecker->extractIssuers($absolutePath) as $issuer) {
+            $matchesCn = $this->normalize((string) ($issuer['cn'] ?? '')) === $expectedCn;
+            $matchesO = $expectedO === '' || $this->normalize((string) ($issuer['o'] ?? '')) === $expectedO;
+            $matchesC = $expectedC === '' || $this->normalize((string) ($issuer['c'] ?? '')) === $expectedC;
+
+            if ($matchesCn && $matchesO && $matchesC) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function ossSignerKeywords(): array
-    {
-        return array_map(
-            fn (string $keyword) => $this->normalize($keyword),
-            (array) config('services.document_verification.oss_signer_keywords', []),
-        );
     }
 
     /**

@@ -51,7 +51,12 @@ return [
         // ikut terpasang bersama binary tesseract (biasanya cuma 'eng') wajib diinstal manual di
         // server - lihat claude/otomatis-verifikasi.md bagian Hasil implementasi.
         'ocr_lang' => env('DOCUMENT_VERIFICATION_OCR_LANG', 'eng'),
-        'oss_signer_keywords' => ['LEMBAGA OSS', 'ONLINE SINGLE SUBMISSION', 'OSS RBA', 'OSS-RBA'],
+        // DN Penerbit (issuer) sertifikat elektronik yang dianggap sah - dicek dari hasil
+        // https://tte.komdigi.go.id/verifyPDF (lihat claude/otomatis-verifikasi.md bagian
+        // Revisi Fitur). Ganti kalau BSrE merotasi CA-nya (mis. jadi "BSRE CA DS G2").
+        'penerbit_issuer_cn' => env('DOCUMENT_VERIFICATION_PENERBIT_ISSUER_CN', 'BSRE CA DS G1'),
+        'penerbit_issuer_o' => env('DOCUMENT_VERIFICATION_PENERBIT_ISSUER_O', 'Badan Siber dan Sandi Negara'),
+        'penerbit_issuer_c' => env('DOCUMENT_VERIFICATION_PENERBIT_ISSUER_C', 'ID'),
     ],
 
     'kapso' => [
