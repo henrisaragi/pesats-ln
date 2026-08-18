@@ -29,6 +29,7 @@ class KomoditasEntitas extends Model
         'status',
         'verified_by',
         'verified_at',
+        'summary_cek',
     ];
 
     /**
@@ -41,6 +42,7 @@ class KomoditasEntitas extends Model
             'tanggal_berakhir' => 'date',
             'status' => KomoditasEntitasStatus::class,
             'verified_at' => 'datetime',
+            'summary_cek' => 'array',
         ];
     }
 
@@ -66,5 +68,15 @@ class KomoditasEntitas extends Model
     public function isPastExpiryDate(): bool
     {
         return $this->tanggal_berakhir->isPast();
+    }
+
+    /**
+     * Verified tanpa verified_by berarti KomoditasEntitasAutoVerifikasiService yang meloloskannya
+     * (semua pemeriksaan di summary_cek lolos), bukan verifikasi manual oleh user - lihat
+     * claude/otomatis-verifikasi.md.
+     */
+    public function isVerifiedOtomatis(): bool
+    {
+        return $this->status === KomoditasEntitasStatus::Verified && $this->verified_by === null;
     }
 }

@@ -14,14 +14,17 @@ use App\Models\Komoditas;
 use App\Models\KomoditasEntitas;
 use App\Models\User;
 use App\Notifications\AppNotification;
+use App\Services\DokumenVerifikasi\KomoditasEntitasAutoVerifikasiService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class KomoditasEntitasController extends Controller
 {
@@ -31,6 +34,8 @@ class KomoditasEntitasController extends Controller
      * @var list<string>
      */
     private const ALLOWED_ENTITY_TYPES = ['perusahaan', 'penangkaran'];
+
+    public function __construct(private readonly KomoditasEntitasAutoVerifikasiService $autoVerifikasiService) {}
 
     public function index(): View
     {
@@ -61,7 +66,7 @@ class KomoditasEntitasController extends Controller
         $tanggalTerbit = CarbonImmutable::parse($request->validated('tanggal_terbit'));
         $path = $request->file('file')->store('komoditas-entitas/'.$entity->id, 'local');
 
-        KomoditasEntitas::create([
+        $komoditasEntitas = KomoditasEntitas::create([
             'komoditas_id' => $komoditas->id,
             'entitas_id' => $entity->id,
             'nomor_sertifikat' => $request->validated('nomor_sertifikat'),
@@ -71,10 +76,10 @@ class KomoditasEntitasController extends Controller
             'status' => KomoditasEntitasStatus::Pending,
         ]);
 
-        $this->notifyVerifiers($entity, $komoditas);
-
         return redirect()->route('komoditas-entitas.index')
-            ->with('success', __('Komoditas entitas berhasil diajukan, menunggu verifikasi.'));
+            ->with('success', $this->jalankanVerifikasiOtomatis($komoditasEntitas, $entity, $komoditas)
+                ? __('Komoditas entitas berhasil diajukan dan lolos verifikasi otomatis.')
+                : __('Komoditas entitas berhasil diajukan, menunggu verifikasi.'));
     }
 
     public function update(KomoditasEntitasUpdateRequest $request, KomoditasEntitas $komoditasEntitas): RedirectResponse
@@ -105,10 +110,10 @@ class KomoditasEntitasController extends Controller
 
         $komoditasEntitas->update($data);
 
-        $this->notifyVerifiers($entity, $komoditas);
-
         return redirect()->route('komoditas-entitas.index')
-            ->with('success', __('Pengajuan berhasil diperbarui, menunggu verifikasi ulang.'));
+            ->with('success', $this->jalankanVerifikasiOtomatis($komoditasEntitas, $entity, $komoditas)
+                ? __('Pengajuan berhasil diperbarui dan lolos verifikasi otomatis.')
+                : __('Pengajuan berhasil diperbarui, menunggu verifikasi ulang.'));
     }
 
     public function destroy(KomoditasEntitas $komoditasEntitas): RedirectResponse
@@ -121,6 +126,53 @@ class KomoditasEntitasController extends Controller
 
         return redirect()->route('komoditas-entitas.index')
             ->with('success', __('Pengajuan berhasil dihapus.'));
+    }
+
+    /**
+     * Jalankan pemeriksaan otomatis dokumen (lihat KomoditasEntitasAutoVerifikasiService /
+     * claude/otomatis-verifikasi.md). Kalau lolos semua, statusnya sudah Verified saat method ini
+     * selesai sehingga verifier TIDAK perlu diberi tahu. Kalau gagal (termasuk kalau proses
+     * pemeriksaannya sendiri error, mis. dokumen tidak bisa dibaca), dibiarkan Pending seperti
+     * semula dan verifier diberi tahu untuk verifikasi manual seperti alur sebelumnya.
+     * Mengembalikan true kalau lolos otomatis.
+     */
+    private function jalankanVerifikasiOtomatis(KomoditasEntitas $komoditasEntitas, Entitas $entity, Komoditas $komoditas): bool
+    {
+        try {
+            $this->autoVerifikasiService->verifikasi($komoditasEntitas);
+        } catch (Throwable $e) {
+            Log::error('Verifikasi otomatis Komoditas Entitas gagal.', [
+                'komoditas_entitas_id' => $komoditasEntitas->id,
+                'exception' => $e->getMessage(),
+            ]);
+        }
+
+        if ($komoditasEntitas->fresh()->status === KomoditasEntitasStatus::Verified) {
+            $this->notifySubmitterAutoVerified($komoditasEntitas, $komoditas);
+
+            return true;
+        }
+
+        $this->notifyVerifiers($entity, $komoditas);
+
+        return false;
+    }
+
+    private function notifySubmitterAutoVerified(KomoditasEntitas $komoditasEntitas, Komoditas $komoditas): void
+    {
+        $komoditasEntitas->loadMissing('entitas.users');
+        $recipients = $komoditasEntitas->entitas?->users ?? collect();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Notification::send($recipients, new AppNotification(
+            NotificationCategory::Permohonan,
+            __('Komoditas Entitas Terverifikasi Otomatis'),
+            __('Pengajuan komoditas :komoditas lolos verifikasi otomatis.', ['komoditas' => $komoditas->name]),
+            route('komoditas-entitas.index'),
+        ));
     }
 
     private function notifyVerifiers(Entitas $entity, Komoditas $komoditas): void

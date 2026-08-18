@@ -46,6 +46,14 @@ return [
         'redirect_uri' => env('INSW_REDIRECT_URI'),
     ],
 
+    'document_verification' => [
+        // Bahasa tesseract, gabungan pakai '+' (mis. 'ind+eng'). Traineddata bahasa selain yang
+        // ikut terpasang bersama binary tesseract (biasanya cuma 'eng') wajib diinstal manual di
+        // server - lihat claude/otomatis-verifikasi.md bagian Hasil implementasi.
+        'ocr_lang' => env('DOCUMENT_VERIFICATION_OCR_LANG', 'eng'),
+        'oss_signer_keywords' => ['LEMBAGA OSS', 'ONLINE SINGLE SUBMISSION', 'OSS RBA', 'OSS-RBA'],
+    ],
+
     'kapso' => [
         // Env var name is lowercase ("kapso_api_key") per the integration spec this project
         // was given - kept as-is rather than renamed to the usual UPPER_SNAKE convention.

@@ -37,6 +37,7 @@
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tanggal Terbit') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tanggal Berakhir') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Dokumen') }}</th>
+                                <th class="px-3.5 py-3 text-start" scope="col">{{ __('Ringkasan Cek') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Status') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Aksi') }}</th>
                             </tr>
@@ -59,9 +60,15 @@
                                         </button>
                                     </td>
                                     <td class="px-3.5 py-3">
+                                        <x-komoditas-entitas.summary-cek :item="$item"/>
+                                    </td>
+                                    <td class="px-3.5 py-3">
                                         <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.75 border text-xs {{ $item->status->badgeClass() }}">
                                             {{ $item->status->label() }}
                                         </span>
+                                        @if ($item->isVerifiedOtomatis())
+                                            <span class="block mt-1 text-xs text-default-400">{{ __('Otomatis oleh sistem') }}</span>
+                                        @endif
                                     </td>
                                     <td class="px-3.5 py-3">
                                         @if ($item->status === \App\Enums\KomoditasEntitasStatus::Pending)
@@ -84,7 +91,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="8">
+                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="9">
                                         {{ __('Tidak ada pengajuan komoditas entitas.') }}
                                     </td>
                                 </tr>
