@@ -14,7 +14,7 @@ enum KomoditasEntitasStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Pending => __('Menunggu Verifikasi'),
+            self::Pending => __('Dalam Proses'),
             self::Verified => __('Terverifikasi'),
             self::Rejected => __('Ditolak'),
             self::Expired => __('Kedaluwarsa'),

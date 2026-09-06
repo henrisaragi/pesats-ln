@@ -67,7 +67,7 @@
                     'permission' => 'permohonan-export.view',
                 ],
                 [
-                    'label' => __('Verifikasi Permohonan Ekspor'),
+                    'label' => __('Verifikasi Ekspor'),
                     'icon' => 'shield-check',
                     'route' => 'permohonan-export.verifikasi.index',
                     'permission' => 'permohonan-export.verify',

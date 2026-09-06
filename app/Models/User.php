@@ -70,4 +70,15 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Entitas::class, 'entity_id');
     }
+
+    public function initials(): string
+    {
+        $words = preg_split('/\s+/', trim((string) $this->name));
+
+        return collect($words)
+            ->filter()
+            ->map(fn (string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
+            ->take(2)
+            ->implode('');
+    }
 }
