@@ -15,7 +15,7 @@
     </button>
 
     <div aria-labelledby="{{ $modalId }}-label" id="{{ $modalId }}"
-         class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+         class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none whitespace-normal"
          role="dialog" tabindex="-1">
         <div
             class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
@@ -43,9 +43,9 @@
                                 <span class="mt-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 border text-xs shrink-0 {{ $checkStatus->badgeClass() }}">
                                     {{ $checkStatus->label() }}
                                 </span>
-                                <div>
-                                    <p class="text-sm font-medium text-default-800">{{ $check['label'] }}</p>
-                                    <p class="text-xs text-default-500">{{ $check['detail'] }}</p>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-medium text-default-800 break-words">{{ $check['label'] }}</p>
+                                    <p class="text-xs text-default-500 break-words">{{ $check['detail'] }}</p>
                                 </div>
                             </li>
                         @endforeach
