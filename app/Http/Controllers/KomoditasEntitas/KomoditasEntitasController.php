@@ -21,9 +21,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class KomoditasEntitasController extends Controller
@@ -64,7 +64,10 @@ class KomoditasEntitasController extends Controller
         $this->abortIfAlreadySubmitted($entity, $komoditas->id);
 
         $tanggalTerbit = CarbonImmutable::parse($request->validated('tanggal_terbit'));
-        $path = $request->file('file')->store('komoditas-entitas/'.$entity->id, 'local');
+        $file = $request->file('file');
+        $path = $this->buildObjectKey($entity, $request->validated('nomor_sertifikat'), $file->extension() ?: 'pdf');
+
+        Storage::disk('s3')->put($path, file_get_contents($file->getRealPath()));
 
         $komoditasEntitas = KomoditasEntitas::create([
             'komoditas_id' => $komoditas->id,
@@ -104,8 +107,13 @@ class KomoditasEntitasController extends Controller
         ];
 
         if ($request->hasFile('file')) {
-            Storage::disk('local')->delete($komoditasEntitas->file_path);
-            $data['file_path'] = $request->file('file')->store('komoditas-entitas/'.$entity->id, 'local');
+            $file = $request->file('file');
+            $newPath = $this->buildObjectKey($entity, $data['nomor_sertifikat'], $file->extension() ?: 'pdf');
+
+            Storage::disk('s3')->put($newPath, file_get_contents($file->getRealPath()));
+            Storage::disk('s3')->delete($komoditasEntitas->file_path);
+
+            $data['file_path'] = $newPath;
         }
 
         $komoditasEntitas->update($data);
@@ -121,7 +129,7 @@ class KomoditasEntitasController extends Controller
         $this->authorizeOwner($komoditasEntitas);
         $this->abortUnlessRejected($komoditasEntitas);
 
-        Storage::disk('local')->delete($komoditasEntitas->file_path);
+        Storage::disk('s3')->delete($komoditasEntitas->file_path);
         $komoditasEntitas->delete();
 
         return redirect()->route('komoditas-entitas.index')
@@ -194,18 +202,24 @@ class KomoditasEntitasController extends Controller
         ));
     }
 
-    public function download(KomoditasEntitas $komoditasEntitas): StreamedResponse
+    public function download(KomoditasEntitas $komoditasEntitas): RedirectResponse
     {
         $this->authorizeDocumentAccess($komoditasEntitas);
 
-        return Storage::disk('local')->download($komoditasEntitas->file_path);
+        $url = Storage::disk('s3')->temporaryUrl($komoditasEntitas->file_path, now()->addMinutes(10), [
+            'ResponseContentDisposition' => 'attachment; filename="'.basename($komoditasEntitas->file_path).'"',
+        ]);
+
+        return redirect($url);
     }
 
-    public function preview(KomoditasEntitas $komoditasEntitas): StreamedResponse
+    public function preview(KomoditasEntitas $komoditasEntitas): RedirectResponse
     {
         $this->authorizeDocumentAccess($komoditasEntitas);
 
-        return Storage::disk('local')->response($komoditasEntitas->file_path);
+        $url = Storage::disk('s3')->temporaryUrl($komoditasEntitas->file_path, now()->addMinutes(10));
+
+        return redirect($url);
     }
 
     private function authorizeDocumentAccess(KomoditasEntitas $komoditasEntitas): void
@@ -267,5 +281,20 @@ class KomoditasEntitasController extends Controller
         );
 
         return $entity;
+    }
+
+    /**
+     * Object key di bucket S3: folder {id}-{nama_entitas}/{tahun-bulan} supaya bisa ditelusuri
+     * manual dari MinIO Console, lalu file bernama nomor sertifikat (slug) + timestamp supaya
+     * tidak collision antar upload - pola sama seperti DocumentController::buildObjectKey().
+     */
+    private function buildObjectKey(Entitas $entitas, string $nomorSertifikat, string $extension): string
+    {
+        $slugNomor = Str::slug($nomorSertifikat, '-') ?: 'sertifikat';
+        $filename = sprintf('%s_%s.%s', $slugNomor, now()->format('YmdHis'), $extension);
+        $entityFolder = $entitas->id.'-'.(Str::slug($entitas->name, '_') ?: 'entitas');
+        $monthFolder = now()->format('Y-m');
+
+        return "komoditas-entitas/{$entityFolder}/{$monthFolder}/{$filename}";
     }
 }

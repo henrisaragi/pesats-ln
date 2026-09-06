@@ -30,7 +30,7 @@ class KomoditasEntitasTest extends TestCase
         $this->seed(RoleSeeder::class);
         $this->seed(MasterDataPermissionSeeder::class);
 
-        Storage::fake('local');
+        Storage::fake('s3');
     }
 
     private function makeUser(string $entityType, ?string $role = null): User
@@ -93,7 +93,7 @@ class KomoditasEntitasTest extends TestCase
         $record = KomoditasEntitas::where('entitas_id', $user->entity_id)->firstOrFail();
         $this->assertSame('2026-01-10', $record->tanggal_terbit->toDateString());
         $this->assertSame('2031-01-10', $record->tanggal_berakhir->toDateString());
-        Storage::disk('local')->assertExists($record->file_path);
+        Storage::disk('s3')->assertExists($record->file_path);
     }
 
     public function test_submitting_notifies_users_with_verify_permission_only(): void
@@ -260,7 +260,7 @@ class KomoditasEntitasTest extends TestCase
 
         $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
 
-        Storage::disk('local')->put('komoditas-entitas/dummy.pdf', 'fake-pdf-content');
+        Storage::disk('s3')->put('komoditas-entitas/dummy.pdf', 'fake-pdf-content');
 
         $record = KomoditasEntitas::create([
             'komoditas_id' => $komoditas->id,
@@ -271,12 +271,12 @@ class KomoditasEntitasTest extends TestCase
             'status' => KomoditasEntitasStatus::Pending,
         ]);
 
-        $this->actingAs($submitter)->get(route('komoditas-entitas.download', $record))->assertOk();
-        $this->actingAs($verifier)->get(route('komoditas-entitas.download', $record))->assertOk();
+        $this->actingAs($submitter)->get(route('komoditas-entitas.download', $record))->assertRedirect();
+        $this->actingAs($verifier)->get(route('komoditas-entitas.download', $record))->assertRedirect();
         $this->actingAs($stranger)->get(route('komoditas-entitas.download', $record))->assertForbidden();
 
-        $this->actingAs($submitter)->get(route('komoditas-entitas.preview', $record))->assertOk();
-        $this->actingAs($verifier)->get(route('komoditas-entitas.preview', $record))->assertOk();
+        $this->actingAs($submitter)->get(route('komoditas-entitas.preview', $record))->assertRedirect();
+        $this->actingAs($verifier)->get(route('komoditas-entitas.preview', $record))->assertRedirect();
         $this->actingAs($stranger)->get(route('komoditas-entitas.preview', $record))->assertForbidden();
     }
 
@@ -298,7 +298,7 @@ class KomoditasEntitasTest extends TestCase
         $verifier->givePermissionTo('komoditas-entitas.verify');
 
         $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
-        Storage::disk('local')->put('komoditas-entitas/dummy.pdf', 'fake-pdf-content');
+        Storage::disk('s3')->put('komoditas-entitas/dummy.pdf', 'fake-pdf-content');
 
         $record = KomoditasEntitas::create([
             'komoditas_id' => $komoditas->id,
@@ -309,8 +309,8 @@ class KomoditasEntitasTest extends TestCase
             'status' => KomoditasEntitasStatus::Pending,
         ]);
 
-        $this->actingAs($verifier)->get(route('komoditas-entitas.preview', $record))->assertOk();
-        $this->actingAs($verifier)->get(route('komoditas-entitas.download', $record))->assertOk();
+        $this->actingAs($verifier)->get(route('komoditas-entitas.preview', $record))->assertRedirect();
+        $this->actingAs($verifier)->get(route('komoditas-entitas.download', $record))->assertRedirect();
     }
 
     public function test_cannot_submit_the_same_komoditas_twice_while_pending_or_verified(): void
@@ -428,7 +428,7 @@ class KomoditasEntitasTest extends TestCase
     {
         $user = $this->makeUser('perusahaan');
         $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
-        Storage::disk('local')->put('komoditas-entitas/old.pdf', 'old-content');
+        Storage::disk('s3')->put('komoditas-entitas/old.pdf', 'old-content');
 
         $record = KomoditasEntitas::create([
             'komoditas_id' => $komoditas->id,
@@ -456,15 +456,15 @@ class KomoditasEntitasTest extends TestCase
         $this->assertNull($record->verified_at);
         $this->assertSame('2026-03-05', $record->tanggal_terbit->toDateString());
         $this->assertSame('2031-03-05', $record->tanggal_berakhir->toDateString());
-        Storage::disk('local')->assertExists($record->file_path);
-        Storage::disk('local')->assertMissing('komoditas-entitas/old.pdf');
+        Storage::disk('s3')->assertExists($record->file_path);
+        Storage::disk('s3')->assertMissing('komoditas-entitas/old.pdf');
     }
 
     public function test_editing_a_rejected_submission_without_a_new_file_keeps_the_existing_one(): void
     {
         $user = $this->makeUser('perusahaan');
         $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
-        Storage::disk('local')->put('komoditas-entitas/keep.pdf', 'keep-content');
+        Storage::disk('s3')->put('komoditas-entitas/keep.pdf', 'keep-content');
 
         $record = KomoditasEntitas::create([
             'komoditas_id' => $komoditas->id,
@@ -483,7 +483,7 @@ class KomoditasEntitasTest extends TestCase
 
         $record->refresh();
         $this->assertSame('komoditas-entitas/keep.pdf', $record->file_path);
-        Storage::disk('local')->assertExists('komoditas-entitas/keep.pdf');
+        Storage::disk('s3')->assertExists('komoditas-entitas/keep.pdf');
     }
 
     public function test_pending_or_verified_submission_cannot_be_edited_or_deleted(): void
@@ -515,7 +515,7 @@ class KomoditasEntitasTest extends TestCase
     {
         $user = $this->makeUser('perusahaan');
         $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
-        Storage::disk('local')->put('komoditas-entitas/dummy.pdf', 'fake-pdf-content');
+        Storage::disk('s3')->put('komoditas-entitas/dummy.pdf', 'fake-pdf-content');
 
         $record = KomoditasEntitas::create([
             'komoditas_id' => $komoditas->id,
@@ -530,7 +530,7 @@ class KomoditasEntitasTest extends TestCase
             ->assertRedirect(route('komoditas-entitas.index'));
 
         $this->assertDatabaseMissing('komoditas_entitas', ['id' => $record->id]);
-        Storage::disk('local')->assertMissing('komoditas-entitas/dummy.pdf');
+        Storage::disk('s3')->assertMissing('komoditas-entitas/dummy.pdf');
     }
 
     public function test_cannot_edit_or_delete_another_entitys_submission(): void

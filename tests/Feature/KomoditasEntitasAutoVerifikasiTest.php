@@ -39,7 +39,7 @@ class KomoditasEntitasAutoVerifikasiTest extends TestCase
         $this->seed(RoleSeeder::class);
         $this->seed(MasterDataPermissionSeeder::class);
 
-        Storage::fake('local');
+        Storage::fake('s3');
     }
 
     private function makeUser(string $entityType, string $entityName = 'Entitas Test'): User

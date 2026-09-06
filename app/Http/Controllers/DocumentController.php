@@ -14,8 +14,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends Controller
 {
@@ -44,17 +44,22 @@ class DocumentController extends Controller
     public function store(DocumentRequest $request): RedirectResponse
     {
         $entityId = $request->validated('entity_id');
-        $path = $request->file('file')->store('documents/'.$entityId, 'local');
+        $entitas = Entitas::findOrFail($entityId);
+        $type = DocumentType::from($request->validated('type_document'));
+        $file = $request->file('file');
+        $key = $this->buildObjectKey($entitas, $type, $request->validated('nomor_document'), $file->extension() ?: 'pdf');
+
+        Storage::disk('s3')->put($key, file_get_contents($file->getRealPath()));
 
         $document = Document::create([
             'entity_id' => $entityId,
             'created_by_id' => Auth::id(),
             'permohonan_id' => $request->validated('permohonan_id'),
             'nomor_document' => $request->validated('nomor_document'),
-            'type_document' => $request->validated('type_document'),
+            'type_document' => $type,
             'issued_date' => $request->validated('issued_date'),
             'issued_country_id' => $request->validated('issued_country_id'),
-            'path' => $path,
+            'path' => $key,
         ]);
 
         $document->satsLn()->sync($request->validated('sats_ln_ids') ?? []);
@@ -66,18 +71,26 @@ class DocumentController extends Controller
     {
         $this->authorizeEntityAccess($document);
 
+        $type = DocumentType::from($request->validated('type_document'));
+
         $data = [
             'entity_id' => $request->validated('entity_id'),
             'permohonan_id' => $request->validated('permohonan_id'),
             'nomor_document' => $request->validated('nomor_document'),
-            'type_document' => $request->validated('type_document'),
+            'type_document' => $type,
             'issued_date' => $request->validated('issued_date'),
             'issued_country_id' => $request->validated('issued_country_id'),
         ];
 
         if ($request->hasFile('file')) {
-            Storage::disk('local')->delete($document->path);
-            $data['path'] = $request->file('file')->store('documents/'.$data['entity_id'], 'local');
+            $entitas = Entitas::findOrFail($data['entity_id']);
+            $file = $request->file('file');
+            $newKey = $this->buildObjectKey($entitas, $type, $data['nomor_document'], $file->extension() ?: 'pdf');
+
+            Storage::disk('s3')->put($newKey, file_get_contents($file->getRealPath()));
+            Storage::disk('s3')->delete($document->path);
+
+            $data['path'] = $newKey;
         }
 
         $document->update($data);
@@ -90,24 +103,30 @@ class DocumentController extends Controller
     {
         $this->authorizeEntityAccess($document);
 
-        Storage::disk('local')->delete($document->path);
+        Storage::disk('s3')->delete($document->path);
         $document->delete();
 
         return redirect()->route('documents.index')->with('success', __('Dokumen berhasil dihapus.'));
     }
 
-    public function download(Document $document): StreamedResponse
+    public function download(Document $document): RedirectResponse
     {
         $this->authorizeEntityAccess($document);
 
-        return Storage::disk('local')->download($document->path);
+        $url = Storage::disk('s3')->temporaryUrl($document->path, now()->addMinutes(10), [
+            'ResponseContentDisposition' => 'attachment; filename="'.basename($document->path).'"',
+        ]);
+
+        return redirect($url);
     }
 
-    public function preview(Document $document): StreamedResponse
+    public function preview(Document $document): RedirectResponse
     {
         $this->authorizeEntityAccess($document);
 
-        return Storage::disk('local')->response($document->path);
+        $url = Storage::disk('s3')->temporaryUrl($document->path, now()->addMinutes(10));
+
+        return redirect($url);
     }
 
     public function permohonanOptions(Entitas $entity): JsonResponse
@@ -143,5 +162,20 @@ class DocumentController extends Controller
         $viewer = Auth::user();
 
         abort_unless($viewer->can('documents.view-all') || $viewer->entity_id === $document->entity_id, 403);
+    }
+
+    /**
+     * Object key di bucket S3: folder {id}-{nama_entitas}/{tahun-bulan} supaya bisa ditelusuri
+     * manual dari MinIO Console, lalu file bernama prefix tipe dokumen + nomor dokumen (slug) +
+     * timestamp supaya tidak collision antar upload.
+     */
+    private function buildObjectKey(Entitas $entitas, DocumentType $type, string $nomorDocument, string $extension): string
+    {
+        $slugNomor = Str::slug($nomorDocument, '-') ?: 'dokumen';
+        $filename = sprintf('%s_%s_%s.%s', $type->value, $slugNomor, now()->format('YmdHis'), $extension);
+        $entityFolder = $entitas->id.'-'.(Str::slug($entitas->name, '_') ?: 'entitas');
+        $monthFolder = now()->format('Y-m');
+
+        return "documents/{$entityFolder}/{$monthFolder}/{$filename}";
     }
 }

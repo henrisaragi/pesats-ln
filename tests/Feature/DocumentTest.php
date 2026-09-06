@@ -30,7 +30,7 @@ class DocumentTest extends TestCase
         $this->seed(RoleSeeder::class);
         $this->seed(MasterDataPermissionSeeder::class);
 
-        Storage::fake('local');
+        Storage::fake('s3');
     }
 
     private function makeStaff(): User
@@ -262,7 +262,7 @@ class DocumentTest extends TestCase
 
         $document = Document::firstOrFail();
         $oldPath = $document->path;
-        Storage::disk('local')->assertExists($oldPath);
+        Storage::disk('s3')->assertExists($oldPath);
 
         $this->actingAs($staff)->put(route('documents.update', $document), [
             'entity_id' => $entitas->id,
@@ -275,8 +275,8 @@ class DocumentTest extends TestCase
 
         $document->refresh();
         $this->assertNotSame($oldPath, $document->path);
-        Storage::disk('local')->assertMissing($oldPath);
-        Storage::disk('local')->assertExists($document->path);
+        Storage::disk('s3')->assertMissing($oldPath);
+        Storage::disk('s3')->assertExists($document->path);
         $this->assertSame('DOC-UPDATED', $document->nomor_document);
     }
 
@@ -299,7 +299,7 @@ class DocumentTest extends TestCase
             ->assertRedirect(route('documents.index'));
 
         $this->assertSoftDeleted('documents', ['id' => $document->id]);
-        Storage::disk('local')->assertMissing($path);
+        Storage::disk('s3')->assertMissing($path);
     }
 
     public function test_user_without_view_all_only_sees_their_own_entitys_documents_in_the_index(): void

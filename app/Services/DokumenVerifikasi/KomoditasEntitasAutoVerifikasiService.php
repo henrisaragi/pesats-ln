@@ -7,6 +7,7 @@ namespace App\Services\DokumenVerifikasi;
 use App\Enums\DokumenPemeriksaanStatus;
 use App\Enums\KomoditasEntitasStatus;
 use App\Models\KomoditasEntitas;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -35,9 +36,15 @@ class KomoditasEntitasAutoVerifikasiService
 
     public function verifikasi(KomoditasEntitas $komoditasEntitas): void
     {
-        $absolutePath = Storage::disk('local')->path($komoditasEntitas->file_path);
+        $disk = Storage::disk('s3');
 
-        if (! is_file($absolutePath)) {
+        // exists()/get() ke bucket lewat jaringan - beda dari disk lokal sebelumnya, panggilan
+        // ini bisa gagal sesaat (timeout/blip koneksi ke MinIO) padahal filenya ada. retry() di
+        // sini supaya satu blip jaringan tidak langsung menggagalkan verifikasi otomatis (jatuh
+        // ke Pending untuk verifikasi manual) - kalau memang tetap gagal setelah 3 percobaan,
+        // exception tetap dilempar ke atas dan ditangani seperti biasa oleh
+        // KomoditasEntitasController::jalankanVerifikasiOtomatis().
+        if (! retry(3, fn () => $disk->exists($komoditasEntitas->file_path), 250)) {
             $this->simpanHasil($komoditasEntitas, [$this->buildCheck(
                 'dokumen',
                 __('Dokumen'),
@@ -48,51 +55,72 @@ class KomoditasEntitasAutoVerifikasiService
             return;
         }
 
-        $checks = [];
+        $absolutePath = retry(3, fn () => $this->downloadToTempFile($disk, $komoditasEntitas->file_path), 250);
 
-        $hasSignature = $this->signatureChecker->hasDigitalSignature($absolutePath);
-        $checks[] = $this->buildCheck(
-            'tanda_tangan_digital',
-            __('Tanda Tangan Digital'),
-            $hasSignature ? DokumenPemeriksaanStatus::Lolos : DokumenPemeriksaanStatus::Gagal,
-            $hasSignature
-                ? __('Dokumen memiliki tanda tangan digital.')
-                : __('Dokumen tidak memiliki tanda tangan digital.'),
-        );
+        try {
+            $checks = [];
 
-        $text = $hasSignature ? $this->normalize($this->extractText($absolutePath)) : '';
+            $hasSignature = $this->signatureChecker->hasDigitalSignature($absolutePath);
+            $checks[] = $this->buildCheck(
+                'tanda_tangan_digital',
+                __('Tanda Tangan Digital'),
+                $hasSignature ? DokumenPemeriksaanStatus::Lolos : DokumenPemeriksaanStatus::Gagal,
+                $hasSignature
+                    ? __('Dokumen memiliki tanda tangan digital.')
+                    : __('Dokumen tidak memiliki tanda tangan digital.'),
+            );
 
-        $penerbitValid = $hasSignature && $this->isPenerbitValid($absolutePath);
-        $checks[] = $this->buildCheck(
-            'penerbit',
-            __('Penerbit'),
-            match (true) {
-                ! $hasSignature => DokumenPemeriksaanStatus::Dilewati,
-                $penerbitValid => DokumenPemeriksaanStatus::Lolos,
-                default => DokumenPemeriksaanStatus::Gagal,
-            },
-            match (true) {
-                ! $hasSignature => __('Dilewati karena dokumen tidak memiliki tanda tangan digital.'),
-                $penerbitValid => __('Penerbit sertifikat elektronik sesuai (:cn, :o).', [
-                    'cn' => config('services.document_verification.penerbit_issuer_cn'),
-                    'o' => config('services.document_verification.penerbit_issuer_o'),
-                ]),
-                default => __('Penerbit sertifikat elektronik tidak sesuai dengan yang diharapkan (:cn, :o).', [
-                    'cn' => config('services.document_verification.penerbit_issuer_cn'),
-                    'o' => config('services.document_verification.penerbit_issuer_o'),
-                ]),
-            },
-        );
+            $text = $hasSignature ? $this->normalize($this->extractText($absolutePath)) : '';
 
-        $canCheckIsi = $penerbitValid;
+            $penerbitValid = $hasSignature && $this->isPenerbitValid($absolutePath);
+            $checks[] = $this->buildCheck(
+                'penerbit',
+                __('Penerbit'),
+                match (true) {
+                    ! $hasSignature => DokumenPemeriksaanStatus::Dilewati,
+                    $penerbitValid => DokumenPemeriksaanStatus::Lolos,
+                    default => DokumenPemeriksaanStatus::Gagal,
+                },
+                match (true) {
+                    ! $hasSignature => __('Dilewati karena dokumen tidak memiliki tanda tangan digital.'),
+                    $penerbitValid => __('Penerbit sertifikat elektronik sesuai (:cn, :o).', [
+                        'cn' => config('services.document_verification.penerbit_issuer_cn'),
+                        'o' => config('services.document_verification.penerbit_issuer_o'),
+                    ]),
+                    default => __('Penerbit sertifikat elektronik tidak sesuai dengan yang diharapkan (:cn, :o).', [
+                        'cn' => config('services.document_verification.penerbit_issuer_cn'),
+                        'o' => config('services.document_verification.penerbit_issuer_o'),
+                    ]),
+                },
+            );
 
-        $checks[] = $this->checkNamaPelakuUsaha($text, $komoditasEntitas, $canCheckIsi);
-        $checks[] = $this->checkNomorSertifikat($text, $komoditasEntitas, $canCheckIsi);
-        $checks[] = $this->checkJenisDiedarkan($text, $komoditasEntitas, $canCheckIsi);
-        $checks[] = $this->checkRuangLingkup($text, $canCheckIsi);
-        $checks[] = $this->checkTanggalTerbit($text, $komoditasEntitas, $canCheckIsi);
+            $canCheckIsi = $penerbitValid;
 
-        $this->simpanHasil($komoditasEntitas, $checks);
+            $checks[] = $this->checkNamaPelakuUsaha($text, $komoditasEntitas, $canCheckIsi);
+            $checks[] = $this->checkNomorSertifikat($text, $komoditasEntitas, $canCheckIsi);
+            $checks[] = $this->checkJenisDiedarkan($text, $komoditasEntitas, $canCheckIsi);
+            $checks[] = $this->checkRuangLingkup($text, $canCheckIsi);
+            $checks[] = $this->checkTanggalTerbit($text, $komoditasEntitas, $canCheckIsi);
+
+            $this->simpanHasil($komoditasEntitas, $checks);
+        } finally {
+            @unlink($absolutePath);
+        }
+    }
+
+    /**
+     * openssl_pkcs7_read(), Imagick::readImage(), dan binary tesseract semuanya butuh file asli
+     * di filesystem lokal - bukan sekadar object key S3 - jadi diunduh dulu ke temp file di sini.
+     * Ekstensi dipertahankan supaya Imagick (dipakai PdfTextExtractor untuk fallback OCR) bisa
+     * memilih delegate Ghostscript yang benar.
+     */
+    private function downloadToTempFile(Filesystem $disk, string $path): string
+    {
+        $extension = pathinfo($path, PATHINFO_EXTENSION) ?: 'pdf';
+        $tempPath = tempnam(sys_get_temp_dir(), 'kea_verif_').'.'.$extension;
+        file_put_contents($tempPath, $disk->get($path));
+
+        return $tempPath;
     }
 
     private function extractText(string $absolutePath): string
