@@ -92,13 +92,22 @@ class MasterDataPermissionSeeder extends Seeder
 
     /**
      * Gerbang akses baca halaman detail verifikasi (permohonan-export/verifikasi/{permohonan},
-     * termasuk sats-ln.show) - sengaja dipisah dari permohonan-export.verify (yang menggerbang
-     * index & aksi verify/reject/cetak) supaya akses lihat detail satu Permohonan bisa diatur
+     * termasuk sats-ln.show) - sengaja dipisah dari permohonan-export.verify (yang sekarang cuma
+     * menggerbang aksi tombol Verifikasi) supaya akses lihat detail satu Permohonan bisa diatur
      * independen dari izin melakukan aksi verifikasi. Nama permission sengaja pakai prefix
      * "permohonan." (bukan "permohonan-export.") sesuai permintaan eksplisit. Tidak auto-granted
      * ke role manapun, di-assign manual lewat UI Roles/Permissions seperti permohonan-export.verify.
      */
     private const PERMOHONAN_VERIFY_DETAIL_PERMISSION = 'permohonan.verify-detail';
+
+    /**
+     * Gerbang akses ke menu sidebar "Verifikasi Ekspor" dan route index
+     * permohonan-export/verifikasi (daftar antrian) - dipisah dari permohonan-export.verify yang
+     * sekarang khusus untuk aksi tombol Verifikasi, dan dari permohonan.verify-detail yang khusus
+     * untuk halaman detail satu Permohonan. Tidak auto-granted ke role manapun, di-assign manual
+     * lewat UI Roles/Permissions seperti dua permission verifikasi lainnya di atas.
+     */
+    private const PERMOHONAN_VERIFY_LIST_PERMISSION = 'permohonan.verify.view';
 
     /**
      * Roles allowed to submit Permohonan SATS-LN Ekspor for their own entity.
@@ -210,7 +219,7 @@ class MasterDataPermissionSeeder extends Seeder
             $permissions[] = "{$entity}.sync";
         }
 
-        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...[self::PERMOHONAN_VERIFY_DETAIL_PERMISSION], ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS, ...self::DOCUMENTS_PERMISSIONS, ...self::CUSTOMER_PERMISSIONS, ...self::ASSESMENT_ISI_PERMISSIONS);
+        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...[self::PERMOHONAN_VERIFY_DETAIL_PERMISSION, self::PERMOHONAN_VERIFY_LIST_PERMISSION], ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS, ...self::DOCUMENTS_PERMISSIONS, ...self::CUSTOMER_PERMISSIONS, ...self::ASSESMENT_ISI_PERMISSIONS);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([

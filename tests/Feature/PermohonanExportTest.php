@@ -73,6 +73,18 @@ class PermohonanExportTest extends TestCase
 
     private function makeStaffVerifier(): User
     {
+        return $this->makeStaffUser([
+            'permohonan-export.verify',
+            'permohonan.verify.view',
+            'permohonan.verify-detail',
+        ]);
+    }
+
+    /**
+     * @param  string|array<int, string>  $permissions
+     */
+    private function makeStaffUser(string|array $permissions): User
+    {
         $user = User::create([
             'name' => 'Verifier Test',
             'email' => uniqid('verifier', true).'@example.test',
@@ -82,7 +94,7 @@ class PermohonanExportTest extends TestCase
             'onboarding_completed' => true,
         ]);
 
-        $user->givePermissionTo(['permohonan-export.verify', 'permohonan.verify-detail']);
+        $user->givePermissionTo($permissions);
 
         return $user;
     }
@@ -418,7 +430,7 @@ class PermohonanExportTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_verifikasi_detail_pages_require_the_dedicated_verify_detail_permission(): void
+    public function test_verifikasi_index_detail_and_verify_action_are_gated_by_independent_permissions(): void
     {
         $user = $this->makeUser('perusahaan');
         $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
@@ -428,44 +440,29 @@ class PermohonanExportTest extends TestCase
         $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
         $satsLn = $permohonan->satsLn()->firstOrFail();
 
-        // Has permohonan-export.verify (so it can list/act on the queue) but not the dedicated
-        // permohonan.verify-detail permission - detail pages must stay out of reach.
-        $verifierWithoutDetail = User::create([
-            'name' => 'Verifier No Detail',
-            'email' => uniqid('verifier', true).'@example.test',
-            'username' => uniqid('verifier', true),
-            'password' => bcrypt('password'),
-            'is_active' => true,
-            'onboarding_completed' => true,
-        ]);
-        $verifierWithoutDetail->givePermissionTo('permohonan-export.verify');
+        // Has permohonan-export.verify (Verifikasi action) only - the antrian list and the
+        // detail pages need their own dedicated permission and must stay out of reach.
+        $verifyActionOnly = $this->makeStaffUser('permohonan-export.verify');
 
-        $this->actingAs($verifierWithoutDetail)
-            ->get(route('permohonan-export.verifikasi.index'))
-            ->assertOk();
-
-        $this->actingAs($verifierWithoutDetail)
-            ->get(route('permohonan-export.verifikasi.show', $permohonan))
-            ->assertForbidden();
-
-        $this->actingAs($verifierWithoutDetail)
+        $this->actingAs($verifyActionOnly)->get(route('permohonan-export.verifikasi.index'))->assertForbidden();
+        $this->actingAs($verifyActionOnly)->get(route('permohonan-export.verifikasi.show', $permohonan))->assertForbidden();
+        $this->actingAs($verifyActionOnly)
             ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
             ->assertForbidden();
 
-        // Conversely, permohonan.verify-detail alone is enough to open the detail pages even
-        // without permohonan-export.verify (the two permissions are independent gates).
-        $detailOnlyViewer = User::create([
-            'name' => 'Detail Only Viewer',
-            'email' => uniqid('verifier', true).'@example.test',
-            'username' => uniqid('verifier', true),
-            'password' => bcrypt('password'),
-            'is_active' => true,
-            'onboarding_completed' => true,
-        ]);
-        $detailOnlyViewer->givePermissionTo('permohonan.verify-detail');
+        // permohonan.verify.view alone opens the antrian list but not the detail pages.
+        $listOnly = $this->makeStaffUser('permohonan.verify.view');
 
-        $this->actingAs($detailOnlyViewer)
-            ->get(route('permohonan-export.verifikasi.show', $permohonan))
+        $this->actingAs($listOnly)->get(route('permohonan-export.verifikasi.index'))->assertOk();
+        $this->actingAs($listOnly)->get(route('permohonan-export.verifikasi.show', $permohonan))->assertForbidden();
+
+        // permohonan.verify-detail alone opens the detail pages but not the antrian list.
+        $detailOnly = $this->makeStaffUser('permohonan.verify-detail');
+
+        $this->actingAs($detailOnly)->get(route('permohonan-export.verifikasi.index'))->assertForbidden();
+        $this->actingAs($detailOnly)->get(route('permohonan-export.verifikasi.show', $permohonan))->assertOk();
+        $this->actingAs($detailOnly)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
             ->assertOk();
     }
 

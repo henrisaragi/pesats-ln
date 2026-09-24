@@ -20,10 +20,11 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
     // Static "verifikasi" prefix must be registered before the catch-all "{permohonan}" routes
     // below, otherwise Laravel would try to implicit-bind "verifikasi" itself as a Permohonan id.
     Route::prefix('verifikasi')->name('verifikasi.')->group(function (): void {
-        Route::get('', [PermohonanVerifikasiController::class, 'index'])->middleware('permission:permohonan-export.verify')->name('index');
-        // Halaman detail (show/sats-ln.show) digerbang permission-nya sendiri, terpisah dari
-        // permohonan-export.verify yang menggerbang index & aksi verify/reject/cetak - supaya
-        // akses baca detail satu Permohonan bisa diatur independen dari izin melakukan aksi.
+        Route::get('', [PermohonanVerifikasiController::class, 'index'])->middleware('permission:permohonan.verify.view')->name('index');
+        // Halaman detail (show/sats-ln.show) digerbang permission-nya sendiri (permohonan.verify-
+        // detail), terpisah dari permohonan.verify.view (index) dan permohonan-export.verify
+        // (khusus aksi tombol Verifikasi) - supaya akses lihat daftar, lihat detail, dan
+        // melakukan aksi verifikasi bisa diatur independen satu sama lain.
         Route::get('{permohonan}', [PermohonanVerifikasiController::class, 'show'])->middleware('permission:permohonan.verify-detail')->name('show');
         Route::get('{permohonan}/sats-ln/{satsLn}', [PermohonanVerifikasiController::class, 'show'])->middleware('permission:permohonan.verify-detail')->name('sats-ln.show');
         Route::post('{permohonan}/verify', [PermohonanVerifikasiController::class, 'verify'])->middleware('permission:permohonan-export.verify')->name('verify');

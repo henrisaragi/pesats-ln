@@ -82,7 +82,7 @@
                     'label' => __('Verifikasi Ekspor'),
                     'icon' => 'shield-check',
                     'route' => 'permohonan-export.verifikasi.index',
-                    'permission' => 'permohonan-export.verify',
+                    'permission' => 'permohonan.verify.view',
                 ],
                 [
                     'label' => __('Chat'),
