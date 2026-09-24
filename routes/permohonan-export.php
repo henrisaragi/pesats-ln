@@ -22,6 +22,7 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
     Route::prefix('verifikasi')->name('verifikasi.')->middleware('permission:permohonan-export.verify')->group(function (): void {
         Route::get('', [PermohonanVerifikasiController::class, 'index'])->name('index');
         Route::get('{permohonan}', [PermohonanVerifikasiController::class, 'show'])->name('show');
+        Route::get('{permohonan}/sats-ln/{satsLn}', [PermohonanVerifikasiController::class, 'show'])->name('sats-ln.show');
         Route::post('{permohonan}/verify', [PermohonanVerifikasiController::class, 'verify'])->name('verify');
         Route::post('{permohonan}/reject', [PermohonanVerifikasiController::class, 'reject'])->name('reject');
         Route::post('{permohonan}/sats-ln/{satsLn}/mark-printed', [PermohonanVerifikasiController::class, 'markPrinted'])->name('mark-printed');
@@ -36,6 +37,10 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
 
     Route::middleware('permission:permohonan-export.edit')->group(function (): void {
         Route::post('{permohonan}/sats-ln', [SatsLnController::class, 'store'])->name('sats-ln.store');
+        // Segmen statis "submit" harus didaftarkan sebelum "{satsLn}" di bawah, sama seperti
+        // alasan prefix "verifikasi" di atas - kalau tidak, Laravel akan coba implicit-bind
+        // "submit" sebagai SatsLn id.
+        Route::post('{permohonan}/sats-ln/submit', [PermohonanController::class, 'submitSatsLn'])->name('sats-ln.submit');
         Route::put('{permohonan}/sats-ln/{satsLn}', [SatsLnController::class, 'update'])->name('sats-ln.update');
         Route::delete('{permohonan}/sats-ln/{satsLn}', [SatsLnController::class, 'destroy'])->name('sats-ln.destroy');
         Route::post('{permohonan}/sats-ln/{satsLn}/items', [SatsLnController::class, 'storeItem'])->name('sats-ln.items.store');

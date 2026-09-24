@@ -4,18 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\PermohonanExport;
 
-use App\Enums\NotificationCategory;
 use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
-use App\Jobs\SendWhatsAppNotificationJob;
 use App\Models\Permohonan;
 use App\Models\SatsLn;
-use App\Notifications\AppNotification;
 use App\Services\PermohonanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class PermohonanVerifikasiController extends Controller
@@ -42,18 +38,36 @@ class PermohonanVerifikasiController extends Controller
         ]);
     }
 
-    public function show(Permohonan $permohonan): View
+    public function show(Permohonan $permohonan, ?SatsLn $satsLn = null): View
     {
+        if ($satsLn !== null) {
+            abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
+        }
+
+        $permohonan->load([
+            'entitas',
+            'satsLn' => fn ($query) => $query->oldest(),
+            'satsLn.customerCompany.country',
+            'satsLn.purposeOfTransaction',
+            'satsLn.portOfExportation',
+            'satsLn.portOfDestination',
+            'satsLn.items.species',
+            'satsLn.items.kuotaNasional.komoditas',
+            'satsLn.items.kuotaNasional.source',
+            'satsLn.items.kuotaNasional.tradeCode',
+            'satsLn.items.kuotaNasional.species',
+            'satsLn.items.kuotaPerusahaan.kuotaNasional.tradeCode',
+            'satsLn.items.kuotaPerusahaan.kuotaNasional.source',
+        ]);
+
+        $selectedSatsLn = $satsLn ?? $permohonan->satsLn->last();
+
         return view('permohonan-export.verifikasi.show', [
-            'permohonan' => $permohonan->load([
-                'entitas',
-                'satsLn.items.species',
-                'satsLn.items.kuotaPerusahaan.kuotaNasional.source',
-                'satsLn.purposeOfTransaction',
-                'satsLn.customerCompany',
-                'satsLn.printedBy',
-                'satsLn.issuedBy',
-            ]),
+            'permohonan' => $permohonan,
+            'selectedSatsLn' => $selectedSatsLn,
+            'realisasiNasionalRunningTotalByItemId' => $this->permohonanService->realisasiKuotaNasionalRunningTotalForItems(
+                $selectedSatsLn?->items ?? collect()
+            ),
         ]);
     }
 
@@ -61,13 +75,10 @@ class PermohonanVerifikasiController extends Controller
     {
         abort_unless($permohonan->status === PermohonanStatus::AntrianVerifikasi, 403);
 
-        $permohonan->update([
-            'status' => PermohonanStatus::DalamProsesVerifikasi,
+        $this->permohonanService->changeStatus($permohonan, PermohonanStatus::DalamProsesVerifikasi, [
             'verified_by' => Auth::id(),
             'verified_at' => now(),
         ]);
-
-        $this->notifySubmitter($permohonan, __('Permohonan Diverifikasi'), __('Permohonan :nomor telah diverifikasi dan mulai diproses.', ['nomor' => $permohonan->nomor_permohonan]));
 
         return redirect()->route('permohonan-export.verifikasi.index')->with('success', __('Permohonan berhasil diverifikasi.'));
     }
@@ -76,14 +87,11 @@ class PermohonanVerifikasiController extends Controller
     {
         abort_unless(in_array($permohonan->status, [PermohonanStatus::AntrianVerifikasi, PermohonanStatus::DalamProsesVerifikasi], true), 403);
 
-        $permohonan->update([
-            'status' => PermohonanStatus::Ditolak,
+        $this->permohonanService->changeStatus($permohonan, PermohonanStatus::Ditolak, [
             'verified_by' => Auth::id(),
             'verified_at' => now(),
             'catatan_verifikasi' => $request->string('catatan_verifikasi')->toString() ?: null,
         ]);
-
-        $this->notifySubmitter($permohonan, __('Permohonan Ditolak'), __('Permohonan :nomor ditolak.', ['nomor' => $permohonan->nomor_permohonan]));
 
         return redirect()->route('permohonan-export.verifikasi.index')->with('success', __('Permohonan berhasil ditolak.'));
     }
@@ -108,29 +116,5 @@ class PermohonanVerifikasiController extends Controller
         $this->permohonanService->recomputeStatus($permohonan);
 
         return redirect()->route('permohonan-export.verifikasi.show', $permohonan)->with('success', __('SATS-LN ditandai sudah ditandatangani.'));
-    }
-
-    private function notifySubmitter(Permohonan $permohonan, string $title, string $message): void
-    {
-        $permohonan->loadMissing('entitas.users');
-
-        $recipients = $permohonan->entitas?->users ?? collect();
-
-        if ($recipients->isEmpty()) {
-            return;
-        }
-
-        Notification::send($recipients, new AppNotification(
-            NotificationCategory::Permohonan,
-            $title,
-            $message,
-            route('permohonan-export.show', $permohonan),
-        ));
-
-        // Contoh pemakaian lain KapsoWhatsAppService di titik notifikasi yang berbeda
-        // (lihat juga PermohonanController::notifyVerifiers()).
-        foreach ($recipients->whereNotNull('phone_number') as $recipient) {
-            SendWhatsAppNotificationJob::dispatch($recipient->phone_number, $message);
-        }
     }
 }

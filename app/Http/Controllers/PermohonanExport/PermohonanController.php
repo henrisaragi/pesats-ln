@@ -6,11 +6,9 @@ namespace App\Http\Controllers\PermohonanExport;
 
 use App\Enums\DocumentType;
 use App\Enums\JenisPermohonan;
-use App\Enums\NotificationCategory;
 use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PermohonanExport\PermohonanRequest;
-use App\Jobs\SendWhatsAppNotificationJob;
 use App\Models\Country;
 use App\Models\Customer\Customer;
 use App\Models\Document;
@@ -22,13 +20,10 @@ use App\Models\PurposeOfTransaction;
 use App\Models\SatsLn;
 use App\Models\Species;
 use App\Models\TradeCode;
-use App\Models\User;
-use App\Notifications\AppNotification;
 use App\Services\PermohonanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class PermohonanController extends Controller
@@ -164,15 +159,12 @@ class PermohonanController extends Controller
                 ->with('error', __('Minimal 1 SATS-LN harus diisi sebelum permohonan diajukan.'));
         }
 
-        $permohonan->update([
-            'status' => PermohonanStatus::AntrianVerifikasi,
+        $this->permohonanService->changeStatus($permohonan, PermohonanStatus::AntrianVerifikasi, [
             'submitted_at' => now(),
             'verified_by' => null,
             'verified_at' => null,
             'catatan_verifikasi' => null,
         ]);
-
-        $this->notifyVerifiers($permohonan);
 
         return redirect()->route('permohonan-export.index')
             ->with('success', __('Permohonan berhasil diajukan, menunggu verifikasi.'));
@@ -188,32 +180,40 @@ class PermohonanController extends Controller
         return redirect()->route('permohonan-export.index')->with('success', __('Permohonan berhasil dihapus.'));
     }
 
-    private function notifyVerifiers(Permohonan $permohonan): void
+    /**
+     * Ajukan Permohonan dari halaman detail SATS-LN - beda dari submit() di atas (yang langsung
+     * ke AntrianVerifikasi, sudah dipakai tombol "Ajukan Permohonan" di halaman edit): aksi ini
+     * validasi tiap SATS-LN sudah punya minimal 1 item & 1 lampiran dokumen, lalu memindahkan
+     * status ke Submitted (bukan AntrianVerifikasi - dua tahap terpisah, tidak saling menggantikan).
+     */
+    public function submitSatsLn(Permohonan $permohonan): RedirectResponse
     {
-        $verifiers = User::permission('permohonan-export.verify')->get();
+        $this->authorizeOwner($permohonan);
+        abort_unless($permohonan->status->isEditable(), 403);
 
-        if ($verifiers->isEmpty()) {
-            return;
+        $satsLn = $permohonan->satsLn()->withCount(['items', 'documents'])->get();
+
+        if ($satsLn->count() < 1 || $satsLn->count() > 25) {
+            return redirect()->route('permohonan-export.show', $permohonan)
+                ->with('error', __('Jumlah SATS-LN harus antara 1 sampai 25 untuk dapat diajukan.'));
         }
 
-        $message = __(':entitas mengajukan permohonan :nomor untuk diverifikasi.', [
-            'entitas' => $permohonan->entitas?->name,
-            'nomor' => $permohonan->nomor_permohonan,
+        if ($satsLn->contains(fn (SatsLn $item): bool => $item->items_count === 0)) {
+            return redirect()->route('permohonan-export.show', $permohonan)
+                ->with('error', __('Setiap SATS-LN harus memiliki minimal 1 spesies sebelum diajukan.'));
+        }
+
+        if ($satsLn->contains(fn (SatsLn $item): bool => $item->documents_count === 0)) {
+            return redirect()->route('permohonan-export.show', $permohonan)
+                ->with('error', __('Setiap SATS-LN harus memiliki lampiran dokumen sebelum diajukan.'));
+        }
+
+        $this->permohonanService->changeStatus($permohonan, PermohonanStatus::Submitted, [
+            'submitted_at' => now(),
         ]);
 
-        Notification::send($verifiers, new AppNotification(
-            NotificationCategory::Permohonan,
-            __('Permohonan SATS-LN Ekspor Baru'),
-            $message,
-            route('permohonan-export.verifikasi.show', $permohonan),
-        ));
-
-        // Contoh pemakaian KapsoWhatsAppService (lewat SendWhatsAppNotificationJob, yang
-        // menangani cek on/off App\Models\WhatsAppSetting) - cukup dispatch, tidak perlu tahu
-        // soal toggle atau konfigurasi Kapso di sini.
-        foreach ($verifiers->whereNotNull('phone_number') as $verifier) {
-            SendWhatsAppNotificationJob::dispatch($verifier->phone_number, $message);
-        }
+        return redirect()->route('permohonan-export.show', $permohonan)
+            ->with('success', __('SATS-LN berhasil diajukan.'));
     }
 
     private function authorizeOwner(Permohonan $permohonan): Entitas

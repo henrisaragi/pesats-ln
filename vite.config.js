@@ -6,6 +6,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
+            'resources/css/style.css',
             'resources/js/app.js',
             'resources/js/onboarding-tour.js',
             'resources/js/components/dropzone.js',
@@ -14,6 +15,9 @@ export default defineConfig({
             'resources/js/pages/apps-calendar.js',
             'resources/js/pages/apps-ecommerce-orders.js',
             'resources/js/pages/apps-mailbox.js',
+            'resources/js/pages/assesment-isi-show.js',
+            'resources/js/pages/assesment-isi-verifikasi-show.js',
+            'resources/js/pages/assesment-pertanyaan-form.js',
             'resources/js/pages/chat.js',
             'resources/js/pages/dashboard-analytics.js',
             'resources/js/pages/dashboard-ecommerce.js',

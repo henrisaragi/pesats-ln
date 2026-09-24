@@ -13,6 +13,8 @@ require __DIR__.'/permissions.php';
 require __DIR__.'/master.php';
 require __DIR__.'/users.php';
 require __DIR__.'/komoditas-entitas.php';
+require __DIR__.'/assesment.php';
+require __DIR__.'/assesment-isi.php';
 require __DIR__.'/kuota-perusahaan.php';
 require __DIR__.'/permohonan-export.php';
 require __DIR__.'/documents.php';

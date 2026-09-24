@@ -27,6 +27,7 @@ class MasterDataPermissionSeeder extends Seeder
         'entitas',
         'entity-profiles',
         'documents',
+        'assesment',
     ];
 
     private const ACTIONS = ['view', 'create', 'update', 'delete'];
@@ -71,7 +72,9 @@ class MasterDataPermissionSeeder extends Seeder
      * Permohonan (SATS-LN Ekspor): self-service submit/manage own drafts (view/create/edit/delete)
      * plus view-all (cross-entity oversight, additive like documents.view-all/customer.view-all)
      * and verify for staff, reused for verify/reject and for marking individual SATS-LN tabs
-     * printed/signed (all on the same staff-facing screen, no need to split further).
+     * printed/signed. disposisi/print/update-status/siap-diambil/telah-diambil gate the dedicated
+     * action buttons on the staff verifikasi detail page (permohonan-export/verifikasi/{id}) - not
+     * auto-granted to any role below, assigned manually via the Roles/Permissions UI like verify.
      */
     private const PERMOHONAN_PERMISSIONS = [
         'permohonan-export.view',
@@ -80,6 +83,11 @@ class MasterDataPermissionSeeder extends Seeder
         'permohonan-export.edit',
         'permohonan-export.delete',
         'permohonan-export.verify',
+        'permohonan-export.disposisi',
+        'permohonan-export.print',
+        'permohonan-export.update-status',
+        'permohonan-export.siap-diambil',
+        'permohonan-export.telah-diambil',
     ];
 
     /**
@@ -136,6 +144,26 @@ class MasterDataPermissionSeeder extends Seeder
     ];
 
     /**
+     * Assesment Isi: entitas mengisi kuisioner assesment.komoditas untuk salah satu komoditasnya
+     * (lihat claude/fitur-assesment.md) - pola sama seperti komoditas-entitas. view-all untuk
+     * staff yang perlu lihat lintas entitas, verify untuk verifikator mengoreksi jawaban dan
+     * menerbitkan sertifikat - tidak di-auto-grant ke role manapun kecuali super-admin, di-assign
+     * manual lewat UI Roles/Permissions seperti komoditas-entitas.verify.
+     */
+    private const ASSESMENT_ISI_PERMISSIONS = [
+        'assesment-isi.view',
+        'assesment-isi.view-all',
+        'assesment-isi.create',
+        'assesment-isi.verify',
+    ];
+
+    /**
+     * Roles allowed to submit Assesment Isi for their own entity's komoditas - sama seperti
+     * KOMODITAS_ENTITAS_SUBMITTER_ROLES karena assessment terikat komoditas yang dimiliki entitas.
+     */
+    private const ASSESMENT_ISI_SUBMITTER_ROLES = ['perusahaan', 'penangkaran'];
+
+    /**
      * Customer Entitas: data customer per entitas harus ketat (lihat claude/customer-task.md) -
      * "edit" sengaja dipakai untuk create DAN update sekaligus (pola sama seperti
      * komoditas-entitas.create yang juga dipakai untuk store() dan update()), tidak ada
@@ -172,7 +200,7 @@ class MasterDataPermissionSeeder extends Seeder
             $permissions[] = "{$entity}.sync";
         }
 
-        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS, ...self::DOCUMENTS_PERMISSIONS, ...self::CUSTOMER_PERMISSIONS);
+        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS, ...self::DOCUMENTS_PERMISSIONS, ...self::CUSTOMER_PERMISSIONS, ...self::ASSESMENT_ISI_PERMISSIONS);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
@@ -215,6 +243,12 @@ class MasterDataPermissionSeeder extends Seeder
             $role = Role::where('name', $roleName)->first();
 
             $role?->givePermissionTo(['customer.view', 'customer.edit', 'customer.delete']);
+        }
+
+        foreach (self::ASSESMENT_ISI_SUBMITTER_ROLES as $roleName) {
+            $role = Role::where('name', $roleName)->first();
+
+            $role?->givePermissionTo(['assesment-isi.view', 'assesment-isi.create']);
         }
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\PermohonanStatus;
+use App\Events\PermohonanStatusChanged;
 use App\Models\Entitas\Entitas;
 use App\Models\Komoditas;
 use App\Models\KuotaNasional;
@@ -241,9 +242,29 @@ class PermohonanService
             default => PermohonanStatus::DalamProsesVerifikasi,
         };
 
-        if ($status !== $permohonan->status) {
-            $permohonan->update(['status' => $status]);
+        $this->changeStatus($permohonan, $status);
+    }
+
+    /**
+     * Satu-satunya pintu masuk untuk mengubah status Permohonan - menjamin SETIAP perubahan status
+     * (manual dari controller maupun otomatis lewat recomputeStatus()) memicu PermohonanStatusChanged,
+     * yang otomatis mengirim notifikasi kategori Permohonan (lihat
+     * App\Listeners\SendPermohonanStatusNotification). Tempat lain TIDAK BOLEH memanggil
+     * $permohonan->update(['status' => ...]) langsung - selalu lewat method ini.
+     *
+     * @param  array<string, mixed>  $attributes  Kolom lain yang ikut di-update bersamaan (mis. submitted_at, verified_by).
+     */
+    public function changeStatus(Permohonan $permohonan, PermohonanStatus $status, array $attributes = []): void
+    {
+        $from = $permohonan->status;
+
+        if ($from === $status) {
+            return;
         }
+
+        $permohonan->update(array_merge($attributes, ['status' => $status]));
+
+        event(new PermohonanStatusChanged($permohonan, $from, $status));
     }
 
     private const ROMAN_MONTHS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];

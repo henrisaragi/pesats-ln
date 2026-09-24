@@ -8,8 +8,6 @@ File: vendor.js
 */
 
 
-import '../css/style.css'
-
 import 'preline';
 
 import 'simplebar';

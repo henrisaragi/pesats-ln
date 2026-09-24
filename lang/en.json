@@ -733,5 +733,11 @@
     "Tanggal terbit pada dokumen (:ditemukan) sesuai dengan input (:diinput).": "The issue date in the document (:ditemukan) matches the input (:diinput).",
     "Tanggal terbit pada dokumen (:ditemukan) tidak sesuai dengan input (:diinput).": "The issue date in the document (:ditemukan) does not match the input (:diinput).",
     "Tanggal terbit tidak ditemukan pada dokumen.": "Issue date not found in the document.",
-    "Dilewati karena pemeriksaan sebelumnya tidak lolos.": "Skipped because the previous check did not pass."
+    "Dilewati karena pemeriksaan sebelumnya tidak lolos.": "Skipped because the previous check did not pass.",
+    "Disposisi": "Disposition",
+    "Print/Cetak": "Print",
+    "Update Status (Dalam Proses Penandatanganan)": "Update Status (Signing in Progress)",
+    "Siap Diambil": "Ready for Pickup",
+    "Telah Diambil": "Picked Up",
+    "Ini button :label. Fitur ini akan segera tersedia.": "This is the :label button. This feature will be available soon."
 }

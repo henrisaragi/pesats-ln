@@ -1,3 +1,5 @@
+@vite(['resources/css/style.css'])
+
 @yield('css')
 
 <script>

@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Enums\DocumentType;
 use App\Enums\JenisPermohonan;
 use App\Enums\KomoditasEntitasStatus;
+use App\Enums\NotificationCategory;
 use App\Enums\PermohonanStatus;
 use App\Jobs\SendWhatsAppNotificationJob;
 use App\Models\Country;
@@ -25,11 +26,13 @@ use App\Models\SourceStatus;
 use App\Models\Species;
 use App\Models\TradeCode;
 use App\Models\User;
+use App\Notifications\AppNotification;
 use App\Services\PermohonanService;
 use Database\Seeders\MasterDataPermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -345,6 +348,75 @@ class PermohonanExportTest extends TestCase
         $this->actingAs($user)->get(route('permohonan-export.show', $permohonan))->assertOk();
     }
 
+    public function test_verifikasi_show_page_renders_selected_sats_ln_and_gates_action_buttons_by_permission(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $verifier = $this->makeStaffVerifier();
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 5));
+
+        $satsLn = $permohonan->satsLn()->orderBy('id')->firstOrFail();
+
+        // makeStaffVerifier() only grants permohonan-export.verify, so only the "Verifikasi"
+        // action button should render - the other 5 are gated behind their own permission.
+        $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertOk()
+            ->assertSee(__('Verifikasi'))
+            ->assertDontSee(__('Disposisi'))
+            ->assertDontSee(__('Print/Cetak'))
+            ->assertDontSee(__('Siap Diambil'))
+            ->assertDontSee(__('Telah Diambil'));
+
+        $verifier->givePermissionTo([
+            'permohonan-export.disposisi',
+            'permohonan-export.print',
+            'permohonan-export.update-status',
+            'permohonan-export.siap-diambil',
+            'permohonan-export.telah-diambil',
+        ]);
+
+        $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertOk()
+            ->assertSee(__('Disposisi'))
+            ->assertSee(__('Print/Cetak'))
+            ->assertSee(__('Siap Diambil'))
+            ->assertSee(__('Telah Diambil'));
+    }
+
+    public function test_verifikasi_sats_ln_show_404s_for_sats_ln_belonging_to_another_permohonan(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $verifier = $this->makeStaffVerifier();
+
+        $this->createPermohonan($user);
+        $firstPermohonan = Permohonan::firstOrFail();
+
+        $document = $this->createPermohonanDocument($user);
+        $this->actingAs($user)->post(route('permohonan-export.store'), [
+            'document_id' => (string) $document->id,
+            'jenis_permohonan' => JenisPermohonan::Baru->value,
+        ]);
+        $secondPermohonan = Permohonan::query()->where('id', '!=', $firstPermohonan->id)->firstOrFail();
+
+        $indonesia = Country::query()->firstOrCreate(['iso_code' => 'ID'], ['name' => 'Indonesia', 'iso_code3' => 'IDN', 'phone_code' => '62']);
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $secondPermohonan), [
+            'customer_company_id' => null,
+            'purpose_of_transaction_id' => PurposeOfTransaction::create(['code' => 'COM-'.uniqid(), 'name' => 'Komersial'])->id,
+            'country_of_exportation' => $indonesia->id,
+        ]);
+        $satsLn = $secondPermohonan->satsLn()->firstOrFail();
+
+        $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$firstPermohonan, $satsLn]))
+            ->assertNotFound();
+    }
+
     public function test_cannot_exceed_max_25_sats_ln_per_permohonan(): void
     {
         $user = $this->makeUser('perusahaan');
@@ -363,6 +435,100 @@ class PermohonanExportTest extends TestCase
             ->assertRedirect(route('permohonan-export.edit', $permohonan));
 
         $this->assertSame(25, $permohonan->satsLn()->count());
+    }
+
+    public function test_submit_sats_ln_succeeds_when_all_sats_ln_have_items_and_documents(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+
+        $document = $this->createLampiranDocument($user);
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.documents.attach', [$permohonan, $satsLn]), [
+            'document_id' => (string) $document->id,
+        ]);
+
+        $this->actingAs($user)->get(route('permohonan-export.show', $permohonan))
+            ->assertSee('action="'.route('permohonan-export.sats-ln.submit', $permohonan).'"', false);
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.submit', $permohonan));
+
+        $response->assertRedirect(route('permohonan-export.show', $permohonan));
+        $this->assertSame('SATS-LN berhasil diajukan.', session('success'));
+        $permohonan->refresh();
+        $this->assertSame(PermohonanStatus::Submitted, $permohonan->status);
+        $this->assertNotNull($permohonan->submitted_at);
+    }
+
+    public function test_submit_sats_ln_fails_when_permohonan_has_no_sats_ln(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.submit', $permohonan));
+
+        $response->assertRedirect(route('permohonan-export.show', $permohonan));
+        $this->assertNotNull(session('error'));
+        $this->assertSame(PermohonanStatus::Draft, $permohonan->fresh()->status);
+    }
+
+    public function test_submit_sats_ln_fails_when_a_sats_ln_is_missing_an_item(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $satsLn = $this->makeSatsLnForItems($user);
+        $permohonan = $satsLn->permohonan;
+
+        $document = $this->createLampiranDocument($user);
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.documents.attach', [$permohonan, $satsLn]), [
+            'document_id' => (string) $document->id,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.submit', $permohonan));
+
+        $response->assertRedirect(route('permohonan-export.show', $permohonan));
+        $this->assertNotNull(session('error'));
+        $this->assertSame(PermohonanStatus::Draft, $permohonan->fresh()->status);
+    }
+
+    public function test_submit_sats_ln_fails_when_a_sats_ln_is_missing_a_document(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.submit', $permohonan));
+
+        $response->assertRedirect(route('permohonan-export.show', $permohonan));
+        $this->assertNotNull(session('error'));
+        $this->assertSame(PermohonanStatus::Draft, $permohonan->fresh()->status);
+    }
+
+    public function test_submit_sats_ln_fails_when_exceeding_max_25_sats_ln(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $satsLn = $this->makeSatsLnForItems($user);
+        $permohonan = $satsLn->permohonan;
+
+        for ($i = 0; $i < 25; $i++) {
+            $this->addSatsLnToPermohonan($satsLn);
+        }
+
+        $this->assertSame(26, $permohonan->satsLn()->count());
+
+        $response = $this->actingAs($user)->post(route('permohonan-export.sats-ln.submit', $permohonan));
+
+        $response->assertRedirect(route('permohonan-export.show', $permohonan));
+        $this->assertNotNull(session('error'));
+        $this->assertSame(PermohonanStatus::Draft, $permohonan->fresh()->status);
     }
 
     public function test_submit_dispatches_whatsapp_notification_to_verifiers_with_a_phone_number(): void
@@ -399,6 +565,89 @@ class PermohonanExportTest extends TestCase
         $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.verify', $permohonan));
 
         Bus::assertDispatched(SendWhatsAppNotificationJob::class, fn ($job) => $job->to === '15557654321');
+    }
+
+    public function test_submit_notifies_verifiers_with_category_permohonan(): void
+    {
+        Notification::fake();
+
+        $user = $this->makeUser('perusahaan');
+        $verifier = $this->makeStaffVerifier();
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.submit', $permohonan));
+
+        Notification::assertSentTo(
+            $verifier,
+            AppNotification::class,
+            fn (AppNotification $notification) => $notification->category === NotificationCategory::Permohonan
+                && $notification->title === __('Permohonan SATS-LN Ekspor Baru')
+        );
+    }
+
+    /**
+     * submitSatsLn() sebelumnya (sebelum PermohonanStatusChanged ada) sama sekali tidak mengirim
+     * notifikasi apapun - jadi ini bukan cuma regresi test, tapi menguji perilaku BARU.
+     */
+    public function test_submit_sats_ln_notifies_the_entitys_users_with_category_permohonan(): void
+    {
+        Notification::fake();
+
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+
+        $document = $this->createLampiranDocument($user);
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.documents.attach', [$permohonan, $satsLn]), [
+            'document_id' => (string) $document->id,
+        ]);
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.submit', $permohonan));
+
+        Notification::assertSentTo(
+            $user,
+            AppNotification::class,
+            fn (AppNotification $notification) => $notification->category === NotificationCategory::Permohonan
+                && $notification->title === __('Permohonan Diajukan')
+        );
+    }
+
+    /**
+     * recomputeStatus() (dipanggil dari markPrinted/markSigned) sebelumnya mengubah status TANPA
+     * notifikasi apapun - jadi ini juga menguji cakupan BARU dari PermohonanStatusChanged, bukan
+     * cuma regresi.
+     */
+    public function test_mark_printed_notifies_the_submitting_entitys_users(): void
+    {
+        Notification::fake();
+
+        $user = $this->makeUser('perusahaan');
+        $verifier = $this->makeStaffVerifier();
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.submit', $permohonan));
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.verify', $permohonan));
+
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.mark-printed', [$permohonan, $satsLn]));
+
+        $this->assertSame(PermohonanStatus::DicetakSebagian, $permohonan->fresh()->status);
+        Notification::assertSentTo(
+            $user,
+            AppNotification::class,
+            fn (AppNotification $notification) => $notification->category === NotificationCategory::Permohonan
+                && $notification->title === __('SATS-LN Dicetak')
+        );
     }
 
     public function test_store_rejects_document_belonging_to_another_entity(): void

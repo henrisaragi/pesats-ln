@@ -61,6 +61,18 @@
                     'permission' => 'komoditas-entitas.verify',
                 ],
                 [
+                    'label' => __('Assesment'),
+                    'icon' => 'clipboard-check',
+                    'route' => 'assesment-isi.index',
+                    'permission' => 'assesment-isi.view',
+                ],
+                [
+                    'label' => __('Verifikasi Assesment'),
+                    'icon' => 'shield-check',
+                    'route' => 'assesment-isi.verifikasi.index',
+                    'permission' => 'assesment-isi.verify',
+                ],
+                [
                     'label' => __('SATS-LN Ekspor'),
                     'icon' => 'file-text',
                     'route' => 'permohonan-export.index',
@@ -141,6 +153,11 @@
                             'label' => __('Tujuan Transaksi'),
                             'route' => 'master.purpose-of-transactions.index',
                             'permission' => 'purpose-of-transactions.view',
+                        ],
+                        [
+                            'label' => __('Assesment'),
+                            'route' => 'assesment.index',
+                            'permission' => 'assesment.view',
                         ],
                     ],
                 ],

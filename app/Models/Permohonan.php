@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\JenisPermohonan;
 use App\Enums\PermohonanStatus;
+use App\Models\Concerns\HasPublicId;
 use App\Models\Entitas\Entitas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Permohonan extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasPublicId, SoftDeletes;
 
     protected const MAX_SATS_LN = 25;
 

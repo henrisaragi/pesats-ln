@@ -30,6 +30,14 @@
                                     aria-label="{{ __('Tambah SATS-LN') }}">
                                     <i class="size-4" data-lucide="plus"></i>
                                 </button>
+                                <form action="{{ route('permohonan-export.sats-ln.submit', $permohonan) }}"
+                                    method="POST">
+                                    @csrf
+                                    <button class="btn size-7.5 bg-success text-white shrink-0" type="submit"
+                                        aria-label="{{ __('Ajukan Permohonan') }}">
+                                        <i class="size-4" data-lucide="send"></i>
+                                    </button>
+                                </form>
                             @endif
                         @endcan
                     </div>
