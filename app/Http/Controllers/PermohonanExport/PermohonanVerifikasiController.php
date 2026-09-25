@@ -27,7 +27,7 @@ class PermohonanVerifikasiController extends Controller
             : PermohonanStatus::AntrianVerifikasi;
 
         $permohonan = Permohonan::query()
-            ->with('entitas')
+            ->with(['entitas', 'verifiedBy'])
             ->withCount('satsLn')
             ->when($status !== null, fn ($query) => $query->where('status', $status))
             ->latest()
