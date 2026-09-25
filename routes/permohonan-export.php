@@ -27,6 +27,7 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
         // melakukan aksi verifikasi bisa diatur independen satu sama lain.
         Route::get('{permohonan}', [PermohonanVerifikasiController::class, 'show'])->middleware('permission:permohonan.verify-detail')->name('show');
         Route::get('{permohonan}/sats-ln/{satsLn}', [PermohonanVerifikasiController::class, 'show'])->middleware('permission:permohonan.verify-detail')->name('sats-ln.show');
+        Route::post('{permohonan}/disposisi', [PermohonanVerifikasiController::class, 'disposisi'])->middleware('permission:permohonan-export.disposisi')->name('disposisi');
         Route::post('{permohonan}/verify', [PermohonanVerifikasiController::class, 'verify'])->middleware('permission:permohonan-export.verify')->name('verify');
         Route::post('{permohonan}/reject', [PermohonanVerifikasiController::class, 'reject'])->middleware('permission:permohonan-export.verify')->name('reject');
         Route::post('{permohonan}/sats-ln/{satsLn}/mark-printed', [PermohonanVerifikasiController::class, 'markPrinted'])->middleware('permission:permohonan-export.verify')->name('mark-printed');

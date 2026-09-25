@@ -124,7 +124,61 @@
         </div>
     </div>
 
+    @can('permohonan-export.disposisi')
+        @php
+            $isDisposisiRedisplay = old('_modal') === 'verifikasi-action-modal-disposisi';
+        @endphp
+        <div aria-labelledby="verifikasi-action-modal-disposisi-label" id="verifikasi-action-modal-disposisi"
+            class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+            role="dialog" tabindex="-1">
+            <div
+                class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                    <form action="{{ route('permohonan-export.verifikasi.disposisi', $permohonan) }}" method="POST">
+                        @csrf
+                        <input name="_modal" type="hidden" value="verifikasi-action-modal-disposisi">
+                        <div class="card-header">
+                            <h3 class="font-bold text-default-800 text-base" id="verifikasi-action-modal-disposisi-label">
+                                {{ __('Disposisi') }}
+                            </h3>
+                            <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                    data-hs-overlay="#verifikasi-action-modal-disposisi" type="button">
+                                <span class="sr-only">{{ __('Tutup') }}</span>
+                                <i class="size-5" data-lucide="x"></i>
+                            </button>
+                        </div>
+                        {{--
+                            Sengaja TIDAK diberi overflow-y-auto/max-h di sini: meng-clip dropdown Choices.js
+                            (lihat claude/permohonan-task.md) - overlay terluar .hs-overlay sudah scroll sendiri.
+                        --}}
+                        <div class="p-4">
+                            <label class="inline-block mb-2 text-sm font-medium" for="disposisi-verifikator-id">
+                                {{ __('Disposisi Kepada') }}
+                            </label>
+                            <x-select id="disposisi-verifikator-id" name="verifikator_id"
+                                      :options="$verifikatorOptions"
+                                      :selected="$isDisposisiRedisplay ? old('verifikator_id') : null"
+                                      :placeholder="__('Pilih Verifikator')" required />
+                            @if ($isDisposisiRedisplay && $errors->has('verifikator_id'))
+                                <p class="mt-1 text-xs text-danger">{{ $errors->first('verifikator_id') }}</p>
+                            @endif
+                        </div>
+                        <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
+                            <button class="btn bg-default-150" data-hs-overlay="#verifikasi-action-modal-disposisi" type="button">
+                                {{ __('Batal') }}
+                            </button>
+                            <button class="btn bg-primary text-white hover:bg-primary/90" type="submit">
+                                {{ __('Disposisi') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endcan
+
     @foreach ($verifikasiActions as $action)
+        @continue($action['key'] === 'disposisi')
         @can($action['permission'])
             <div aria-labelledby="verifikasi-action-modal-{{ $action['key'] }}-label"
                 id="verifikasi-action-modal-{{ $action['key'] }}"

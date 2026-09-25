@@ -6,8 +6,10 @@ namespace App\Http\Controllers\PermohonanExport;
 
 use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PermohonanExport\DisposisiRequest;
 use App\Models\Permohonan;
 use App\Models\SatsLn;
+use App\Models\User;
 use App\Services\PermohonanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -68,7 +70,22 @@ class PermohonanVerifikasiController extends Controller
             'realisasiNasionalRunningTotalByItemId' => $this->permohonanService->realisasiKuotaNasionalRunningTotalForItems(
                 $selectedSatsLn?->items ?? collect()
             ),
+            'verifikatorOptions' => User::whereHas('roles', fn ($query) => $query->where('name', 'verifikator'))
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
+    }
+
+    public function disposisi(DisposisiRequest $request, Permohonan $permohonan): RedirectResponse
+    {
+        abort_unless($permohonan->status === PermohonanStatus::Submitted, 403);
+
+        $this->permohonanService->changeStatus($permohonan, PermohonanStatus::AntrianVerifikasi, [
+            'verified_by' => $request->validated('verifikator_id'),
+        ]);
+
+        return redirect()->route('permohonan-export.verifikasi.index')->with('success', __('Permohonan berhasil didisposisikan.'));
     }
 
     public function verify(Permohonan $permohonan): RedirectResponse

@@ -34,6 +34,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class PermohonanExportTest extends TestCase
@@ -83,10 +84,10 @@ class PermohonanExportTest extends TestCase
     /**
      * @param  string|array<int, string>  $permissions
      */
-    private function makeStaffUser(string|array $permissions): User
+    private function makeStaffUser(string|array $permissions, string $name = 'Verifier Test'): User
     {
         $user = User::create([
-            'name' => 'Verifier Test',
+            'name' => $name,
             'email' => uniqid('verifier', true).'@example.test',
             'username' => uniqid('verifier', true),
             'password' => bcrypt('password'),
@@ -97,6 +98,51 @@ class PermohonanExportTest extends TestCase
         $user->givePermissionTo($permissions);
 
         return $user;
+    }
+
+    /**
+     * Role "verifikator" bukan dari RoleSeeder (dibuat manual lewat UI Roles di environment
+     * nyata, lihat feedback_follow_actual_stack) - firstOrCreate di sini supaya test tidak
+     * bergantung pada seeder role tambahan.
+     */
+    private function makeVerifikatorUser(bool $isActive = true, string $name = 'Verifikator Test'): User
+    {
+        Role::firstOrCreate(['name' => 'verifikator', 'guard_name' => 'web']);
+
+        $user = User::create([
+            'name' => $name,
+            'email' => uniqid('verifikator', true).'@example.test',
+            'username' => uniqid('verifikator', true),
+            'password' => bcrypt('password'),
+            'is_active' => $isActive,
+            'onboarding_completed' => true,
+        ]);
+
+        $user->assignRole('verifikator');
+
+        return $user;
+    }
+
+    /**
+     * Bangun Permohonan sampai status Submitted (lewat sats-ln.submit, bukan submit() lama yang
+     * langsung ke AntrianVerifikasi) - itulah status yang jadi prasyarat aksi Disposisi.
+     */
+    private function makeSubmittedPermohonan(User $user, KuotaPerusahaan $kuotaPerusahaan): Permohonan
+    {
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::latest('id')->firstOrFail();
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $satsLn = $permohonan->satsLn()->firstOrFail();
+
+        $document = $this->createLampiranDocument($user);
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.documents.attach', [$permohonan, $satsLn]), [
+            'document_id' => (string) $document->id,
+        ]);
+
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.submit', $permohonan));
+
+        return $permohonan->refresh();
     }
 
     private function createPermohonanDocument(User $user): Document
@@ -464,6 +510,77 @@ class PermohonanExportTest extends TestCase
         $this->actingAs($detailOnly)
             ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
             ->assertOk();
+    }
+
+    public function test_disposisi_assigns_verifikator_and_moves_status_to_antrian_verifikasi(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $permohonan = $this->makeSubmittedPermohonan($user, $kuotaPerusahaan);
+
+        $verifikator = $this->makeVerifikatorUser();
+        $kordinator = $this->makeStaffUser(['permohonan-export.disposisi', 'permohonan.verify-detail'], 'Kordinator Test');
+
+        $response = $this->actingAs($kordinator)->post(route('permohonan-export.verifikasi.disposisi', $permohonan), [
+            'verifikator_id' => (string) $verifikator->id,
+        ]);
+
+        $response->assertRedirect(route('permohonan-export.verifikasi.index'));
+        $this->assertSame('Permohonan berhasil didisposisikan.', session('success'));
+
+        $permohonan->refresh();
+        $this->assertSame(PermohonanStatus::AntrianVerifikasi, $permohonan->status);
+        $this->assertSame($verifikator->id, $permohonan->verified_by);
+    }
+
+    public function test_disposisi_fails_when_permohonan_is_not_in_submitted_status(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::firstOrFail();
+
+        $verifikator = $this->makeVerifikatorUser();
+        $kordinator = $this->makeStaffUser(['permohonan-export.disposisi', 'permohonan.verify-detail'], 'Kordinator Test');
+
+        $this->actingAs($kordinator)->post(route('permohonan-export.verifikasi.disposisi', $permohonan), [
+            'verifikator_id' => (string) $verifikator->id,
+        ])->assertForbidden();
+
+        $this->assertSame(PermohonanStatus::Draft, $permohonan->fresh()->status);
+    }
+
+    public function test_disposisi_rejects_a_user_that_does_not_have_the_verifikator_role(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $permohonan = $this->makeSubmittedPermohonan($user, $kuotaPerusahaan);
+
+        $notVerifikator = $this->makeStaffUser('permohonan-export.verify', 'Non Verifikator Staff');
+        $kordinator = $this->makeStaffUser(['permohonan-export.disposisi', 'permohonan.verify-detail'], 'Kordinator Test');
+
+        $this->actingAs($kordinator)->post(route('permohonan-export.verifikasi.disposisi', $permohonan), [
+            'verifikator_id' => (string) $notVerifikator->id,
+        ])->assertSessionHasErrors('verifikator_id');
+
+        $this->assertSame(PermohonanStatus::Submitted, $permohonan->fresh()->status);
+    }
+
+    public function test_verifikasi_show_page_only_lists_active_verifikator_role_users_in_disposisi_select(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $permohonan = $this->makeSubmittedPermohonan($user, $kuotaPerusahaan);
+
+        $activeVerifikator = $this->makeVerifikatorUser(true, 'Aktif Verifikator');
+        $inactiveVerifikator = $this->makeVerifikatorUser(false, 'Nonaktif Verifikator');
+        $nonVerifikatorStaff = $this->makeStaffUser('permohonan-export.verify', 'Non Verifikator Staff');
+        $kordinator = $this->makeStaffUser(['permohonan-export.disposisi', 'permohonan.verify-detail'], 'Kordinator Test');
+
+        $this->actingAs($kordinator)->get(route('permohonan-export.verifikasi.show', $permohonan))
+            ->assertOk()
+            ->assertSee($activeVerifikator->name)
+            ->assertDontSee($inactiveVerifikator->name)
+            ->assertDontSee($nonVerifikatorStaff->name);
     }
 
     public function test_cannot_exceed_max_25_sats_ln_per_permohonan(): void
