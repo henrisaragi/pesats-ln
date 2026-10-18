@@ -2187,6 +2187,19 @@ class PermohonanExportTest extends TestCase
             'messages' => "SATS-LN Ke #1 diverifikasi ulang. Perubahan:\n- Tanggal Terbit: 18/10/2026 → 01/10/2026\n- Tanggal Berakhir: 18/01/2027 → 01/01/2027",
         ]);
 
+        // Modal Aktivitas cuma berisi milestone SATS-LN ini (bukan perubahan status Permohonan).
+        $page = $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertOk()
+            ->assertSee('satsln-activity-modal')
+            ->assertSee(__('Aktivitas').' (3)')
+            ->assertSeeInOrder([
+                'SATS-LN Ke #1 diverifikasi ulang. Perubahan:',
+                'Verifikasi SATS-LN Ke #1 dibuka kembali untuk diubah: Salah tanggal terbit.',
+                'SATS-LN Ke #1 disetujui dan diverifikasi dengan nomor 00001/IV/SATS-LN/2026.',
+            ]);
+        $this->assertSame(3, substr_count($page->getContent(), 'data-satsln-activity-item'));
+
         // Setelah dicetak, verifikasi tidak bisa dibuka ulang lagi.
         $satsLn->update(['printed_at' => now()]);
         $this->actingAs($verifier)->post($reopenUrl, ['pesan' => 'Ubah lagi'])->assertForbidden();

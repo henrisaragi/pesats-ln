@@ -774,5 +774,6 @@
     "SATS-LN Ke #:nomor diverifikasi ulang. Perubahan:": "SATS-LN #:nomor re-verified. Changes:",
     "Verifikasi SATS-LN dibuka kembali. Silakan ubah data lewat tombol Verifikasi.": "SATS-LN verification reopened. Update the data via the Verify button.",
     "Ubah Verifikasi SATS-LN Ke #:nomor": "Change Verification of SATS-LN #:nomor",
-    "Setelah disimpan, tombol Verifikasi aktif kembali untuk mengubah data SATS-LN ini.": "Once saved, the Verify button becomes active again so you can change this SATS-LN data."
+    "Setelah disimpan, tombol Verifikasi aktif kembali untuk mengubah data SATS-LN ini.": "Once saved, the Verify button becomes active again so you can change this SATS-LN data.",
+    "Aktivitas SATS-LN Ke #:nomor": "SATS-LN #:nomor Activity"
 }

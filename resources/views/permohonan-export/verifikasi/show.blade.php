@@ -110,6 +110,7 @@
         <div class="lg:col-span-3 col-span-1">
             @if ($selectedSatsLn)
                 @php
+                    $selectedSatsLnActivities = $permohonan->activities->where('sats_ln_id', $selectedSatsLn->id)->values();
                     $satsLnDocuments = $selectedSatsLn->documents;
                     $firstSatsLnDocument = $satsLnDocuments->first();
                 @endphp
@@ -150,6 +151,10 @@
                         @else
                             <span class="text-sm text-default-500">{{ __('Belum ada dokumen terlampir.') }}</span>
                         @endif
+                            <button class="btn btn-sm bg-default-150 hover:bg-default-200" type="button"
+                                    data-hs-overlay="#satsln-activity-modal">
+                                <i class="size-4 me-1" data-lucide="history"></i>{{ __('Aktivitas') }} ({{ $selectedSatsLnActivities->count() }})
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -165,23 +170,6 @@
                     {{ __('Belum ada SATS-LN.') }}
                 </div>
             @endif
-
-            <div class="card mt-4 print:hidden">
-                <div class="card-body">
-                    <h6 class="mb-4 card-title">{{ __('Aktivitas') }}</h6>
-                    @forelse ($permohonan->activities as $activity)
-                        <div class="relative ps-6 pb-4 last:pb-0 border-s border-default-200 ms-1.5">
-                            <span class="absolute -start-1.5 top-1 size-3 rounded-full {{ $activity->sats_ln_id ? 'bg-primary' : 'bg-default-300' }}"></span>
-                            <p class="text-sm text-default-700 whitespace-pre-line">{{ $activity->messages }}</p>
-                            <p class="mt-0.5 text-xs text-default-500">
-                                {{ $activity->created_at?->translatedFormat('d M Y H:i') }}@if ($activity->user) &middot; {{ $activity->user->name }}@endif
-                            </p>
-                        </div>
-                    @empty
-                        <p class="text-sm text-default-500">{{ __('Belum ada aktivitas.') }}</p>
-                    @endforelse
-                </div>
-            </div>
         </div>
     </div>
 
@@ -451,6 +439,60 @@
                 </div>
             </div>
         @endcan
+    @endif
+
+    @if ($selectedSatsLn)
+        <div aria-labelledby="satsln-activity-modal-label" id="satsln-activity-modal"
+            class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+            role="dialog" tabindex="-1">
+            <div
+                class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                    <div class="card-header">
+                        <h3 class="font-bold text-default-800 text-base" id="satsln-activity-modal-label">
+                            {{ __('Aktivitas SATS-LN Ke #:nomor', ['nomor' => $selectedSatsLn->nomor_urut]) }}
+                        </h3>
+                        <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                data-hs-overlay="#satsln-activity-modal" type="button">
+                            <span class="sr-only">{{ __('Tutup') }}</span>
+                            <i class="size-5" data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="p-5">
+                        {{-- Milestone dari terbaru ke terlama: titik + garis vertikal menyambung antar item. --}}
+                        @forelse ($selectedSatsLnActivities as $activity)
+                            <div class="relative flex gap-4" data-satsln-activity-item>
+                                <div class="relative flex flex-col items-center">
+                                    <span class="z-10 mt-1 size-3 shrink-0 rounded-full ring-4 ring-primary/15 {{ $loop->first ? 'bg-primary' : 'bg-default-300' }}"></span>
+                                    @unless ($loop->last)
+                                        <span class="w-px flex-1 bg-default-200"></span>
+                                    @endunless
+                                </div>
+                                <div class="flex-1 {{ $loop->last ? '' : 'pb-6' }}">
+                                    <p class="inline-flex items-center gap-1.5 text-xs font-medium text-default-500">
+                                        <i class="size-3.5" data-lucide="calendar-clock"></i>
+                                        {{ $activity->created_at?->translatedFormat('d M Y, H:i') }}
+                                    </p>
+                                    <p class="mt-1 text-sm text-default-700 whitespace-pre-line break-words">{{ $activity->messages }}</p>
+                                    @if ($activity->user)
+                                        <p class="mt-1 inline-flex items-center gap-1 text-xs text-default-400">
+                                            <i class="size-3.5" data-lucide="user"></i>{{ $activity->user->name }}
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-sm text-default-500">{{ __('Belum ada aktivitas.') }}</p>
+                        @endforelse
+                    </div>
+                    <div class="p-4 flex justify-end border-t border-dashed border-default-900/10">
+                        <button class="btn bg-default-150" data-hs-overlay="#satsln-activity-modal" type="button">
+                            {{ __('Tutup') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 
     @foreach ($verifikasiActions as $action)
