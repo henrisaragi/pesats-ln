@@ -26,21 +26,33 @@ class Permohonan extends Model
     protected $fillable = [
         'entity_id',
         'nomor_permohonan',
+        'year',
         'jenis_permohonan',
         'status',
         'submitted_at',
         'verified_by',
         'verified_at',
         'catatan_verifikasi',
+        'disposisi_cetak_at',
+        'disposisi_cetak_by',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Permohonan $permohonan): void {
+            $permohonan->year ??= now()->year;
+        });
+    }
 
     protected function casts(): array
     {
         return [
+            'year' => 'integer',
             'jenis_permohonan' => JenisPermohonan::class,
             'status' => PermohonanStatus::class,
             'submitted_at' => 'datetime',
             'verified_at' => 'datetime',
+            'disposisi_cetak_at' => 'datetime',
         ];
     }
 
@@ -62,6 +74,17 @@ class Permohonan extends Model
     public function satsLn(): HasMany
     {
         return $this->hasMany(SatsLn::class);
+    }
+
+    /**
+     * Tombol Disposisi Cetak: masih tahap verifikasi dan SETIAP SATS-LN sudah diputuskan
+     * (disetujui/ditolak) - satu yang masih belum/on hold menahan seluruh Permohonan.
+     */
+    public function canBeSentToDivisiCetak(): bool
+    {
+        return in_array($this->status, [PermohonanStatus::AntrianVerifikasi, PermohonanStatus::DalamProsesVerifikasi], true)
+            && $this->satsLn->isNotEmpty()
+            && $this->satsLn->every(fn (SatsLn $satsLn): bool => $satsLn->status_satsln?->isDecided() ?? false);
     }
 
     public function activities(): HasMany

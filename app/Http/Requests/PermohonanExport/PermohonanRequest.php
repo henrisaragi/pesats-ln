@@ -27,6 +27,7 @@ class PermohonanRequest extends FormRequest
                 ->where('type_document', DocumentType::Permohonan->value)
                 ->whereNull('permohonan_id')],
             'jenis_permohonan' => ['required', Rule::enum(JenisPermohonan::class)],
+            'year' => ['nullable', 'integer', 'between:2000,2099'],
         ];
     }
 }

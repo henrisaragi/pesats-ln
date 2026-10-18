@@ -44,6 +44,8 @@
     "Belum ada notifikasi.": "No notifications yet.",
     "Belum ada permohonan.": "No requests yet.",
     "Tahun Aktif": "Active Year",
+    "Pilih Tahun Aktif": "Select Active Year",
+    "Tahun Aktif belum dipilih. Silakan pilih tahun untuk melanjutkan.": "Active year has not been selected. Please select a year to continue.",
     "Tahun :year": "Year :year",
     "Layanan Entitas": "Entity Services",
     "Komoditas Entitas": "Entity Commodities",
@@ -326,8 +328,6 @@
     "Kuota nasional berhasil diperbarui.": "National quota updated successfully.",
     "Kuota nasional berhasil dihapus.": "National quota deleted successfully.",
     "Kuota nasional untuk \":species\" tahun :year akan dihapus permanen.": "The national quota for \":species\" in :year will be permanently deleted.",
-
-    "Entitas": "Entity",
     "Daftar Entitas": "Entity List",
     "Tambah Entitas": "Add Entity",
     "Ubah Entitas": "Edit Entity",
@@ -366,7 +366,6 @@
     "Entitas berhasil dihapus.": "Entity deleted successfully.",
     "Entitas \":name\" akan dihapus permanen.": "Entity \":name\" will be permanently deleted.",
     "Semua Jenis": "All Types",
-
     "User": "User",
     "Daftar User": "User List",
     "Tambah User": "Add User",
@@ -378,9 +377,7 @@
     "kosongkan jika tidak diubah": "leave blank to keep unchanged",
     "NIP": "Employee ID",
     "Jabatan": "Position",
-    "Role": "Role",
     "Pilih Role": "Select Role",
-    "Status": "Status",
     "Aktif": "Active",
     "Nonaktif": "Inactive",
     "Tanggal Dibuat": "Created At",
@@ -390,7 +387,6 @@
     "User berhasil diperbarui.": "User updated successfully.",
     "User berhasil dihapus.": "User deleted successfully.",
     "Anda tidak dapat menghapus akun sendiri.": "You cannot delete your own account.",
-
     "Memuat...": "Loading...",
     "Cari:": "Search:",
     "Tampilkan _MENU_ data": "Show _MENU_ entries",
@@ -401,7 +397,6 @@
     "Belum ada data.": "No data yet.",
     "Awal": "First",
     "Akhir": "Last",
-
     "Sinkron dari INSW": "Sync from INSW",
     "Ambil Data Referensi": "Load Reference Data",
     "Data negara berhasil dimuat: :created baru, :updated diperbarui.": "Country data loaded successfully: :created new, :updated updated.",
@@ -434,10 +429,8 @@
     "Profil entitas berhasil diperbarui.": "Entity profile updated successfully.",
     "Profil entitas berhasil dihapus.": "Entity profile deleted successfully.",
     "Profil entitas \":name\" akan dihapus permanen.": "Entity profile \":name\" will be permanently deleted.",
-
     ":count tugas sinkronisasi kecamatan telah dijadwalkan di antrean. Pastikan `php artisan queue:work` berjalan agar prosesnya selesai.": ":count district sync jobs have been queued. Make sure `php artisan queue:work` is running for them to complete.",
     ":count tugas sinkronisasi kelurahan telah dijadwalkan di antrean. Pastikan `php artisan queue:work` berjalan agar prosesnya selesai.": ":count sub-district sync jobs have been queued. Make sure `php artisan queue:work` is running for them to complete.",
-
     "Progres Pengisian": "Fill-in Progress",
     "Ikuti langkah-langkah berikut untuk melengkapi data entitas Anda. Setiap kali Anda klik \"Selanjutnya\", data langsung tersimpan.": "Follow the steps below to complete your entity data. Every time you click \"Next\", the data is saved immediately.",
     "Klik salah satu kartu sesuai jenis entitas Anda: Perusahaan, Penangkaran, Perorangan, atau UPT KSDA.": "Click one of the cards matching your entity type: Company, Captive Breeding, Individual, or UPT KSDA.",
@@ -455,7 +448,6 @@
     "Selesai!": "Done!",
     "Data entitas Anda sudah lengkap. Klik \"Ke Dashboard\" untuk mulai menggunakan aplikasi.": "Your entity data is complete. Click \"Go to Dashboard\" to start using the application.",
     "Selesai": "Done",
-
     "Kuota Perusahaan": "Company Quota",
     "Daftar Kuota Perusahaan": "Company Quota List",
     "Tambah Kuota Perusahaan": "Add Company Quota",
@@ -473,24 +465,23 @@
     "Kuota perusahaan berhasil diperbarui.": "Company quota updated successfully.",
     "Kuota perusahaan berhasil dihapus.": "Company quota deleted successfully.",
     "Kuota perusahaan untuk \":entitas\" akan dihapus permanen.": "The company quota for \":entitas\" will be permanently deleted.",
-
     "Kuota Saya": "My Quota",
     "Kuota :entitas": "Quota :entitas",
     "Kuota Saya / Nasional": "My / National Quota",
     "Belum ada kuota nasional yang dialokasikan untuk entitas Anda pada tahun ini.": "No national quota has been allocated to your entity for this year yet.",
-
     "Nama Satuan": "Unit Name",
     "Jumlah Desimal": "Number of Decimals",
     "Aktifkan pembulatan": "Enable rounding",
+    "Tampilkan Data Kuota di SATS-LN": "Show Quota Data in SATS-LN",
     "Desimal": "Decimals",
     "Bilangan bulat": "Whole number",
     ":n koma": ":n decimal(s)",
     ":n angka di belakang koma": ":n decimal place(s)",
     "Tanpa desimal (bilangan bulat)": "No decimals (whole number)",
     "dibulatkan": "rounded",
-
     "Permohonan SATS-LN Ekspor": "SATS-LN Export Request",
     "Verifikasi Permohonan Ekspor": "Export Request Verification",
+    "Verifikasi Saya": "My Verifications",
     "Daftar Permohonan": "Request List",
     "Permohonan Baru": "New Request",
     "Nomor Permohonan": "Request Number",
@@ -499,7 +490,6 @@
     "Ubah lebar panel": "Resize panel",
     "Belum ada dokumen terlampir.": "No documents attached yet.",
     "Anda tidak memiliki akses filter status.": "You do not have access to any status filter.",
-    "Belum ada permohonan.": "No requests yet.",
     "Detail Permohonan": "Request Detail",
     "Kelola SATS-LN": "Manage SATS-LN",
     "Nomor Permohonan (Otomatis)": "Request Number (Automatic)",
@@ -604,7 +594,6 @@
     "Ditandatangani :tanggal": "Signed :tanggal",
     "SATS-LN ditandai sudah dicetak.": "SATS-LN marked as printed.",
     "SATS-LN ditandai sudah ditandatangani.": "SATS-LN marked as signed.",
-
     "Settings": "Settings",
     "Whatsapp": "Whatsapp",
     "Notifikasi WhatsApp": "WhatsApp Notifications",
@@ -612,7 +601,6 @@
     "Jika diaktifkan, notifikasi tertentu (mis. permohonan baru, verifikasi) juga akan dikirim via WhatsApp ke nomor pengguna yang terdaftar.": "When enabled, certain notifications (e.g. new requests, verification) will also be sent via WhatsApp to users' registered numbers.",
     "Pengaturan notifikasi WhatsApp berhasil disimpan.": "WhatsApp notification settings saved successfully.",
     "No. WhatsApp": "WhatsApp No.",
-
     "Daftar Dokumen": "Document List",
     "Belum ada data dokumen.": "No document data yet.",
     "Tambah Dokumen": "Add Document",
@@ -645,7 +633,6 @@
     "Dokumen berhasil dihapus.": "Document deleted successfully.",
     "Dokumen \":nomor\" akan dihapus permanen.": "Document \":nomor\" will be permanently deleted.",
     "Tidak ada entitas": "No entity",
-
     "Customer": "Customer",
     "Daftar Customer": "Customer List",
     "Belum ada data customer.": "No customer data yet.",
@@ -657,9 +644,7 @@
     "Customer berhasil ditambahkan.": "Customer added successfully.",
     "Customer berhasil diperbarui.": "Customer updated successfully.",
     "Customer berhasil dihapus.": "Customer deleted successfully.",
-
     "Nomor akan otomatis di-generate": "Number will be generated automatically",
-
     "Status Server": "Server Status",
     "Queue Worker (Default)": "Queue Worker (Default)",
     "Queue Worker (Notifications)": "Queue Worker (Notifications)",
@@ -668,7 +653,6 @@
     "Tidak Aktif": "Inactive",
     "Tidak Diketahui": "Unknown",
     "Status dicek langsung dari daftar proses server setiap halaman ini dimuat. Klik \"Refresh\" untuk memeriksa ulang.": "Status is checked directly from the server's process list every time this page loads. Click \"Refresh\" to check again.",
-
     "Akun ini sedang digunakan di perangkat lain. Silakan coba lagi nanti atau logout dari perangkat tersebut.": "This account is currently in use on another device. Please try again later or log out from that device.",
     "Kode OTP tidak valid atau sudah kedaluwarsa.": "The OTP code is invalid or has expired.",
     "Kode OTP baru telah dikirim ke email Anda.": "A new OTP code has been sent to your email.",
@@ -775,5 +759,13 @@
     "Verifikasi SATS-LN dibuka kembali. Silakan ubah data lewat tombol Verifikasi.": "SATS-LN verification reopened. Update the data via the Verify button.",
     "Ubah Verifikasi SATS-LN Ke #:nomor": "Change Verification of SATS-LN #:nomor",
     "Setelah disimpan, tombol Verifikasi aktif kembali untuk mengubah data SATS-LN ini.": "Once saved, the Verify button becomes active again so you can change this SATS-LN data.",
-    "Aktivitas SATS-LN Ke #:nomor": "SATS-LN #:nomor Activity"
+    "Aktivitas SATS-LN Ke #:nomor": "SATS-LN #:nomor Activity",
+    "Disposisi Cetak": "Assignment for Print",
+    "Anda yakin akan mengirim data ke Divisi Cetak?": "Are you sure you want to send the data to the Print Division?",
+    "Permohonan berhasil dikirim ke Divisi Cetak.": "Application successfully sent to the Print Division.",
+    "Antrian Cetak": "Print Queue",
+    "Permohonan Siap Dicetak": "Application Ready to Print",
+    "Permohonan :nomor telah dikirim ke Divisi Cetak.": "Application :nomor has been sent to the Print Division.",
+    "Disetujui": "Approved",
+    "On Hold": "On Hold"
 }

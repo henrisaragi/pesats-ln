@@ -1,15 +1,17 @@
-@extends('layouts.vertical', ['title' => __('Verifikasi Permohonan Ekspor')])
+@php $isMine ??= false; @endphp
+@extends('layouts.vertical', ['title' => $isMine ? __('Verifikasi Saya') : __('Verifikasi Permohonan Ekspor')])
 
 @section('content')
     @include('layouts.partials/page-title', [
         'subtitle' => __('Layanan Entitas'),
-        'title' => __('Verifikasi Permohonan Ekspor'),
+        'title' => $isMine ? __('Verifikasi Saya') : __('Verifikasi Permohonan Ekspor'),
     ])
 
-    <div class="card">
+    <div class="card" data-active-year-page>
         <div class="card-header">
             <h6 class="card-title">{{ __('Daftar Permohonan') }}</h6>
         </div>
+        @unless ($isMine)
         <div class="card-header">
             <form action="{{ route('permohonan-export.verifikasi.index') }}"
                 class="md:flex items-center md:space-y-0 space-y-4 gap-3" method="GET">
@@ -29,6 +31,7 @@
                 @endif
             </form>
         </div>
+        @endunless
         <div class="flex flex-col">
             <div class="overflow-x-auto">
                 <div class="min-w-full inline-block align-middle">
@@ -70,7 +73,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td class="px-3.5 py-6 text-center text-default-500" colspan="6">
+                                        <td class="px-3.5 py-6 text-center text-default-500" colspan="7">
                                             {{ __('Tidak ada permohonan.') }}
                                         </td>
                                     </tr>

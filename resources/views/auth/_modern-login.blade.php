@@ -158,11 +158,13 @@
                 yearSelect.value = savedYear;
             }
 
-            console.log('Tahun aktif:', yearSelect.value);
+            // Simpan juga pilihan default (tanpa event change) supaya tahun_aktif tidak pernah null setelah login.
+            yearSelect.form?.addEventListener('submit', function() {
+                localStorage.setItem('tahun_aktif', yearSelect.value);
+            });
 
             yearSelect.addEventListener('change', function() {
                 localStorage.setItem('tahun_aktif', this.value);
-                console.log('Tahun aktif:', this.value);
             });
         });
     </script>

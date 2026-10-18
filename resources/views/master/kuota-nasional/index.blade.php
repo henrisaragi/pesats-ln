@@ -7,7 +7,7 @@
 @section('content')
     @include('layouts.partials/page-title', ['subtitle' => __('Database Kuota'), 'title' => __('Kuota Nasional')])
 
-    <div class="card" data-kuota-nasional-page>
+    <div class="card" data-active-year-page>
         <div class="card-header">
             <h6 class="card-title">
                 {{ __('Daftar Kuota Nasional') }}
@@ -209,16 +209,26 @@
                                         <p class="mt-1 text-xs text-danger">{{ $errors->first('quota') }}</p>
                                     @endif
                                 </div>
-                                <div>
-                                    <label class="inline-block mb-2 text-sm font-medium"
-                                           for="kuota-nasional-create-year">
-                                        {{ __('Tahun') }}
-                                    </label>
-                                    <input class="form-input" id="kuota-nasional-create-year" name="year" type="number"
-                                           value="{{ old('_modal') === 'kuota-nasional-create-modal' ? old('year') : now()->year }}"/>
-                                    @if (old('_modal') === 'kuota-nasional-create-modal' && $errors->has('year'))
-                                        <p class="mt-1 text-xs text-danger">{{ $errors->first('year') }}</p>
-                                    @endif
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium"
+                                               for="kuota-nasional-create-year">
+                                            {{ __('Tahun') }}
+                                        </label>
+                                        <input class="form-input" id="kuota-nasional-create-year" name="year" type="number"
+                                               value="{{ old('_modal') === 'kuota-nasional-create-modal' ? old('year') : now()->year }}"/>
+                                        @if (old('_modal') === 'kuota-nasional-create-modal' && $errors->has('year'))
+                                            <p class="mt-1 text-xs text-danger">{{ $errors->first('year') }}</p>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-2 sm:mt-7 sm:h-9.25">
+                                        <input class="form-checkbox" id="kuota-nasional-create-sats-ln"
+                                               name="show_in_sats_ln" type="checkbox" value="1"
+                                               @checked(old('_modal') === 'kuota-nasional-create-modal' ? old('show_in_sats_ln') : true)/>
+                                        <label class="text-sm font-medium" for="kuota-nasional-create-sats-ln">
+                                            {{ __('Tampilkan Data Kuota di SATS-LN') }}
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -344,17 +354,27 @@
                                             <p class="mt-1 text-xs text-danger">{{ $errors->first('quota') }}</p>
                                         @endif
                                     </div>
-                                    <div>
-                                        <label class="inline-block mb-2 text-sm font-medium"
-                                               for="kuota-nasional-edit-year-{{ $item->id }}">
-                                            {{ __('Tahun') }}
-                                        </label>
-                                        <input class="form-input" id="kuota-nasional-edit-year-{{ $item->id }}"
-                                               name="year" type="number"
-                                               value="{{ old('_modal') === 'kuota-nasional-edit-modal-'.$item->id ? old('year') : $item->year }}"/>
-                                        @if (old('_modal') === 'kuota-nasional-edit-modal-'.$item->id && $errors->has('year'))
-                                            <p class="mt-1 text-xs text-danger">{{ $errors->first('year') }}</p>
-                                        @endif
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="inline-block mb-2 text-sm font-medium"
+                                                   for="kuota-nasional-edit-year-{{ $item->id }}">
+                                                {{ __('Tahun') }}
+                                            </label>
+                                            <input class="form-input" id="kuota-nasional-edit-year-{{ $item->id }}"
+                                                   name="year" type="number"
+                                                   value="{{ old('_modal') === 'kuota-nasional-edit-modal-'.$item->id ? old('year') : $item->year }}"/>
+                                            @if (old('_modal') === 'kuota-nasional-edit-modal-'.$item->id && $errors->has('year'))
+                                                <p class="mt-1 text-xs text-danger">{{ $errors->first('year') }}</p>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center gap-2 sm:mt-7 sm:h-9.25">
+                                            <input class="form-checkbox" id="kuota-nasional-edit-sats-ln-{{ $item->id }}"
+                                                   name="show_in_sats_ln" type="checkbox" value="1"
+                                                   @checked(old('_modal') === 'kuota-nasional-edit-modal-'.$item->id ? old('show_in_sats_ln') : $item->show_in_sats_ln)/>
+                                            <label class="text-sm font-medium" for="kuota-nasional-edit-sats-ln-{{ $item->id }}">
+                                                {{ __('Tampilkan Data Kuota di SATS-LN') }}
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -417,8 +437,4 @@
             </div>
         @endforeach
     @endcan
-@endsection
-
-@section('scripts')
-    @vite(['resources/js/pages/kuota-nasional-index.js'])
 @endsection

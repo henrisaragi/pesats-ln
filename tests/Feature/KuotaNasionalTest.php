@@ -158,4 +158,23 @@ class KuotaNasionalTest extends TestCase
         $response->assertSee('Ekor');
         $response->assertDontSee('100,00');
     }
+
+    public function test_update_saves_show_in_sats_ln_checkbox_and_unchecked_means_false(): void
+    {
+        $staff = $this->makeStaff();
+        $staff->givePermissionTo('kuota-nasional.update');
+        $kuota = $this->makeKuotaNasional((int) now()->year);
+
+        $payload = $kuota->only(['komoditas_id', 'species_id', 'source_id', 'trade_code_id', 'quota', 'year']);
+
+        $this->actingAs($staff)
+            ->put(route('master.kuota-nasional.update', $kuota), $payload)
+            ->assertSessionHasNoErrors();
+        $this->assertFalse($kuota->fresh()->show_in_sats_ln);
+
+        $this->actingAs($staff)
+            ->put(route('master.kuota-nasional.update', $kuota), [...$payload, 'show_in_sats_ln' => '1'])
+            ->assertSessionHasNoErrors();
+        $this->assertTrue($kuota->fresh()->show_in_sats_ln);
+    }
 }

@@ -11,6 +11,7 @@ enum PermohonanStatus: string
     case AntrianVerifikasi = 'antrian_verifikasi';
     case DalamProsesVerifikasi = 'dalam_proses_verifikasi';
     case Ditolak = 'ditolak';
+    case AntrianCetak = 'antrian_cetak';
     case DicetakSebagian = 'dicetak_sebagian';
     case DitandatanganiSebagian = 'ditandatangani_sebagian';
     case SiapDiambil = 'siap_diambil';
@@ -29,6 +30,7 @@ enum PermohonanStatus: string
             self::AntrianVerifikasi => __('Antrian Verifikasi'),
             self::DalamProsesVerifikasi => __('Dalam Proses Verifikasi'),
             self::Ditolak => __('Ditolak'),
+            self::AntrianCetak => __('Antrian Cetak'),
             self::DicetakSebagian => __('Telah Dicetak Sebagian'),
             self::DitandatanganiSebagian => __('Telah Ditandatangani Sebagian'),
             self::SiapDiambil => __('Siap Untuk Diambil'),
@@ -42,7 +44,7 @@ enum PermohonanStatus: string
             self::Submitted, self::AntrianVerifikasi => 'border-info/30 bg-info/10 text-info',
             self::DalamProsesVerifikasi => 'border-warning/30 bg-warning/10 text-warning',
             self::Ditolak => 'border-danger/30 bg-danger/10 text-danger',
-            self::DicetakSebagian, self::DitandatanganiSebagian => 'border-primary/30 bg-primary/10 text-primary',
+            self::AntrianCetak, self::DicetakSebagian, self::DitandatanganiSebagian => 'border-primary/30 bg-primary/10 text-primary',
             self::SiapDiambil => 'border-success/30 bg-success/10 text-success',
         };
     }

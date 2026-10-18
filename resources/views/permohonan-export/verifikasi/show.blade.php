@@ -15,6 +15,7 @@
             ['key' => 'siap-diambil', 'permission' => 'permohonan-export.siap-diambil', 'label' => __('Siap Diambil'), 'icon' => 'package-check', 'class' => 'bg-default-150 hover:bg-default-200'],
             ['key' => 'telah-diambil', 'permission' => 'permohonan-export.telah-diambil', 'label' => __('Telah Diambil'), 'icon' => 'circle-check-big', 'class' => 'bg-default-150 hover:bg-default-200'],
         ];
+        $canDisposisiCetak = auth()->user()->can('permohonan-export.disposisi-cetak') && $permohonan->canBeSentToDivisiCetak();
     @endphp
 
     <div class="card mb-4">
@@ -35,6 +36,12 @@
                         </button>
                     @endcan
                 @endforeach
+                @if ($canDisposisiCetak)
+                    <button class="btn btn-sm bg-success text-white hover:bg-success/90" type="button"
+                            data-hs-overlay="#verifikasi-disposisi-cetak-modal">
+                        <i class="size-4 me-1" data-lucide="send"></i>{{ __('Disposisi Cetak') }}
+                    </button>
+                @endif
             </div>
         </div>
     </div>
@@ -490,6 +497,42 @@
                             {{ __('Tutup') }}
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($canDisposisiCetak)
+        <div aria-labelledby="verifikasi-disposisi-cetak-modal-label" id="verifikasi-disposisi-cetak-modal"
+            class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+            role="dialog" tabindex="-1">
+            <div
+                class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                    <form action="{{ route('permohonan-export.verifikasi.disposisi-cetak', $permohonan) }}" method="POST">
+                        @csrf
+                        <div class="card-header">
+                            <h3 class="font-bold text-default-800 text-base" id="verifikasi-disposisi-cetak-modal-label">
+                                {{ __('Disposisi Cetak') }}
+                            </h3>
+                            <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                    data-hs-overlay="#verifikasi-disposisi-cetak-modal" type="button">
+                                <span class="sr-only">{{ __('Tutup') }}</span>
+                                <i class="size-5" data-lucide="x"></i>
+                            </button>
+                        </div>
+                        <div class="p-4 text-sm text-default-600">
+                            {{ __('Anda yakin akan mengirim data ke Divisi Cetak?') }}
+                        </div>
+                        <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
+                            <button class="btn bg-default-150" data-hs-overlay="#verifikasi-disposisi-cetak-modal" type="button">
+                                {{ __('Tidak') }}
+                            </button>
+                            <button class="btn bg-success text-white hover:bg-success/90" type="submit">
+                                {{ __('Ya') }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

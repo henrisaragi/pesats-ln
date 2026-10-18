@@ -22,6 +22,7 @@ use App\Models\Species;
 use App\Models\TradeCode;
 use App\Services\PermohonanService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -30,13 +31,14 @@ class PermohonanController extends Controller
 {
     public function __construct(private readonly PermohonanService $permohonanService) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $entity = $this->ownEntityOrAbort();
 
         $permohonan = Permohonan::query()
             ->withCount('satsLn')
             ->where('entity_id', $entity->id)
+            ->where('year', $this->activeYear($request))
             ->latest()
             ->paginate(10);
 
@@ -61,6 +63,7 @@ class PermohonanController extends Controller
             $permohonan = Permohonan::create([
                 'entity_id' => $entity->id,
                 'nomor_permohonan' => $this->permohonanService->generateNomorPermohonan(),
+                'year' => $request->validated('year') ?? now()->year,
                 'jenis_permohonan' => $request->validated('jenis_permohonan'),
                 'status' => PermohonanStatus::Draft,
             ]);

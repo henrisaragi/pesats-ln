@@ -7,7 +7,7 @@
 @section('content')
     @include('layouts.partials/page-title', ['subtitle' => __('Database Kuota'), 'title' => __('Kuota Perusahaan')])
 
-    <div class="card" data-kuota-perusahaan-page>
+    <div class="card" data-active-year-page>
         <div class="card-header">
             <h6 class="card-title">
                 {{ __('Daftar Kuota Perusahaan') }}
@@ -379,8 +379,4 @@
             </div>
         @endforeach
     @endcan
-@endsection
-
-@section('scripts')
-    @vite(['resources/js/pages/kuota-perusahaan-index.js'])
 @endsection

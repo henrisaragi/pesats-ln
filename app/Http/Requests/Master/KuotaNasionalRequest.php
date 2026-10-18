@@ -13,6 +13,11 @@ class KuotaNasionalRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['show_in_sats_ln' => $this->boolean('show_in_sats_ln')]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -25,6 +30,7 @@ class KuotaNasionalRequest extends FormRequest
             'trade_code_id' => ['required', 'integer', 'exists:trade_codes,id'],
             'quota' => ['required', 'numeric', 'min:0'],
             'year' => ['required', 'integer', 'digits:4'],
+            'show_in_sats_ln' => ['boolean'],
         ];
     }
 }

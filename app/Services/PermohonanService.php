@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\MasaBerlakuSatsLn;
 use App\Enums\PermohonanStatus;
+use App\Enums\SatsLnStatus;
 use App\Events\PermohonanStatusChanged;
 use App\Models\Entitas\Entitas;
 use App\Models\Komoditas;
@@ -279,6 +280,7 @@ class PermohonanService
                     'valid_until' => $data['masa_berlaku']->validUntil($publishDate),
                     'special_conditions' => $data['special_conditions'],
                     'verified_id' => $verifier->id,
+                    'status_satsln' => SatsLnStatus::Disetujui,
                 ]);
 
                 $locked->activities()->create([
@@ -315,7 +317,7 @@ class PermohonanService
 
             abort_unless($locked->canBeReopened(), 403);
 
-            $locked->update(['verified_id' => null]);
+            $locked->update(['verified_id' => null, 'status_satsln' => SatsLnStatus::OnHold]);
 
             $locked->activities()->create([
                 'permohonan_id' => $permohonan->id,
@@ -365,19 +367,43 @@ class PermohonanService
     }
 
     /**
-     * Verifikator tidak menyetujui SATS-LN: cukup catat pesannya sebagai aktivitas - SATS-LN tetap
-     * belum terverifikasi dan status Permohonan tidak berubah.
+     * Verifikator tidak menyetujui SATS-LN: tandai status_satsln Ditolak dan catat pesannya sebagai
+     * aktivitas - SATS-LN tetap belum terverifikasi (masih bisa disetujui kemudian) dan status
+     * Permohonan tidak berubah.
      */
     public function disagreeSatsLn(Permohonan $permohonan, SatsLn $satsLn, string $pesan, User $verifier): void
     {
-        $satsLn->activities()->create([
-            'permohonan_id' => $permohonan->id,
-            'user_id' => $verifier->id,
-            'messages' => __('SATS-LN Ke #:nomor tidak disetujui: :pesan', [
-                'nomor' => $satsLn->nomor_urut,
-                'pesan' => $pesan,
-            ]),
-        ]);
+        DB::transaction(function () use ($permohonan, $satsLn, $pesan, $verifier): void {
+            $satsLn->update(['status_satsln' => SatsLnStatus::Ditolak]);
+
+            $satsLn->activities()->create([
+                'permohonan_id' => $permohonan->id,
+                'user_id' => $verifier->id,
+                'messages' => __('SATS-LN Ke #:nomor tidak disetujui: :pesan', [
+                    'nomor' => $satsLn->nomor_urut,
+                    'pesan' => $pesan,
+                ]),
+            ]);
+        });
+    }
+
+    /**
+     * Kirim Permohonan ke Divisi Cetak (status Antrian Cetak). Baris Permohonan dikunci supaya
+     * syarat "semua SATS-LN sudah diputuskan" dicek ulang tanpa balapan dengan verifikasi/buka ulang.
+     */
+    public function disposisiCetak(Permohonan $permohonan, User $user): void
+    {
+        DB::transaction(function () use ($permohonan, $user): void {
+            $locked = Permohonan::query()->lockForUpdate()->findOrFail($permohonan->id);
+            $locked->load('satsLn');
+
+            abort_unless($locked->canBeSentToDivisiCetak(), 403);
+
+            $this->changeStatus($locked, PermohonanStatus::AntrianCetak, [
+                'disposisi_cetak_at' => now(),
+                'disposisi_cetak_by' => $user->id,
+            ]);
+        });
     }
 
     /**

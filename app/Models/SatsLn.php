@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\SatsLnStatus;
 use App\Models\Concerns\HasPublicId;
 use App\Models\Customer\Customer;
 use App\Models\Entitas\Entitas;
@@ -34,6 +35,7 @@ class SatsLn extends Model
         'publish_date',
         'valid_until',
         'verified_id',
+        'status_satsln',
         'issued_by_id',
         'printed_user_id',
         'printed_at',
@@ -54,6 +56,7 @@ class SatsLn extends Model
             'signed_at' => 'datetime',
             'year' => 'integer',
             'nomor_urut' => 'integer',
+            'status_satsln' => SatsLnStatus::class,
         ];
     }
 

@@ -3,7 +3,7 @@
 @section('content')
     @include('layouts.partials/page-title', ['subtitle' => __('Layanan Entitas'), 'title' => __('Kuota Saya')])
 
-    <div class="card" data-kuota-saya-page>
+    <div class="card" data-active-year-page>
         <div class="card-header">
             <h6 class="card-title">
                 {{ __('Kuota :entitas', ['entitas' => $entity->name]) }}
@@ -58,8 +58,4 @@
             </div>
         </div>
     </div>
-@endsection
-
-@section('scripts')
-    @vite(['resources/js/pages/kuota-saya-index.js'])
 @endsection

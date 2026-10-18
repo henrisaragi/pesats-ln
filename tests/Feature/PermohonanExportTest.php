@@ -9,6 +9,7 @@ use App\Enums\JenisPermohonan;
 use App\Enums\KomoditasEntitasStatus;
 use App\Enums\NotificationCategory;
 use App\Enums\PermohonanStatus;
+use App\Enums\SatsLnStatus;
 use App\Jobs\SendWhatsAppNotificationJob;
 use App\Models\Country;
 use App\Models\Customer\Customer;
@@ -511,6 +512,76 @@ class PermohonanExportTest extends TestCase
         $this->actingAs($detailOnly)
             ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
             ->assertOk();
+    }
+
+    public function test_verifikasi_saya_lists_only_permohonan_verified_by_current_user(): void
+    {
+        [$mine, $mineSatsLn] = $this->makeAntrianVerifikasiSatsLn();
+        [$other, $otherSatsLn] = $this->makeAntrianVerifikasiSatsLn();
+        [$unverified] = $this->makeAntrianVerifikasiSatsLn();
+
+        $verifier = $this->makeStaffVerifier();
+        $otherVerifier = $this->makeStaffVerifier();
+        $mineSatsLn->update(['verified_id' => $verifier->id]);
+        $otherSatsLn->update(['verified_id' => $otherVerifier->id]);
+
+        $this->actingAs($verifier)->get(route('permohonan-export.verifikasi.mine'))
+            ->assertOk()
+            ->assertSee($mine->nomor_permohonan)
+            ->assertDontSee($other->nomor_permohonan)
+            ->assertDontSee($unverified->nomor_permohonan);
+
+        $this->actingAs($this->makeStaffUser('permohonan.verify.view'))
+            ->get(route('permohonan-export.verifikasi.mine'))
+            ->assertForbidden();
+    }
+
+    public function test_store_saves_active_year_and_permohonan_lists_are_filtered_by_it(): void
+    {
+        $user = $this->makeUser('perusahaan');
+
+        $this->actingAs($user)->post(route('permohonan-export.store'), [
+            'document_id' => (string) $this->createPermohonanDocument($user)->id,
+            'jenis_permohonan' => JenisPermohonan::Baru->value,
+            'year' => 2025,
+        ]);
+        $this->createPermohonan($user);
+
+        $permohonan2025 = Permohonan::where('year', 2025)->firstOrFail();
+        $permohonanNow = Permohonan::where('year', now()->year)->firstOrFail();
+
+        $verifier = $this->makeStaffUser([
+            'permohonan-export.verify',
+            'permohonan.verify.view',
+            PermohonanStatus::VERIFIKASI_FILTER_ALL_PERMISSION,
+        ]);
+        $permohonan2025->update(['status' => PermohonanStatus::AntrianVerifikasi]);
+        $permohonanNow->update(['status' => PermohonanStatus::AntrianVerifikasi]);
+        SatsLn::create([
+            'permohonan_id' => $permohonan2025->id,
+            'nomor_urut' => 1,
+            'entity_id' => $user->entity_id,
+            'type_satsln' => 'Export',
+            'purpose_of_transaction_id' => PurposeOfTransaction::create(['code' => 'COM-'.uniqid(), 'name' => 'Komersial'])->id,
+            'satsln_issued_type' => 'P_0',
+            'year' => 2025,
+            'verified_id' => $verifier->id,
+        ]);
+
+        foreach ([
+            [$user, route('permohonan-export.index', ['year' => 2025])],
+            [$verifier, route('permohonan-export.verifikasi.index', ['year' => 2025, 'status' => 'all'])],
+            [$verifier, route('permohonan-export.verifikasi.mine', ['year' => 2025])],
+        ] as [$actor, $url]) {
+            $this->actingAs($actor)->get($url)
+                ->assertOk()
+                ->assertSee($permohonan2025->nomor_permohonan)
+                ->assertDontSee($permohonanNow->nomor_permohonan);
+        }
+
+        $this->actingAs($user)->get(route('permohonan-export.index'))
+            ->assertSee($permohonanNow->nomor_permohonan)
+            ->assertDontSee($permohonan2025->nomor_permohonan);
     }
 
     public function test_verifikasi_index_status_filters_are_gated_by_role_permissions(): void
@@ -2203,5 +2274,81 @@ class PermohonanExportTest extends TestCase
         // Setelah dicetak, verifikasi tidak bisa dibuka ulang lagi.
         $satsLn->update(['printed_at' => now()]);
         $this->actingAs($verifier)->post($reopenUrl, ['pesan' => 'Ubah lagi'])->assertForbidden();
+    }
+
+    public function test_sats_ln_status_follows_verify_disagree_and_reopen(): void
+    {
+        $this->travelTo('2026-10-18 10:00:00');
+        [$permohonan, $satsLn] = $this->makeAntrianVerifikasiSatsLn();
+        $verifier = $this->makeStaffVerifier();
+        $verifyUrl = route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $satsLn]);
+
+        $this->assertNull($satsLn->status_satsln);
+
+        $this->actingAs($verifier)->post($verifyUrl, ['setuju' => '0', 'pesan' => 'Dokumen kurang.']);
+        $this->assertSame(SatsLnStatus::Ditolak, $satsLn->refresh()->status_satsln);
+
+        $this->actingAs($verifier)->post($verifyUrl, $this->verifySatsLnPayload());
+        $this->assertSame(SatsLnStatus::Disetujui, $satsLn->refresh()->status_satsln);
+
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.sats-ln.reopen', [$permohonan, $satsLn]), ['pesan' => 'Ubah.']);
+        $this->assertSame(SatsLnStatus::OnHold, $satsLn->refresh()->status_satsln);
+    }
+
+    public function test_disposisi_cetak_is_available_only_after_every_sats_ln_is_decided(): void
+    {
+        $this->travelTo('2026-10-18 10:00:00');
+        Notification::fake();
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::latest('id')->firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 5));
+        $this->actingAs($user)->post(route('permohonan-export.submit', $permohonan));
+        [$first, $second] = $permohonan->satsLn()->oldest('id')->get()->all();
+
+        $verifier = $this->makeStaffUser([
+            'permohonan-export.verify',
+            'permohonan.verify-detail',
+            'permohonan-export.disposisi-cetak',
+        ]);
+        $divisiCetak = $this->makeStaffUser('permohonan-export.print', 'Divisi Cetak Test');
+        $showUrl = route('permohonan-export.verifikasi.show', $permohonan);
+        $disposisiCetakUrl = route('permohonan-export.verifikasi.disposisi-cetak', $permohonan);
+
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $first]), $this->verifySatsLnPayload());
+
+        // SATS-LN kedua belum diverifikasi - tombol belum tampil dan aksi ditolak.
+        $this->actingAs($verifier)->get($showUrl)->assertOk()->assertDontSee('verifikasi-disposisi-cetak-modal');
+        $this->actingAs($verifier)->post($disposisiCetakUrl)->assertForbidden();
+
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $second]), [
+            'setuju' => '0',
+            'pesan' => 'Spesies tidak sesuai.',
+        ]);
+
+        // 1 disetujui + 1 ditolak = semua sudah diverifikasi.
+        $this->actingAs($verifier)->get($showUrl)->assertOk()
+            ->assertSee('verifikasi-disposisi-cetak-modal')
+            ->assertSee('Anda yakin akan mengirim data ke Divisi Cetak?');
+
+        // Tanpa permission tombol tidak tampil dan route ditolak middleware.
+        $this->actingAs($this->makeStaffVerifier())->get($showUrl)->assertOk()->assertDontSee('verifikasi-disposisi-cetak-modal');
+        $this->actingAs($this->makeStaffVerifier())->post($disposisiCetakUrl)->assertForbidden();
+
+        $this->actingAs($verifier)->post($disposisiCetakUrl)
+            ->assertRedirect($showUrl)
+            ->assertSessionHas('success', 'Permohonan berhasil dikirim ke Divisi Cetak.');
+
+        $permohonan->refresh();
+        $this->assertSame(PermohonanStatus::AntrianCetak, $permohonan->status);
+        $this->assertSame($verifier->id, $permohonan->disposisi_cetak_by);
+        $this->assertSame('2026-10-18 10:00:00', $permohonan->disposisi_cetak_at->format('Y-m-d H:i:s'));
+        Notification::assertSentTo($divisiCetak, AppNotification::class, fn (AppNotification $notification): bool => $notification->category === NotificationCategory::Permohonan);
+
+        // Sudah dikirim - tombol hilang dan tidak bisa dikirim ulang.
+        $this->actingAs($verifier)->get($showUrl)->assertOk()->assertDontSee('verifikasi-disposisi-cetak-modal');
+        $this->actingAs($verifier)->post($disposisiCetakUrl)->assertForbidden();
     }
 }

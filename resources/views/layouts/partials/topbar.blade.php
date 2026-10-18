@@ -154,10 +154,44 @@
 
 <x-notification-alert-modal />
 
+{{-- Wajib pilih Tahun Aktif bila localStorage "tahun_aktif" kosong - tidak bisa ditutup tanpa memilih. --}}
+<div aria-labelledby="active-year-modal-label"
+     class="hs-overlay [--overlay-backdrop:static] hidden size-full fixed top-0 start-0 z-95 overflow-x-hidden overflow-y-auto pointer-events-none"
+     data-hs-overlay-keyboard="false" id="active-year-modal" role="dialog" tabindex="-1">
+    <div
+        class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 md:w-sm m-3 mx-auto min-h-[calc(100%-56px)] flex items-center">
+        <div class="w-full flex flex-col card shadow-2xs border border-default-200 rounded-xl pointer-events-auto px-6 py-8">
+            <div class="text-center">
+                <div class="mx-auto size-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <i class="size-6 text-primary" data-lucide="calendar"></i>
+                </div>
+                <h5 class="mt-5 mb-1 text-lg font-semibold text-default-800" id="active-year-modal-label">
+                    {{ __('Pilih Tahun Aktif') }}
+                </h5>
+                <p class="text-default-500 text-sm">{{ __('Tahun Aktif belum dipilih. Silakan pilih tahun untuk melanjutkan.') }}</p>
+            </div>
+            <div class="mt-5">
+                <label class="sr-only" for="active-year-modal-select">{{ __('Tahun Aktif') }}</label>
+                <select class="form-input" id="active-year-modal-select">
+                    @foreach ($topbarYears as $year)
+                        <option value="{{ $year }}">{{ $year }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="mt-5 flex justify-center">
+                <button class="btn btn-sm bg-primary text-white" id="active-year-modal-save" type="button">
+                    {{ __('Simpan') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     (function() {
         var STORAGE_KEY = 'tahun_aktif';
         var options = document.querySelectorAll('.topbar-year-option');
+        var yearPage = document.querySelector('[data-active-year-page]');
 
         function highlightActiveYear(activeYear) {
             options.forEach(function(option) {
@@ -165,23 +199,58 @@
             });
         }
 
-        var activeYear = localStorage.getItem(STORAGE_KEY) || String(new Date().getFullYear());
-        highlightActiveYear(activeYear);
-        console.log('Tahun aktif:', activeYear);
+        function fillYearInputs(year) {
+            document.querySelectorAll('[data-active-year-input]').forEach(function(input) {
+                input.value = year;
+            });
+        }
+
+        // Halaman bertanda data-active-year-page memfilter datanya lewat query "?year=" (lihat
+        // Controller::activeYear), jadi URL harus selalu mengikuti Tahun Aktif.
+        function syncPageYear(year) {
+            if (!yearPage || new URLSearchParams(window.location.search).get('year') === year) {
+                return;
+            }
+
+            var url = new URL(window.location.href);
+            url.searchParams.set('year', year);
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        }
+
+        function setActiveYear(year) {
+            localStorage.setItem(STORAGE_KEY, year);
+            highlightActiveYear(year);
+            fillYearInputs(year);
+            window.dispatchEvent(new CustomEvent('active-year-changed', {
+                detail: {
+                    year: year
+                }
+            }));
+            syncPageYear(year);
+        }
+
+        var activeYear = localStorage.getItem(STORAGE_KEY);
+
+        if (activeYear) {
+            highlightActiveYear(activeYear);
+            fillYearInputs(activeYear);
+            syncPageYear(activeYear);
+        } else {
+            window.addEventListener('load', function() {
+                window.HSOverlay.open('#active-year-modal');
+            });
+        }
+
+        document.getElementById('active-year-modal-save').addEventListener('click', function() {
+            setActiveYear(document.getElementById('active-year-modal-select').value);
+            window.HSOverlay.close('#active-year-modal');
+        });
 
         options.forEach(function(option) {
             option.addEventListener('click', function(event) {
                 event.preventDefault();
-
-                var year = this.dataset.year;
-                localStorage.setItem(STORAGE_KEY, year);
-                highlightActiveYear(year);
-                console.log('Tahun aktif:', year);
-                window.dispatchEvent(new CustomEvent('active-year-changed', {
-                    detail: {
-                        year: year
-                    }
-                }));
+                setActiveYear(this.dataset.year);
             });
         });
     })();

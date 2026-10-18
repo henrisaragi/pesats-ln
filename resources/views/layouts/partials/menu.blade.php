@@ -81,8 +81,18 @@
                 [
                     'label' => __('Verifikasi Ekspor'),
                     'icon' => 'shield-check',
-                    'route' => 'permohonan-export.verifikasi.index',
-                    'permission' => 'permohonan.verify.view',
+                    'children' => [
+                        [
+                            'label' => __('Verifikasi Ekspor'),
+                            'route' => 'permohonan-export.verifikasi.index',
+                            'permission' => 'permohonan.verify.view',
+                        ],
+                        [
+                            'label' => __('Verifikasi Saya'),
+                            'route' => 'permohonan-export.verifikasi.mine',
+                            'permission' => 'permohonan-export.verify',
+                        ],
+                    ],
                 ],
                 [
                     'label' => __('Chat'),

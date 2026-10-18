@@ -51,6 +51,7 @@ class PermohonanVerifikasiController extends Controller
         $permohonan = Permohonan::query()
             ->with(['entitas', 'verifiedBy'])
             ->withCount('satsLn')
+            ->where('year', $this->activeYear($request))
             ->when($status !== null, fn ($query) => $query->where('status', $status))
             ->when(! $hasFilterAccess, fn ($query) => $query->whereRaw('1 = 0'))
             ->latest()
@@ -63,6 +64,26 @@ class PermohonanVerifikasiController extends Controller
             'allowedStatuses' => $allowedStatuses,
             'canFilterAll' => $canFilterAll,
             'hasFilterAccess' => $hasFilterAccess,
+        ]);
+    }
+
+    /**
+     * Daftar Permohonan yang minimal satu SATS-LN-nya diverifikasi oleh user yang sedang login.
+     */
+    public function mine(Request $request): View
+    {
+        $permohonan = Permohonan::query()
+            ->with(['entitas', 'verifiedBy'])
+            ->withCount('satsLn')
+            ->where('year', $this->activeYear($request))
+            ->whereHas('satsLn', fn ($query) => $query->where('verified_id', $request->user()->id))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('permohonan-export.verifikasi.index', [
+            'permohonan' => $permohonan,
+            'isMine' => true,
         ]);
     }
 
@@ -136,6 +157,13 @@ class PermohonanVerifikasiController extends Controller
         ]);
 
         return redirect()->route('permohonan-export.verifikasi.index')->with('success', __('Permohonan berhasil didisposisikan.'));
+    }
+
+    public function disposisiCetak(Request $request, Permohonan $permohonan): RedirectResponse
+    {
+        $this->permohonanService->disposisiCetak($permohonan, $request->user());
+
+        return redirect()->route('permohonan-export.verifikasi.show', $permohonan)->with('success', __('Permohonan berhasil dikirim ke Divisi Cetak.'));
     }
 
     public function verify(Permohonan $permohonan): RedirectResponse
@@ -223,7 +251,7 @@ class PermohonanVerifikasiController extends Controller
     public function markPrinted(Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
     {
         abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
-        abort_unless($permohonan->status === PermohonanStatus::DalamProsesVerifikasi || $permohonan->status === PermohonanStatus::DicetakSebagian || $permohonan->status === PermohonanStatus::DitandatanganiSebagian, 403);
+        abort_unless($permohonan->status === PermohonanStatus::DalamProsesVerifikasi || $permohonan->status === PermohonanStatus::AntrianCetak || $permohonan->status === PermohonanStatus::DicetakSebagian || $permohonan->status === PermohonanStatus::DitandatanganiSebagian, 403);
 
         $satsLn->update(['printed_at' => now(), 'printed_user_id' => Auth::id()]);
         $this->permohonanService->recomputeStatus($permohonan);
@@ -234,7 +262,7 @@ class PermohonanVerifikasiController extends Controller
     public function markSigned(Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
     {
         abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
-        abort_unless($permohonan->status === PermohonanStatus::DalamProsesVerifikasi || $permohonan->status === PermohonanStatus::DicetakSebagian || $permohonan->status === PermohonanStatus::DitandatanganiSebagian, 403);
+        abort_unless($permohonan->status === PermohonanStatus::DalamProsesVerifikasi || $permohonan->status === PermohonanStatus::AntrianCetak || $permohonan->status === PermohonanStatus::DicetakSebagian || $permohonan->status === PermohonanStatus::DitandatanganiSebagian, 403);
 
         $satsLn->update(['signed_at' => now(), 'issued_by_id' => Auth::id()]);
         $this->permohonanService->recomputeStatus($permohonan);

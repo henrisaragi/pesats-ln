@@ -3,7 +3,7 @@
 @section('content')
     @include('layouts.partials/page-title', ['subtitle' => __('Layanan Entitas'), 'title' => __('Permohonan SATS-LN Ekspor')])
 
-    <div class="card">
+    <div class="card" data-active-year-page>
         <div class="card-header">
             <h6 class="card-title">{{ __('Daftar Permohonan') }}</h6>
             @can('permohonan-export.create')
@@ -99,6 +99,7 @@
                     <form action="{{ route('permohonan-export.store') }}" method="POST">
                         @csrf
                         <input name="_modal" type="hidden" value="permohonan-create-modal">
+                        <input data-active-year-input name="year" type="hidden" value="{{ old('year') }}">
                         {{-- Sengaja tanpa overflow-y-auto/max-h: itu meng-clip dropdown Choices.js, lihat claude/permohonan-task.md. --}}
                         <div class="p-4">
                             <div class="flex flex-col gap-y-4">

@@ -25,6 +25,7 @@ class KuotaNasional extends Model
         'trade_code_id',
         'quota',
         'year',
+        'show_in_sats_ln',
     ];
 
     /**
@@ -35,6 +36,7 @@ class KuotaNasional extends Model
         return [
             'quota' => 'decimal:4',
             'year' => 'integer',
+            'show_in_sats_ln' => 'boolean',
         ];
     }
 

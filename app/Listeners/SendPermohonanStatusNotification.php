@@ -32,7 +32,7 @@ class SendPermohonanStatusNotification
 
         [$title, $message] = $this->content($event);
 
-        $url = $event->to === PermohonanStatus::AntrianVerifikasi
+        $url = in_array($event->to, [PermohonanStatus::AntrianVerifikasi, PermohonanStatus::AntrianCetak], true)
             ? route('permohonan-export.verifikasi.show', $permohonan)
             : route('permohonan-export.show', $permohonan);
 
@@ -47,7 +47,8 @@ class SendPermohonanStatusNotification
     }
 
     /**
-     * Status yang butuh aksi staff (AntrianVerifikasi) diberitahukan ke verifier; status lain
+     * Status yang butuh aksi staff diberitahukan ke staff terkait (AntrianVerifikasi ke verifier,
+     * AntrianCetak ke Divisi Cetak = pemegang permohonan-export.print); status lain
      * (termasuk Submitted dan progres cetak/tanda tangan) diberitahukan ke user milik entitas
      * pengaju - sama seperti pembagian notifyVerifiers()/notifySubmitter() sebelumnya.
      *
@@ -57,6 +58,10 @@ class SendPermohonanStatusNotification
     {
         if ($event->to === PermohonanStatus::AntrianVerifikasi) {
             return User::permission('permohonan-export.verify')->get();
+        }
+
+        if ($event->to === PermohonanStatus::AntrianCetak) {
+            return User::permission('permohonan-export.print')->get();
         }
 
         $event->permohonan->loadMissing('entitas.users');
@@ -95,6 +100,10 @@ class SendPermohonanStatusNotification
             PermohonanStatus::Ditolak => [
                 __('Permohonan Ditolak'),
                 __('Permohonan :nomor ditolak.', ['nomor' => $nomor]),
+            ],
+            PermohonanStatus::AntrianCetak => [
+                __('Permohonan Siap Dicetak'),
+                __('Permohonan :nomor telah dikirim ke Divisi Cetak.', ['nomor' => $nomor]),
             ],
             PermohonanStatus::DicetakSebagian => [
                 __('SATS-LN Dicetak'),

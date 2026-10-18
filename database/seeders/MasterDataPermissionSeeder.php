@@ -73,7 +73,7 @@ class MasterDataPermissionSeeder extends Seeder
      * Permohonan (SATS-LN Ekspor): self-service submit/manage own drafts (view/create/edit/delete)
      * plus view-all (cross-entity oversight, additive like documents.view-all/customer.view-all)
      * and verify for staff, reused for verify/reject and for marking individual SATS-LN tabs
-     * printed/signed. disposisi/print/update-status/siap-diambil/telah-diambil gate the dedicated
+     * printed/signed. disposisi/disposisi-cetak/print/update-status/siap-diambil/telah-diambil gate the dedicated
      * action buttons on the staff verifikasi detail page (permohonan-export/verifikasi/{id}) - not
      * auto-granted to any role below, assigned manually via the Roles/Permissions UI like verify.
      */
@@ -85,6 +85,7 @@ class MasterDataPermissionSeeder extends Seeder
         'permohonan-export.delete',
         'permohonan-export.verify',
         'permohonan-export.disposisi',
+        'permohonan-export.disposisi-cetak',
         'permohonan-export.print',
         'permohonan-export.update-status',
         'permohonan-export.siap-diambil',
