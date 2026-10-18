@@ -34,7 +34,7 @@
                 Surat Angkut Tumbuhan dan Satwa Liar <span class="italic normal-case">(Permit)</span>
             </p>
             @if ($satsLn->satsln_number_issued)
-                <p class="mt-1 text-lg font-semibold text-default-800">{{ $satsLn->satsln_number_issued }}</p>
+                <p class="mt-1 text-lg font-semibold text-default-800">{{ $satsLn->issuedNumberLabel() }}</p>
             @else
                 <p class="mt-1 inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning">
                     Nomor akan otomatis di-generate
@@ -198,12 +198,20 @@
             @endif
         </div>
 
-        {{-- IX: syarat khusus --}}
-        <div class="rounded-lg border border-default-200 bg-default-50 p-4 text-xs text-default-500">
-            <p class="font-medium text-default-600">Syarat khusus <span class="italic font-normal">(Special
-                    conditions)</span></p>
-            <p>Security Stamp No: SN-000001, Captive breed specimen no quota allocated</p>
-        </div>
+        {{-- IX: syarat khusus - disembunyikan kalau security stamp & special conditions sama-sama kosong --}}
+        @php
+            $syaratKhusus = collect([
+                $satsLn->security_stamp ? 'Security Stamp No: '.$satsLn->security_stamp : null,
+                $satsLn->special_conditions,
+            ])->filter()->implode(', ');
+        @endphp
+        @if ($syaratKhusus !== '')
+            <div class="rounded-lg border border-default-200 bg-default-50 p-4 text-xs text-default-500">
+                <p class="font-medium text-default-600">Syarat khusus <span class="italic font-normal">(Special
+                        conditions)</span></p>
+                <p class="whitespace-pre-line">{{ $syaratKhusus }}</p>
+            </div>
+        @endif
 
 
 

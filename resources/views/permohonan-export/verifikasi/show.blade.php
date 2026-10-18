@@ -6,10 +6,10 @@
     @php
         // Tombol aksi khusus verifikasi (Revisi 5) - tiap tombol punya permission sendiri dan untuk
         // sementara aksinya cuma buka modal placeholder (belum ada logika di baliknya). Dipakai
-        // untuk render tombol dan modal-nya sekaligus lewat 1 array supaya konsisten.
+        // untuk render tombol dan modal-nya sekaligus lewat 1 array supaya konsisten. Tombol
+        // Verifikasi tidak di sini: verifikasinya per SATS-LN, jadi ada di kartu SATS-LN terpilih.
         $verifikasiActions = [
             ['key' => 'disposisi', 'permission' => 'permohonan-export.disposisi', 'label' => __('Disposisi'), 'icon' => 'share-2', 'class' => 'bg-default-150 hover:bg-default-200'],
-            ['key' => 'verifikasi', 'permission' => 'permohonan-export.verify', 'label' => __('Verifikasi'), 'icon' => 'check', 'class' => 'bg-success text-white hover:bg-success/90'],
             ['key' => 'print', 'permission' => 'permohonan-export.print', 'label' => __('Print/Cetak'), 'icon' => 'printer', 'class' => 'bg-primary text-white hover:bg-primary/90'],
             ['key' => 'update-status', 'permission' => 'permohonan-export.update-status', 'label' => __('Update Status (Dalam Proses Penandatanganan)'), 'icon' => 'pen-line', 'class' => 'bg-default-150 hover:bg-default-200'],
             ['key' => 'siap-diambil', 'permission' => 'permohonan-export.siap-diambil', 'label' => __('Siap Diambil'), 'icon' => 'package-check', 'class' => 'bg-default-150 hover:bg-default-200'],
@@ -118,6 +118,27 @@
                         <h6 class="font-semibold text-sm text-default-700">
                             {{ __('SATS-LN Ke #:nomor', ['nomor' => $selectedSatsLn->nomor_urut]) }}
                         </h6>
+                        @php
+                            $canVerifySatsLn = in_array($permohonan->status, [\App\Enums\PermohonanStatus::AntrianVerifikasi, \App\Enums\PermohonanStatus::DalamProsesVerifikasi], true);
+                        @endphp
+                        <div class="flex items-center gap-2 flex-wrap">
+                        @can('permohonan-export.verify')
+                            @if ($selectedSatsLn->isVerified() && $canVerifySatsLn && $selectedSatsLn->canBeReopened())
+                                <button class="btn btn-sm border border-success/30 bg-success/10 text-success hover:bg-success/20" type="button"
+                                        data-hs-overlay="#satsln-reopen-modal">
+                                    <i class="size-4 me-1" data-lucide="badge-check"></i>{{ __('Terverifikasi') }}
+                                </button>
+                            @elseif ($selectedSatsLn->isVerified())
+                                <button class="btn btn-sm border border-success/30 bg-success/10 text-success" type="button" disabled>
+                                    <i class="size-4 me-1" data-lucide="badge-check"></i>{{ __('Terverifikasi') }}
+                                </button>
+                            @elseif ($canVerifySatsLn)
+                                <button class="btn btn-sm bg-success text-white hover:bg-success/90" type="button"
+                                        data-hs-overlay="#satsln-verify-modal">
+                                    <i class="size-4 me-1" data-lucide="check"></i>{{ __('Verifikasi') }}
+                                </button>
+                            @endif
+                        @endcan
                         @if ($firstSatsLnDocument)
                             <button class="btn btn-sm bg-primary text-white hover:bg-primary/90" type="button"
                                     data-hs-overlay="#satsln-document-view-modal"
@@ -129,6 +150,7 @@
                         @else
                             <span class="text-sm text-default-500">{{ __('Belum ada dokumen terlampir.') }}</span>
                         @endif
+                        </div>
                     </div>
                 </div>
                 <div class="card">
@@ -143,6 +165,23 @@
                     {{ __('Belum ada SATS-LN.') }}
                 </div>
             @endif
+
+            <div class="card mt-4 print:hidden">
+                <div class="card-body">
+                    <h6 class="mb-4 card-title">{{ __('Aktivitas') }}</h6>
+                    @forelse ($permohonan->activities as $activity)
+                        <div class="relative ps-6 pb-4 last:pb-0 border-s border-default-200 ms-1.5">
+                            <span class="absolute -start-1.5 top-1 size-3 rounded-full {{ $activity->sats_ln_id ? 'bg-primary' : 'bg-default-300' }}"></span>
+                            <p class="text-sm text-default-700 whitespace-pre-line">{{ $activity->messages }}</p>
+                            <p class="mt-0.5 text-xs text-default-500">
+                                {{ $activity->created_at?->translatedFormat('d M Y H:i') }}@if ($activity->user) &middot; {{ $activity->user->name }}@endif
+                            </p>
+                        </div>
+                    @empty
+                        <p class="text-sm text-default-500">{{ __('Belum ada aktivitas.') }}</p>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </div>
 
@@ -198,6 +237,221 @@
             </div>
         </div>
     @endcan
+
+    @if ($selectedSatsLn && ! $selectedSatsLn->isVerified() && $canVerifySatsLn)
+        @can('permohonan-export.verify')
+            @php
+                $isVerifyRedisplay = old('_modal') === 'satsln-verify-modal';
+                $requiresSecurityStamp = $selectedSatsLn->requiresSecurityStamp();
+                $verifyFieldError = fn (string $field): ?string => $isVerifyRedisplay ? $errors->first($field) ?: null : null;
+                $verifyOld = fn (string $field, mixed $default = null): mixed => $isVerifyRedisplay ? old($field, $default) : $default;
+                // Verifikasi ulang (sudah pernah terbit nomor): nilai awal diisi dari data SATS-LN sebelumnya.
+                $isReverification = $selectedSatsLn->satsln_number_issued !== null;
+                $previousMasaBerlaku = $selectedSatsLn->publish_date && $selectedSatsLn->valid_until
+                    ? \App\Enums\MasaBerlakuSatsLn::matching($selectedSatsLn->publish_date, $selectedSatsLn->valid_until)
+                    : null;
+                $defaultYear = $isReverification ? $selectedSatsLn->year : now()->year;
+                $selectedMasaBerlaku = $verifyOld('masa_berlaku', ($previousMasaBerlaku ?? \App\Enums\MasaBerlakuSatsLn::TigaBulan)->value);
+                $isAgreed = (string) $verifyOld('setuju', '1') === '1';
+            @endphp
+            <div aria-labelledby="satsln-verify-modal-label" id="satsln-verify-modal"
+                class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+                role="dialog" tabindex="-1">
+                <div
+                    class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                    <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                        <form action="{{ route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $selectedSatsLn]) }}"
+                              data-satsln-verify-form method="POST">
+                            @csrf
+                            <input name="_modal" type="hidden" value="satsln-verify-modal">
+                            {{-- Diisi dari localStorage "tahun_aktif" (Tahun Aktif saat login) oleh permohonan-show.js. --}}
+                            <input data-satsln-verify-year @if ($isReverification) data-satsln-verify-year-locked @endif name="year" type="hidden" value="{{ $verifyOld('year', $defaultYear) }}">
+                            <div class="card-header">
+                                <h3 class="font-bold text-default-800 text-base" id="satsln-verify-modal-label">
+                                    {{ __('Verifikasi SATS-LN Ke #:nomor', ['nomor' => $selectedSatsLn->nomor_urut]) }}
+                                </h3>
+                                <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                        data-hs-overlay="#satsln-verify-modal" type="button">
+                                    <span class="sr-only">{{ __('Tutup') }}</span>
+                                    <i class="size-5" data-lucide="x"></i>
+                                </button>
+                            </div>
+                            <div class="p-4 flex flex-col gap-4">
+                                <div>
+                                    <p class="mb-2 text-sm font-medium">{{ __('Apakah Anda setuju dengan SATS-LN ini?') }}</p>
+                                    <div class="flex items-center gap-6">
+                                        <label class="inline-flex items-center gap-2 text-sm">
+                                            <input class="form-radio" data-satsln-verify-agree name="setuju" type="radio" value="1" @checked($isAgreed)>
+                                            {{ __('Ya') }}
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 text-sm">
+                                            <input class="form-radio" data-satsln-verify-agree name="setuju" type="radio" value="0" @checked(! $isAgreed)>
+                                            {{ __('Tidak') }}
+                                        </label>
+                                    </div>
+                                    @if ($error = $verifyFieldError('setuju'))
+                                        <p class="mt-1 text-xs text-danger">{{ $error }}</p>
+                                    @endif
+                                </div>
+                                {{-- <fieldset disabled> ikut menonaktifkan semua input di dalamnya, jadi field grup yang
+                                     tersembunyi tidak ikut terkirim/divalidasi browser. Ditoggle oleh permohonan-show.js. --}}
+                                <fieldset class="{{ $isAgreed ? 'hidden' : '' }}" data-satsln-verify-group="0" @disabled($isAgreed)>
+                                    <label class="inline-block mb-2 text-sm font-medium" for="satsln-verify-pesan">
+                                        {{ __('Pesan untuk SATS-LN ini') }}
+                                    </label>
+                                    <textarea class="form-input" id="satsln-verify-pesan" maxlength="5000" name="pesan" required
+                                              rows="4">{{ $verifyOld('pesan') }}</textarea>
+                                    @if ($error = $verifyFieldError('pesan'))
+                                        <p class="mt-1 text-xs text-danger">{{ $error }}</p>
+                                    @endif
+                                </fieldset>
+                                <fieldset class="flex flex-col gap-4 {{ $isAgreed ? '' : 'hidden' }}" data-satsln-verify-group="1" @disabled(! $isAgreed)>
+                                <div>
+                                    <label class="inline-block mb-2 text-sm font-medium" for="satsln-verify-number">
+                                        {{ __('Nomor SATS-LN') }}
+                                    </label>
+                                    <div class="flex">
+                                        <span class="inline-flex items-center px-3 rounded-s-md border border-e-0 border-default-200 bg-default-100 text-sm text-default-600"
+                                              data-satsln-verify-year-prefix>{{ $verifyOld('year', $defaultYear) }}</span>
+                                        <input class="form-input rounded-s-none" id="satsln-verify-number" inputmode="numeric"
+                                               data-satsln-number-check="{{ route('permohonan-export.verifikasi.sats-ln.number-check', ['exclude' => $selectedSatsLn->public_id]) }}"
+                                               maxlength="5" name="satsln_number" pattern="\d{1,5}" placeholder="00001" required
+                                               type="text" value="{{ $verifyOld('satsln_number', $selectedSatsLn->issuedNumberWithoutPrefix()) }}"/>
+                                    </div>
+                                    <p class="mt-1 text-xs text-default-500">{{ __('Maksimal 5 angka, mis. 00001.') }}</p>
+                                    @php
+                                        $numberError = $verifyFieldError('satsln_number');
+                                    @endphp
+                                    <p class="mt-1 text-xs text-danger {{ $numberError ? '' : 'hidden' }}" data-satsln-number-error>{{ $numberError }}</p>
+                                </div>
+                                @if ($requiresSecurityStamp)
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium" for="satsln-verify-security-stamp">
+                                            {{ __('Security Stamp') }}
+                                        </label>
+                                        <input class="form-input" id="satsln-verify-security-stamp" maxlength="255"
+                                               name="security_stamp" required type="text"
+                                               value="{{ $verifyOld('security_stamp', $selectedSatsLn->security_stamp) }}"/>
+                                        @if ($error = $verifyFieldError('security_stamp'))
+                                            <p class="mt-1 text-xs text-danger">{{ $error }}</p>
+                                        @endif
+                                    </div>
+                                @endif
+                                <div>
+                                    <label class="inline-block mb-2 text-sm font-medium" for="satsln-verify-masa-berlaku">
+                                        {{ __('Interval Masa Berlaku') }}
+                                    </label>
+                                    <select class="form-input" data-satsln-verify-interval id="satsln-verify-masa-berlaku"
+                                            name="masa_berlaku" required>
+                                        @foreach (\App\Enums\MasaBerlakuSatsLn::cases() as $masaBerlaku)
+                                            <option value="{{ $masaBerlaku->value }}" @selected($selectedMasaBerlaku === $masaBerlaku->value)>
+                                                {{ $masaBerlaku->label() }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @if ($error = $verifyFieldError('masa_berlaku'))
+                                        <p class="mt-1 text-xs text-danger">{{ $error }}</p>
+                                    @endif
+                                </div>
+                                <div class="grid sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium" for="satsln-verify-publish-date">
+                                            {{ __('Tanggal Terbit') }}
+                                        </label>
+                                        <input class="form-input" data-satsln-verify-publish-date id="satsln-verify-publish-date"
+                                               max="{{ today()->format('Y-m-d') }}" name="publish_date" required type="date"
+                                               value="{{ $verifyOld('publish_date', $selectedSatsLn->publish_date?->format('Y-m-d') ?? today()->format('Y-m-d')) }}"/>
+                                        @if ($error = $verifyFieldError('publish_date'))
+                                            <p class="mt-1 text-xs text-danger">{{ $error }}</p>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium" for="satsln-verify-valid-until">
+                                            {{ __('Tanggal Berakhir') }}
+                                        </label>
+                                        {{-- Hanya pratinjau: valid_until dihitung ulang di server dari tanggal terbit + interval. --}}
+                                        <input class="form-input bg-default-100" data-satsln-verify-valid-until
+                                               id="satsln-verify-valid-until" readonly type="date"/>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="inline-block mb-2 text-sm font-medium" for="satsln-verify-special-conditions">
+                                        {{ __('Syarat Khusus') }} <span class="text-default-400">({{ __('opsional') }})</span>
+                                    </label>
+                                    <textarea class="form-input" id="satsln-verify-special-conditions" maxlength="5000"
+                                              name="special_conditions" rows="3">{{ $verifyOld('special_conditions', $selectedSatsLn->special_conditions) }}</textarea>
+                                    @if ($error = $verifyFieldError('special_conditions'))
+                                        <p class="mt-1 text-xs text-danger">{{ $error }}</p>
+                                    @endif
+                                </div>
+                                </fieldset>
+                            </div>
+                            <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
+                                <button class="btn bg-default-150" data-hs-overlay="#satsln-verify-modal" type="button">
+                                    {{ __('Batal') }}
+                                </button>
+                                <button class="btn bg-success text-white hover:bg-success/90" type="submit">
+                                    {{ __('Simpan') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endcan
+    @endif
+
+    @if ($selectedSatsLn && $selectedSatsLn->isVerified() && $canVerifySatsLn && $selectedSatsLn->canBeReopened())
+        @can('permohonan-export.verify')
+            @php
+                $isReopenRedisplay = old('_modal') === 'satsln-reopen-modal';
+            @endphp
+            <div aria-labelledby="satsln-reopen-modal-label" id="satsln-reopen-modal"
+                class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+                role="dialog" tabindex="-1">
+                <div
+                    class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                    <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                        <form action="{{ route('permohonan-export.verifikasi.sats-ln.reopen', [$permohonan, $selectedSatsLn]) }}" method="POST">
+                            @csrf
+                            <input name="_modal" type="hidden" value="satsln-reopen-modal">
+                            <div class="card-header">
+                                <h3 class="font-bold text-default-800 text-base" id="satsln-reopen-modal-label">
+                                    {{ __('Ubah Verifikasi SATS-LN Ke #:nomor', ['nomor' => $selectedSatsLn->nomor_urut]) }}
+                                </h3>
+                                <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                        data-hs-overlay="#satsln-reopen-modal" type="button">
+                                    <span class="sr-only">{{ __('Tutup') }}</span>
+                                    <i class="size-5" data-lucide="x"></i>
+                                </button>
+                            </div>
+                            <div class="p-4">
+                                <p class="mb-3 text-sm text-default-500">
+                                    {{ __('Setelah disimpan, tombol Verifikasi aktif kembali untuk mengubah data SATS-LN ini.') }}
+                                </p>
+                                <label class="inline-block mb-2 text-sm font-medium" for="satsln-reopen-pesan">
+                                    {{ __('Pesan') }}
+                                </label>
+                                <textarea class="form-input" id="satsln-reopen-pesan" maxlength="5000" name="pesan" required
+                                          rows="4">{{ $isReopenRedisplay ? old('pesan') : '' }}</textarea>
+                                @if ($isReopenRedisplay && $errors->has('pesan'))
+                                    <p class="mt-1 text-xs text-danger">{{ $errors->first('pesan') }}</p>
+                                @endif
+                            </div>
+                            <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
+                                <button class="btn bg-default-150" data-hs-overlay="#satsln-reopen-modal" type="button">
+                                    {{ __('Batal') }}
+                                </button>
+                                <button class="btn bg-primary text-white hover:bg-primary/90" type="submit">
+                                    {{ __('Simpan') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endcan
+    @endif
 
     @foreach ($verifikasiActions as $action)
         @continue($action['key'] === 'disposisi')

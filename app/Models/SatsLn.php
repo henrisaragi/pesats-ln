@@ -39,6 +39,7 @@ class SatsLn extends Model
         'printed_at',
         'signed_at',
         'special_conditions',
+        'security_stamp',
         'satsln_issued_type',
         'satsln_number_issued',
         'year',
@@ -54,6 +55,67 @@ class SatsLn extends Model
             'year' => 'integer',
             'nomor_urut' => 'integer',
         ];
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->verified_id !== null;
+    }
+
+    /**
+     * Verifikasi boleh dibuka ulang (untuk mengubah data) selama SATS-LN belum dicetak.
+     */
+    public function canBeReopened(): bool
+    {
+        return $this->isVerified() && $this->printed_at === null;
+    }
+
+    /**
+     * Security Stamp wajib (dan baru ditampilkan) kalau ada spesies Appendix I/II/III di SATS-LN
+     * ini - spesies Non Appendix tidak memakai stamp. Butuh relasi items.species.
+     */
+    public function requiresSecurityStamp(): bool
+    {
+        return $this->items->contains(
+            fn (SatsLnItem $item): bool => $item->species !== null && $item->species->trade_status !== 'Non Appendix'
+        );
+    }
+
+    /**
+     * Nomor tersimpan = 2 digit terakhir Tahun Aktif + 5 digit nomor, mis. 2026 + "1" => "2600001".
+     */
+    public static function composeIssuedNumber(int $year, string $number): string
+    {
+        return substr((string) $year, -2).str_pad($number, 5, '0', STR_PAD_LEFT);
+    }
+
+    public static function issuedNumberExists(string $satslnNumberIssued, ?int $exceptSatsLnId = null): bool
+    {
+        return self::withTrashed()
+            ->where('satsln_number_issued', $satslnNumberIssued)
+            ->when($exceptSatsLnId !== null, fn ($query) => $query->whereKeyNot($exceptSatsLnId))
+            ->exists();
+    }
+
+    /**
+     * 5 digit nomor tanpa prefix tahun, mis. "2600001" => "00001" (untuk mengisi ulang modal).
+     */
+    public function issuedNumberWithoutPrefix(): ?string
+    {
+        return $this->satsln_number_issued === null ? null : substr($this->satsln_number_issued, 2);
+    }
+
+    /**
+     * Nomor tampil SATS-LN, mis. "00001/IV/SATS-LN/2026" - satsln_number_issued tersimpan dengan
+     * prefix 2 digit tahun ("2600001"), prefix itu dibuang di sini.
+     */
+    public function issuedNumberLabel(): ?string
+    {
+        if ($this->satsln_number_issued === null) {
+            return null;
+        }
+
+        return substr($this->satsln_number_issued, 2).'/IV/SATS-LN/'.$this->year;
     }
 
     public function permohonan(): BelongsTo
@@ -114,6 +176,11 @@ class SatsLn extends Model
     public function items(): HasMany
     {
         return $this->hasMany(SatsLnItem::class);
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(ActivitySatsLn::class);
     }
 
     public function documents(): BelongsToMany

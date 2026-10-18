@@ -64,6 +64,11 @@ class Permohonan extends Model
         return $this->hasMany(SatsLn::class);
     }
 
+    public function activities(): HasMany
+    {
+        return $this->hasMany(ActivitySatsLn::class);
+    }
+
     public function hasReachedMaxSatsLn(): bool
     {
         return $this->satsLn()->count() >= self::MAX_SATS_LN;

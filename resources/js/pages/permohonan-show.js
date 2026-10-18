@@ -235,3 +235,150 @@ document.addEventListener('submit', function (event) {
             submitButton?.removeAttribute('disabled');
         });
 });
+
+// Modal Verifikasi SATS-LN (lihat claude/verifikasi-satsln.md):
+// - prefix nomor & field "year" diambil dari Tahun Aktif (localStorage "tahun_aktif", diset saat
+//   login/topbar), mis. 2026 => nomor 00001 tersimpan sebagai 2600001.
+// - Tanggal Berakhir cuma pratinjau dari Tanggal Terbit + interval; nilai finalnya dihitung ulang
+//   di server lewat App\Enums\MasaBerlakuSatsLn::validUntil() dengan aturan yang sama.
+function parseIsoDate(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+
+    return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : null;
+}
+
+function formatIsoDate(date) {
+    const pad = (number) => String(number).padStart(2, '0');
+
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function addMonthsNoOverflow(date, months) {
+    const target = new Date(date.getFullYear(), date.getMonth() + months, 1);
+    const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    target.setDate(Math.min(date.getDate(), lastDay));
+
+    return target;
+}
+
+function satsLnValidUntil(publishDate, interval) {
+    switch (interval) {
+        case '3_bulan':
+            return addMonthsNoOverflow(publishDate, 3);
+        case '6_bulan':
+            return addMonthsNoOverflow(publishDate, 6);
+        case 'full_date':
+            return new Date(publishDate.getFullYear() + 1, 2, 31);
+        default:
+            return null;
+    }
+}
+
+function syncSatsLnValidUntil(form) {
+    const publishDate = parseIsoDate(form.querySelector('[data-satsln-verify-publish-date]')?.value);
+    const interval = form.querySelector('[data-satsln-verify-interval]')?.value;
+    const validUntil = publishDate ? satsLnValidUntil(publishDate, interval) : null;
+    const output = form.querySelector('[data-satsln-verify-valid-until]');
+
+    if (output) {
+        output.value = validUntil ? formatIsoDate(validUntil) : '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-satsln-verify-form]').forEach((form) => {
+        const activeYear = localStorage.getItem('tahun_aktif');
+        const yearInput = form.querySelector('[data-satsln-verify-year]');
+        const prefix = form.querySelector('[data-satsln-verify-year-prefix]');
+
+        // Verifikasi ulang: nomor sudah terikat tahun terbitnya, jadi Tahun Aktif tidak menimpanya.
+        if (activeYear && /^\d{4}$/.test(activeYear) && yearInput && !yearInput.hasAttribute('data-satsln-verify-year-locked')) {
+            yearInput.value = activeYear;
+
+            // Tampil 4 digit (2026); yang tersimpan tetap prefix 2 digit (26) - lihat SatsLn::composeIssuedNumber().
+            if (prefix) {
+                prefix.textContent = activeYear;
+            }
+        }
+
+        syncSatsLnValidUntil(form);
+        setupSatsLnNumberCheck(form);
+    });
+});
+
+// Ya => tampilkan semua field verifikasi; Tidak => hanya Pesan. Grup yang disembunyikan di-disable
+// lewat <fieldset> supaya input-nya tidak ikut terkirim maupun memblok submit (atribut required).
+document.addEventListener('change', function (event) {
+    const radio = event.target.closest('[data-satsln-verify-agree]');
+
+    if (!radio) {
+        return;
+    }
+
+    radio.closest('[data-satsln-verify-form]').querySelectorAll('[data-satsln-verify-group]').forEach((group) => {
+        const active = group.dataset.satslnVerifyGroup === radio.value;
+        group.disabled = !active;
+        group.classList.toggle('hidden', !active);
+    });
+});
+
+// Cek live Nomor SATS-LN (pola sama dengan cek username di users-index.js) - validasi final tetap
+// di server (VerifySatsLnRequest).
+function setupSatsLnNumberCheck(form) {
+    const input = form.querySelector('[data-satsln-number-check]');
+    const errorEl = form.querySelector('[data-satsln-number-error]');
+    const yearInput = form.querySelector('[data-satsln-verify-year]');
+
+    if (!input || !errorEl) {
+        return;
+    }
+
+    const showError = (message) => {
+        errorEl.textContent = message || '';
+        errorEl.classList.toggle('hidden', !message);
+    };
+
+    let timer;
+    let latestRequest = 0;
+
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(async () => {
+            const number = input.value.trim();
+
+            if (!/^\d{1,5}$/.test(number)) {
+                showError(null);
+
+                return;
+            }
+
+            const requestId = ++latestRequest;
+            const url = new URL(input.dataset.satslnNumberCheck, window.location.origin);
+            url.searchParams.set('number', number);
+            url.searchParams.set('year', yearInput?.value || '');
+
+            try {
+                const response = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+                });
+                const result = await response.json();
+
+                if (requestId === latestRequest) {
+                    showError(result.available ? null : result.message);
+                }
+            } catch {
+                // Gangguan jaringan - pengecekan server saat submit tetap jadi acuan.
+            }
+        }, 400);
+    });
+}
+
+['change', 'input'].forEach((eventName) => {
+    document.addEventListener(eventName, function (event) {
+        if (!event.target.matches('[data-satsln-verify-publish-date], [data-satsln-verify-interval]')) {
+            return;
+        }
+
+        syncSatsLnValidUntil(event.target.closest('[data-satsln-verify-form]'));
+    });
+});

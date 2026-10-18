@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\PermohonanExport;
 
+use App\Enums\MasaBerlakuSatsLn;
 use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PermohonanExport\DisposisiRequest;
+use App\Http\Requests\PermohonanExport\ReopenSatsLnRequest;
+use App\Http\Requests\PermohonanExport\VerifySatsLnRequest;
 use App\Models\Document;
 use App\Models\Permohonan;
 use App\Models\SatsLn;
 use App\Models\User;
 use App\Services\PermohonanService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -83,6 +87,8 @@ class PermohonanVerifikasiController extends Controller
             'satsLn.items.kuotaPerusahaan.kuotaNasional.tradeCode',
             'satsLn.items.kuotaPerusahaan.kuotaNasional.source',
             'satsLn.documents',
+            'activities' => fn ($query) => $query->latest('id'),
+            'activities.user',
         ]);
 
         $selectedSatsLn = $satsLn ?? $permohonan->satsLn->last();
@@ -142,6 +148,63 @@ class PermohonanVerifikasiController extends Controller
         ]);
 
         return redirect()->route('permohonan-export.verifikasi.index')->with('success', __('Permohonan berhasil diverifikasi.'));
+    }
+
+    public function verifySatsLn(VerifySatsLnRequest $request, Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
+    {
+        if (! $request->isAgreed()) {
+            $this->permohonanService->disagreeSatsLn($permohonan, $satsLn, $request->validated('pesan'), $request->user());
+
+            return redirect()->route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn])
+                ->with('success', __('Pesan untuk SATS-LN berhasil disimpan.'));
+        }
+
+        $satsLn->loadMissing('items.species');
+
+        $this->permohonanService->verifySatsLn($permohonan, $satsLn, [
+            'satsln_number_issued' => $request->satslnNumberIssued(),
+            'year' => $request->integer('year'),
+            'security_stamp' => $satsLn->requiresSecurityStamp() ? $request->validated('security_stamp') : null,
+            'masa_berlaku' => MasaBerlakuSatsLn::from($request->validated('masa_berlaku')),
+            'publish_date' => $request->validated('publish_date'),
+            'special_conditions' => $request->validated('special_conditions'),
+        ], $request->user());
+
+        return redirect()->route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn])
+            ->with('success', __('SATS-LN berhasil diverifikasi.'));
+    }
+
+    public function reopenSatsLn(ReopenSatsLnRequest $request, Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
+    {
+        $this->permohonanService->reopenSatsLn($permohonan, $satsLn, $request->validated('pesan'), $request->user());
+
+        return redirect()->route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn])
+            ->with('success', __('Verifikasi SATS-LN dibuka kembali. Silakan ubah data lewat tombol Verifikasi.'));
+    }
+
+    /**
+     * Cek nomor SATS-LN secara live dari modal Verifikasi (validasi final tetap di VerifySatsLnRequest).
+     */
+    public function checkSatsLnNumber(Request $request): JsonResponse
+    {
+        $number = $request->string('number')->toString();
+        $year = $request->integer('year');
+
+        if (! preg_match('/^\d{1,5}$/', $number) || $year < 2000 || $year > 2099) {
+            return response()->json(['available' => true]);
+        }
+
+        // exclude = public_id SATS-LN yang sedang diverifikasi ulang, supaya nomornya sendiri tidak dianggap bentrok.
+        $exceptSatsLnId = $request->filled('exclude')
+            ? SatsLn::query()->where('public_id', $request->string('exclude')->toString())->value('id')
+            : null;
+
+        $exists = SatsLn::issuedNumberExists(SatsLn::composeIssuedNumber($year, $number), $exceptSatsLnId);
+
+        return response()->json([
+            'available' => ! $exists,
+            'message' => $exists ? __('Nomor telah digunakan.') : null,
+        ]);
     }
 
     public function reject(Request $request, Permohonan $permohonan): RedirectResponse

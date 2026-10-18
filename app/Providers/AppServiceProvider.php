@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Events\PermohonanStatusChanged;
+use App\Listeners\RecordPermohonanStatusActivity;
 use App\Listeners\SendPermohonanStatusNotification;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -23,5 +24,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(PermohonanStatusChanged::class, SendPermohonanStatusNotification::class);
+        Event::listen(PermohonanStatusChanged::class, RecordPermohonanStatusActivity::class);
     }
 }

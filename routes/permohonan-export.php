@@ -25,12 +25,15 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
         // detail), terpisah dari permohonan.verify.view (index) dan permohonan-export.verify
         // (khusus aksi tombol Verifikasi) - supaya akses lihat daftar, lihat detail, dan
         // melakukan aksi verifikasi bisa diatur independen satu sama lain.
+        Route::get('sats-ln-number-check', [PermohonanVerifikasiController::class, 'checkSatsLnNumber'])->middleware('permission:permohonan-export.verify')->name('sats-ln.number-check');
         Route::get('{permohonan}', [PermohonanVerifikasiController::class, 'show'])->middleware('permission:permohonan.verify-detail')->name('show');
         Route::get('{permohonan}/sats-ln/{satsLn}', [PermohonanVerifikasiController::class, 'show'])->middleware('permission:permohonan.verify-detail')->name('sats-ln.show');
         Route::get('{permohonan}/sats-ln/{satsLn}/documents/{document}/preview', [PermohonanVerifikasiController::class, 'previewDocument'])->middleware('permission:permohonan.verify-detail')->name('sats-ln.documents.preview');
         Route::get('{permohonan}/sats-ln/{satsLn}/documents/{document}/download', [PermohonanVerifikasiController::class, 'downloadDocument'])->middleware('permission:permohonan.verify-detail')->name('sats-ln.documents.download');
         Route::post('{permohonan}/disposisi', [PermohonanVerifikasiController::class, 'disposisi'])->middleware('permission:permohonan-export.disposisi')->name('disposisi');
         Route::post('{permohonan}/verify', [PermohonanVerifikasiController::class, 'verify'])->middleware('permission:permohonan-export.verify')->name('verify');
+        Route::post('{permohonan}/sats-ln/{satsLn}/verify', [PermohonanVerifikasiController::class, 'verifySatsLn'])->middleware('permission:permohonan-export.verify')->name('sats-ln.verify');
+        Route::post('{permohonan}/sats-ln/{satsLn}/reopen', [PermohonanVerifikasiController::class, 'reopenSatsLn'])->middleware('permission:permohonan-export.verify')->name('sats-ln.reopen');
         Route::post('{permohonan}/reject', [PermohonanVerifikasiController::class, 'reject'])->middleware('permission:permohonan-export.verify')->name('reject');
         Route::post('{permohonan}/sats-ln/{satsLn}/mark-printed', [PermohonanVerifikasiController::class, 'markPrinted'])->middleware('permission:permohonan-export.verify')->name('mark-printed');
         Route::post('{permohonan}/sats-ln/{satsLn}/mark-signed', [PermohonanVerifikasiController::class, 'markSigned'])->middleware('permission:permohonan-export.verify')->name('mark-signed');

@@ -1940,4 +1940,255 @@ class PermohonanExportTest extends TestCase
             ->assertNotFound();
         $this->actingAs($this->makeStaffUser('permohonan.verify.view'))->get($previewUrl)->assertForbidden();
     }
+
+    /**
+     * Permohonan di Antrian Verifikasi dengan 1 SATS-LN berisi 1 spesies Appendix II (dari
+     * makeKuotaPerusahaan()) - prasyarat modal Verifikasi per SATS-LN.
+     *
+     * @return array{0: Permohonan, 1: SatsLn}
+     */
+    private function makeAntrianVerifikasiSatsLn(): array
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+
+        $this->createPermohonan($user);
+        $permohonan = Permohonan::latest('id')->firstOrFail();
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.store', $permohonan), $this->satsLnPayload($kuotaPerusahaan, 10));
+        $this->actingAs($user)->post(route('permohonan-export.submit', $permohonan));
+
+        return [$permohonan->refresh(), $permohonan->satsLn()->firstOrFail()];
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function verifySatsLnPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'setuju' => '1',
+            'satsln_number' => '1',
+            'year' => 2026,
+            'security_stamp' => 'SN-000001',
+            'masa_berlaku' => '3_bulan',
+            'publish_date' => '2026-10-18',
+            'special_conditions' => 'Captive breed specimen',
+        ], $overrides);
+    }
+
+    public function test_verifikasi_sats_ln_issues_number_dates_and_moves_permohonan_to_dalam_proses_verifikasi(): void
+    {
+        $this->travelTo('2026-10-18 10:00:00');
+        [$permohonan, $satsLn] = $this->makeAntrianVerifikasiSatsLn();
+        $verifier = $this->makeStaffVerifier();
+
+        $this->actingAs($verifier)
+            ->post(route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $satsLn]), $this->verifySatsLnPayload())
+            ->assertRedirect(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertSessionHasNoErrors();
+
+        $satsLn->refresh();
+        $this->assertSame('2600001', $satsLn->satsln_number_issued);
+        $this->assertSame('2026-10-18', $satsLn->publish_date->format('Y-m-d'));
+        $this->assertSame('2027-01-18', $satsLn->valid_until->format('Y-m-d'));
+        $this->assertSame($verifier->id, $satsLn->verified_id);
+        $this->assertSame('SN-000001', $satsLn->security_stamp);
+        $this->assertSame(PermohonanStatus::DalamProsesVerifikasi, $permohonan->refresh()->status);
+        $this->assertDatabaseHas('activity_satsln', [
+            'permohonan_id' => $permohonan->id,
+            'sats_ln_id' => $satsLn->id,
+            'user_id' => $verifier->id,
+            'messages' => 'SATS-LN Ke #1 disetujui dan diverifikasi dengan nomor 00001/IV/SATS-LN/2026.',
+        ]);
+        $this->assertDatabaseHas('activity_satsln', [
+            'permohonan_id' => $permohonan->id,
+            'sats_ln_id' => null,
+            'messages' => 'Status permohonan berubah dari Antrian Verifikasi menjadi Dalam Proses Verifikasi.',
+        ]);
+
+        $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertOk()
+            ->assertSee('SATS-LN Ke #1 disetujui dan diverifikasi')
+            ->assertSee(__('Terverifikasi'))
+            ->assertSee('00001/IV/SATS-LN/2026')
+            ->assertSee('Security Stamp No: SN-000001, Captive breed specimen')
+            ->assertDontSee('satsln-verify-modal');
+
+        // Sudah terverifikasi - nomor tidak boleh ditimpa.
+        $this->actingAs($verifier)
+            ->post(route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $satsLn]), $this->verifySatsLnPayload(['satsln_number' => '2']))
+            ->assertForbidden();
+    }
+
+    public function test_verifikasi_sats_ln_full_date_interval_ends_on_31_march_of_following_year(): void
+    {
+        $this->travelTo('2027-02-10 10:00:00');
+        [$permohonan, $satsLn] = $this->makeAntrianVerifikasiSatsLn();
+
+        $this->actingAs($this->makeStaffVerifier())
+            ->post(route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $satsLn]), $this->verifySatsLnPayload([
+                'year' => 2027,
+                'masa_berlaku' => 'full_date',
+                'publish_date' => '2027-01-05',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $satsLn->refresh();
+        $this->assertSame('2700001', $satsLn->satsln_number_issued);
+        $this->assertSame('2028-03-31', $satsLn->valid_until->format('Y-m-d'));
+    }
+
+    public function test_verifikasi_sats_ln_rejects_invalid_input(): void
+    {
+        $this->travelTo('2026-10-18 10:00:00');
+        [$permohonan, $satsLn] = $this->makeAntrianVerifikasiSatsLn();
+        [$otherPermohonan, $otherSatsLn] = $this->makeAntrianVerifikasiSatsLn();
+        $otherSatsLn->update(['satsln_number_issued' => '2600007']);
+        $verifier = $this->makeStaffVerifier();
+        $url = route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $satsLn]);
+
+        $this->actingAs($verifier)->post($url, $this->verifySatsLnPayload([
+            'satsln_number' => '123456',
+            'publish_date' => '2026-10-19',
+            'security_stamp' => '',
+        ]))->assertSessionHasErrors(['satsln_number', 'publish_date', 'security_stamp']);
+
+        $this->actingAs($verifier)->post($url, $this->verifySatsLnPayload(['satsln_number' => '00007']))
+            ->assertSessionHasErrors(['satsln_number' => __('Nomor telah digunakan.')]);
+
+        $this->assertNull($satsLn->refresh()->verified_id);
+        $this->assertSame(PermohonanStatus::AntrianVerifikasi, $permohonan->refresh()->status);
+
+        $this->actingAs($verifier)
+            ->post(route('permohonan-export.verifikasi.sats-ln.verify', [$otherPermohonan, $satsLn]), $this->verifySatsLnPayload())
+            ->assertNotFound();
+    }
+
+    public function test_verifikasi_sats_ln_non_appendix_ignores_security_stamp_and_hides_empty_syarat_khusus(): void
+    {
+        $this->travelTo('2026-10-18 10:00:00');
+        [$permohonan, $satsLn] = $this->makeAntrianVerifikasiSatsLn();
+        $satsLn->items()->firstOrFail()->species->update(['trade_status' => 'Non Appendix']);
+        $verifier = $this->makeStaffVerifier();
+
+        $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertOk()
+            ->assertSee('satsln-verify-modal')
+            ->assertDontSee('name="security_stamp"', false);
+
+        $this->actingAs($verifier)
+            ->post(route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $satsLn]), $this->verifySatsLnPayload([
+                'security_stamp' => 'SHOULD-BE-IGNORED',
+                'special_conditions' => null,
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertNull($satsLn->refresh()->security_stamp);
+
+        $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertOk()
+            ->assertDontSee('Special');
+    }
+
+    public function test_verifikasi_sats_ln_tidak_setuju_only_records_pesan_activity(): void
+    {
+        [$permohonan, $satsLn] = $this->makeAntrianVerifikasiSatsLn();
+        $verifier = $this->makeStaffVerifier();
+        $url = route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $satsLn]);
+
+        $this->actingAs($verifier)->post($url, ['setuju' => '0', 'pesan' => ''])
+            ->assertSessionHasErrors('pesan');
+
+        // Field verifikasi lain diabaikan saat tidak setuju.
+        $this->actingAs($verifier)->post($url, ['setuju' => '0', 'pesan' => 'Lampiran CITES belum sesuai.', 'satsln_number' => 'abc'])
+            ->assertRedirect(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertSessionHasNoErrors();
+
+        $satsLn->refresh();
+        $this->assertNull($satsLn->verified_id);
+        $this->assertNull($satsLn->satsln_number_issued);
+        $this->assertSame(PermohonanStatus::AntrianVerifikasi, $permohonan->refresh()->status);
+        $this->assertDatabaseHas('activity_satsln', [
+            'permohonan_id' => $permohonan->id,
+            'sats_ln_id' => $satsLn->id,
+            'user_id' => $verifier->id,
+            'messages' => 'SATS-LN Ke #1 tidak disetujui: Lampiran CITES belum sesuai.',
+        ]);
+    }
+
+    public function test_sats_ln_number_check_reports_taken_numbers_for_active_year(): void
+    {
+        [, $satsLn] = $this->makeAntrianVerifikasiSatsLn();
+        $satsLn->update(['satsln_number_issued' => '2600007']);
+        $url = route('permohonan-export.verifikasi.sats-ln.number-check');
+        $verifier = $this->makeStaffVerifier();
+
+        $this->actingAs($verifier)->getJson($url.'?number=00007&year=2026')
+            ->assertOk()
+            ->assertExactJson(['available' => false, 'message' => __('Nomor telah digunakan.')]);
+        $this->actingAs($verifier)->getJson($url.'?number=7&year=2027')
+            ->assertOk()
+            ->assertJson(['available' => true]);
+
+        $this->actingAs($this->makeStaffUser('permohonan.verify-detail'))->getJson($url.'?number=7&year=2026')
+            ->assertForbidden();
+    }
+
+    public function test_verifikasi_sats_ln_can_be_reopened_and_reverified_with_change_log(): void
+    {
+        $this->travelTo('2026-10-18 10:00:00');
+        [$permohonan, $satsLn] = $this->makeAntrianVerifikasiSatsLn();
+        $verifier = $this->makeStaffVerifier();
+        $verifyUrl = route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $satsLn]);
+        $reopenUrl = route('permohonan-export.verifikasi.sats-ln.reopen', [$permohonan, $satsLn]);
+
+        // Belum terverifikasi - belum bisa dibuka ulang.
+        $this->actingAs($verifier)->post($reopenUrl, ['pesan' => 'Ubah'])->assertForbidden();
+
+        $this->actingAs($verifier)->post($verifyUrl, $this->verifySatsLnPayload(['special_conditions' => null]));
+
+        $this->actingAs($verifier)->post($reopenUrl, ['pesan' => ''])->assertSessionHasErrors('pesan');
+        $this->actingAs($verifier)->post($reopenUrl, ['pesan' => 'Salah tanggal terbit.'])
+            ->assertRedirect(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]));
+
+        $satsLn->refresh();
+        $this->assertFalse($satsLn->isVerified());
+        $this->assertSame('2600001', $satsLn->satsln_number_issued);
+        $this->assertSame(PermohonanStatus::DalamProsesVerifikasi, $permohonan->refresh()->status);
+        $this->assertDatabaseHas('activity_satsln', [
+            'sats_ln_id' => $satsLn->id,
+            'messages' => 'Verifikasi SATS-LN Ke #1 dibuka kembali untuk diubah: Salah tanggal terbit.',
+        ]);
+
+        // Modal Verifikasi terisi nilai lama (nomor sendiri tidak dianggap bentrok).
+        $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertOk()
+            ->assertSee('value="00001"', false)
+            ->assertSee('value="SN-000001"', false)
+            ->assertSee('value="2026-10-18"', false);
+
+        $this->actingAs($verifier)->post($verifyUrl, $this->verifySatsLnPayload([
+            'publish_date' => '2026-10-01',
+            'special_conditions' => null,
+        ]))->assertSessionHasNoErrors();
+
+        $satsLn->refresh();
+        $this->assertTrue($satsLn->isVerified());
+        $this->assertSame(2026, $satsLn->year);
+        $this->assertSame(PermohonanStatus::DalamProsesVerifikasi, $permohonan->refresh()->status);
+        $this->assertSame('2026-10-01', $satsLn->publish_date->format('Y-m-d'));
+        $this->assertDatabaseHas('activity_satsln', [
+            'sats_ln_id' => $satsLn->id,
+            'messages' => "SATS-LN Ke #1 diverifikasi ulang. Perubahan:\n- Tanggal Terbit: 18/10/2026 → 01/10/2026\n- Tanggal Berakhir: 18/01/2027 → 01/01/2027",
+        ]);
+
+        // Setelah dicetak, verifikasi tidak bisa dibuka ulang lagi.
+        $satsLn->update(['printed_at' => now()]);
+        $this->actingAs($verifier)->post($reopenUrl, ['pesan' => 'Ubah lagi'])->assertForbidden();
+    }
 }

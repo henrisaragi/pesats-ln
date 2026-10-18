@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\MasaBerlakuSatsLn;
 use App\Enums\PermohonanStatus;
 use App\Events\PermohonanStatusChanged;
 use App\Models\Entitas\Entitas;
@@ -11,12 +12,17 @@ use App\Models\Komoditas;
 use App\Models\KuotaNasional;
 use App\Models\KuotaPerusahaan;
 use App\Models\Permohonan;
+use App\Models\SatsLn;
 use App\Models\SatsLnItem;
 use App\Models\SourceStatus;
 use App\Models\Species;
 use App\Models\TradeCode;
+use App\Models\User;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PermohonanService
 {
@@ -243,6 +249,135 @@ class PermohonanService
         };
 
         $this->changeStatus($permohonan, $status);
+    }
+
+    /**
+     * Verifikasi satu SATS-LN: terbitkan nomor, tanggal terbit/berakhir, security stamp dan syarat
+     * khusus, lalu pindahkan Permohonan ke Dalam Proses Verifikasi (kalau masih di antrian).
+     * Baris SATS-LN dikunci supaya dua verifikator tidak bisa menerbitkan nomor ganda untuk
+     * SATS-LN yang sama; bentrok nomor antar SATS-LN dijaga unique index satsln_number_issued.
+     *
+     * @param  array{satsln_number_issued: string, year: int, security_stamp: ?string, masa_berlaku: MasaBerlakuSatsLn, publish_date: string, special_conditions: ?string}  $data
+     */
+    public function verifySatsLn(Permohonan $permohonan, SatsLn $satsLn, array $data, User $verifier): void
+    {
+        try {
+            DB::transaction(function () use ($permohonan, $satsLn, $data, $verifier): void {
+                $locked = SatsLn::query()->lockForUpdate()->findOrFail($satsLn->id);
+
+                abort_if($locked->isVerified(), 403);
+
+                $isReverification = $locked->satsln_number_issued !== null;
+                $before = $this->satsLnVerificationSnapshot($locked);
+                $publishDate = CarbonImmutable::createFromFormat('Y-m-d', $data['publish_date'])->startOfDay();
+
+                $locked->update([
+                    'satsln_number_issued' => $data['satsln_number_issued'],
+                    'year' => $data['year'],
+                    'security_stamp' => $data['security_stamp'],
+                    'publish_date' => $publishDate,
+                    'valid_until' => $data['masa_berlaku']->validUntil($publishDate),
+                    'special_conditions' => $data['special_conditions'],
+                    'verified_id' => $verifier->id,
+                ]);
+
+                $locked->activities()->create([
+                    'permohonan_id' => $permohonan->id,
+                    'user_id' => $verifier->id,
+                    'messages' => $isReverification
+                        ? $this->reverificationMessage($locked, $before, $this->satsLnVerificationSnapshot($locked))
+                        : __('SATS-LN Ke #:nomor disetujui dan diverifikasi dengan nomor :issued.', [
+                            'nomor' => $locked->nomor_urut,
+                            'issued' => $locked->issuedNumberLabel(),
+                        ]),
+                ]);
+
+                if ($permohonan->status === PermohonanStatus::AntrianVerifikasi) {
+                    $this->changeStatus($permohonan, PermohonanStatus::DalamProsesVerifikasi, [
+                        'verified_by' => $verifier->id,
+                        'verified_at' => now(),
+                    ]);
+                }
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages(['satsln_number' => __('Nomor telah digunakan.')]);
+        }
+    }
+
+    /**
+     * Buka ulang verifikasi SATS-LN supaya datanya bisa diubah lewat modal Verifikasi lagi: verified_id
+     * dikosongkan (data terbit lain tetap ada sebagai nilai awal), alasannya dicatat di aktivitas.
+     */
+    public function reopenSatsLn(Permohonan $permohonan, SatsLn $satsLn, string $pesan, User $verifier): void
+    {
+        DB::transaction(function () use ($permohonan, $satsLn, $pesan, $verifier): void {
+            $locked = SatsLn::query()->lockForUpdate()->findOrFail($satsLn->id);
+
+            abort_unless($locked->canBeReopened(), 403);
+
+            $locked->update(['verified_id' => null]);
+
+            $locked->activities()->create([
+                'permohonan_id' => $permohonan->id,
+                'user_id' => $verifier->id,
+                'messages' => __('Verifikasi SATS-LN Ke #:nomor dibuka kembali untuk diubah: :pesan', [
+                    'nomor' => $locked->nomor_urut,
+                    'pesan' => $pesan,
+                ]),
+            ]);
+        });
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function satsLnVerificationSnapshot(SatsLn $satsLn): array
+    {
+        return [
+            __('Nomor SATS-LN') => $satsLn->issuedNumberLabel() ?? '-',
+            __('Security Stamp') => $satsLn->security_stamp ?? '-',
+            __('Tanggal Terbit') => $satsLn->publish_date?->format('d/m/Y') ?? '-',
+            __('Tanggal Berakhir') => $satsLn->valid_until?->format('d/m/Y') ?? '-',
+            __('Syarat Khusus') => $satsLn->special_conditions ?? '-',
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $before
+     * @param  array<string, string>  $after
+     */
+    private function reverificationMessage(SatsLn $satsLn, array $before, array $after): string
+    {
+        $changes = collect($after)
+            ->filter(fn (string $value, string $label): bool => $before[$label] !== $value)
+            ->map(fn (string $value, string $label): string => __(':label: :before → :after', [
+                'label' => $label,
+                'before' => $before[$label],
+                'after' => $value,
+            ]));
+
+        if ($changes->isEmpty()) {
+            return __('SATS-LN Ke #:nomor diverifikasi ulang tanpa perubahan data.', ['nomor' => $satsLn->nomor_urut]);
+        }
+
+        return __('SATS-LN Ke #:nomor diverifikasi ulang. Perubahan:', ['nomor' => $satsLn->nomor_urut])
+            ."\n".$changes->map(fn (string $line): string => '- '.$line)->implode("\n");
+    }
+
+    /**
+     * Verifikator tidak menyetujui SATS-LN: cukup catat pesannya sebagai aktivitas - SATS-LN tetap
+     * belum terverifikasi dan status Permohonan tidak berubah.
+     */
+    public function disagreeSatsLn(Permohonan $permohonan, SatsLn $satsLn, string $pesan, User $verifier): void
+    {
+        $satsLn->activities()->create([
+            'permohonan_id' => $permohonan->id,
+            'user_id' => $verifier->id,
+            'messages' => __('SATS-LN Ke #:nomor tidak disetujui: :pesan', [
+                'nomor' => $satsLn->nomor_urut,
+                'pesan' => $pesan,
+            ]),
+        ]);
     }
 
     /**
