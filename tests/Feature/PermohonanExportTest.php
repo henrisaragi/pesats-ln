@@ -33,6 +33,7 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -510,6 +511,42 @@ class PermohonanExportTest extends TestCase
         $this->actingAs($detailOnly)
             ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
             ->assertOk();
+    }
+
+    public function test_verifikasi_index_status_filters_are_gated_by_role_permissions(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $submitted = $this->makeSubmittedPermohonan($user, $kuotaPerusahaan);
+
+        $role = Role::firstOrCreate(['name' => 'filter-submitted-test', 'guard_name' => 'web']);
+        $role->givePermissionTo(['permohonan.verify.view', PermohonanStatus::Submitted->verifikasiFilterPermission()]);
+        $staff = $this->makeStaffUser([]);
+        $staff->assignRole($role);
+
+        // Antrian Verifikasi tidak diizinkan, jadi default jatuh ke status pertama yang diizinkan.
+        $this->actingAs($staff)->get(route('permohonan-export.verifikasi.index'))
+            ->assertOk()
+            ->assertSee($submitted->nomor_permohonan)
+            ->assertDontSee(PermohonanStatus::Draft->label())
+            ->assertDontSee(__('Semua Status'));
+
+        $this->actingAs($staff)->get(route('permohonan-export.verifikasi.index', ['status' => PermohonanStatus::Draft->value]))->assertForbidden();
+        $this->actingAs($staff)->get(route('permohonan-export.verifikasi.index', ['status' => 'all']))->assertForbidden();
+
+        $role->givePermissionTo(PermohonanStatus::VERIFIKASI_FILTER_ALL_PERMISSION);
+
+        $this->actingAs($staff->fresh())->get(route('permohonan-export.verifikasi.index', ['status' => 'all']))
+            ->assertOk()
+            ->assertSee($submitted->nomor_permohonan);
+
+        // Tanpa permission filter apapun, daftar tetap bisa dibuka tapi kosong.
+        $noFilter = $this->makeStaffUser('permohonan.verify.view');
+
+        $this->actingAs($noFilter)->get(route('permohonan-export.verifikasi.index'))
+            ->assertOk()
+            ->assertDontSee($submitted->nomor_permohonan)
+            ->assertSee(__('Anda tidak memiliki akses filter status.'));
     }
 
     public function test_disposisi_assigns_verifikator_and_moves_status_to_antrian_verifikasi(): void
@@ -1865,5 +1902,42 @@ class PermohonanExportTest extends TestCase
         $response->assertSee('data-satsln-document-select', false);
         $response->assertSee(route('documents.preview', $firstDocument), false);
         $response->assertSee(route('documents.preview', $secondDocument), false);
+    }
+
+    public function test_verifikasi_show_page_shows_document_viewer_with_satsln_detail_and_scoped_preview_routes(): void
+    {
+        Storage::fake('s3');
+
+        $user = $this->makeUser('perusahaan');
+        $satsLn = $this->makeSatsLnForItems($user);
+        $permohonan = $satsLn->permohonan;
+        $firstDocument = $this->createLampiranDocument($user);
+        $secondDocument = $this->createLampiranDocument($user, DocumentType::Bap);
+        $unattachedDocument = $this->createLampiranDocument($user);
+        $satsLn->documents()->attach([$firstDocument->id, $secondDocument->id]);
+
+        $verifier = $this->makeStaffUser('permohonan.verify-detail');
+        $previewUrl = route('permohonan-export.verifikasi.sats-ln.documents.preview', [$permohonan, $satsLn, $firstDocument]);
+
+        $response = $this->actingAs($verifier)->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]));
+
+        $response->assertOk();
+        $response->assertSee('data-hs-overlay="#satsln-document-view-modal"', false);
+        $response->assertSee($previewUrl, false);
+        $response->assertSee(route('permohonan-export.verifikasi.sats-ln.documents.preview', [$permohonan, $satsLn, $secondDocument]), false);
+        $response->assertSee('data-satsln-document-select', false);
+        // Detail SATS-LN dirender dua kali: kolom kanan halaman + panel kiri modal viewer.
+        $this->assertSame(2, substr_count($response->getContent(), 'Dokumen ini hanya sah jika data yang dicetak'));
+
+        // Staf tanpa documents.view-all tetap bisa buka dokumen yang terlampir di SATS-LN ini...
+        $this->actingAs($verifier)->get($previewUrl)->assertRedirect();
+        $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.documents.download', [$permohonan, $satsLn, $firstDocument]))
+            ->assertRedirect();
+        // ...tapi tidak dokumen lain yang tidak terlampir.
+        $this->actingAs($verifier)
+            ->get(route('permohonan-export.verifikasi.sats-ln.documents.preview', [$permohonan, $satsLn, $unattachedDocument]))
+            ->assertNotFound();
+        $this->actingAs($this->makeStaffUser('permohonan.verify.view'))->get($previewUrl)->assertForbidden();
     }
 }

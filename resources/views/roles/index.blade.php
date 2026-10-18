@@ -103,8 +103,8 @@
             class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
             role="dialog" tabindex="-1">
             <div
-                class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-xl sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
-                <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 max-w-full size-full flex">
+                <div class="w-full h-full flex flex-col card border-0 rounded-none pointer-events-auto">
                     <div class="card-header">
                         <h3 class="font-bold text-default-800 text-base" id="role-create-modal-label">
                             {{ __('Tambah Role') }}
@@ -115,10 +115,10 @@
                             <i class="size-5" data-lucide="x"></i>
                         </button>
                     </div>
-                    <form action="{{ route('roles.store') }}" method="POST">
+                    <form action="{{ route('roles.store') }}" class="flex flex-col flex-1 min-h-0" method="POST">
                         @csrf
                         <input name="_modal" type="hidden" value="role-create-modal">
-                        <div class="p-4 overflow-y-auto">
+                        <div class="p-4 flex-1 overflow-y-auto">
                             <div class="flex flex-col gap-y-4">
                                 <div>
                                     <label class="inline-block mb-2 text-sm font-medium" for="role-create-name">
@@ -133,7 +133,7 @@
                                 </div>
                                 <div>
                                     <label class="inline-block mb-2 text-sm font-medium">{{ __('Permission') }}</label>
-                                    <div class="grid grid-cols-2 gap-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                         @foreach ($permissionGroups as $group => $groupPermissions)
                                             <div>
                                                 <h6 class="mb-2 text-xs font-semibold uppercase text-default-500">
@@ -175,8 +175,8 @@
                 class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
                 role="dialog" tabindex="-1">
                 <div
-                    class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
-                    <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                    class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 max-w-full size-full flex">
+                    <div class="w-full h-full flex flex-col card border-0 rounded-none pointer-events-auto">
                         <div class="card-header">
                             <h3 class="font-bold text-default-800 text-base" id="role-edit-modal-{{ $role->id }}-label">
                                 {{ __('Ubah Role') }}
@@ -187,11 +187,11 @@
                                 <i class="size-5" data-lucide="x"></i>
                             </button>
                         </div>
-                        <form action="{{ route('roles.update', $role) }}" method="POST">
+                        <form action="{{ route('roles.update', $role) }}" class="flex flex-col flex-1 min-h-0" method="POST">
                             @csrf
                             @method('PUT')
                             <input name="_modal" type="hidden" value="role-edit-modal-{{ $role->id }}">
-                            <div class="p-4 overflow-y-auto">
+                            <div class="p-4 flex-1 overflow-y-auto">
                                 <div class="flex flex-col gap-y-4">
                                     <div>
                                         <label class="inline-block mb-2 text-sm font-medium"
@@ -209,7 +209,7 @@
                                         <label class="inline-block mb-2 text-sm font-medium">
                                             {{ __('Permission') }}
                                         </label>
-                                        <div class="grid grid-cols-2 gap-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                             @foreach ($permissionGroups as $group => $groupPermissions)
                                                 <div>
                                                     <h6 class="mb-2 text-xs font-semibold uppercase text-default-500">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\PermohonanStatus;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -108,6 +109,23 @@ class MasterDataPermissionSeeder extends Seeder
      * lewat UI Roles/Permissions seperti dua permission verifikasi lainnya di atas.
      */
     private const PERMOHONAN_VERIFY_LIST_PERMISSION = 'permohonan.verify.view';
+
+    /**
+     * Filter status di halaman daftar verifikasi (permohonan-export/verifikasi): satu permission
+     * per PermohonanStatus (permohonan.verify.filter.{status}) plus permohonan.verify.filter.all
+     * untuk opsi "Semua Status". Status tanpa permission tidak muncul di dropdown dan request-nya
+     * ditolak 403. Tidak auto-granted ke role manapun selain super-admin, di-assign manual lewat
+     * UI Roles/Permissions.
+     *
+     * @return array<int, string>
+     */
+    private function permohonanVerifyFilterPermissions(): array
+    {
+        return [
+            ...array_map(fn (PermohonanStatus $status): string => $status->verifikasiFilterPermission(), PermohonanStatus::cases()),
+            PermohonanStatus::VERIFIKASI_FILTER_ALL_PERMISSION,
+        ];
+    }
 
     /**
      * Roles allowed to submit Permohonan SATS-LN Ekspor for their own entity.
@@ -219,7 +237,7 @@ class MasterDataPermissionSeeder extends Seeder
             $permissions[] = "{$entity}.sync";
         }
 
-        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...[self::PERMOHONAN_VERIFY_DETAIL_PERMISSION, self::PERMOHONAN_VERIFY_LIST_PERMISSION], ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS, ...self::DOCUMENTS_PERMISSIONS, ...self::CUSTOMER_PERMISSIONS, ...self::ASSESMENT_ISI_PERMISSIONS);
+        array_push($permissions, ...self::KOMODITAS_ENTITAS_PERMISSIONS, ...self::CHAT_PERMISSIONS, ...self::PERMOHONAN_PERMISSIONS, ...[self::PERMOHONAN_VERIFY_DETAIL_PERMISSION, self::PERMOHONAN_VERIFY_LIST_PERMISSION], ...$this->permohonanVerifyFilterPermissions(), ...self::KUOTA_SAYA_PERMISSIONS, ...self::SETTINGS_PERMISSIONS, ...self::DOCUMENTS_PERMISSIONS, ...self::CUSTOMER_PERMISSIONS, ...self::ASSESMENT_ISI_PERMISSIONS);
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([

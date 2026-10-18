@@ -109,6 +109,28 @@
         </div>
         <div class="lg:col-span-3 col-span-1">
             @if ($selectedSatsLn)
+                @php
+                    $satsLnDocuments = $selectedSatsLn->documents;
+                    $firstSatsLnDocument = $satsLnDocuments->first();
+                @endphp
+                <div class="card mb-4 print:hidden">
+                    <div class="p-4 flex items-center justify-between gap-3 flex-wrap">
+                        <h6 class="font-semibold text-sm text-default-700">
+                            {{ __('SATS-LN Ke #:nomor', ['nomor' => $selectedSatsLn->nomor_urut]) }}
+                        </h6>
+                        @if ($firstSatsLnDocument)
+                            <button class="btn btn-sm bg-primary text-white hover:bg-primary/90" type="button"
+                                    data-hs-overlay="#satsln-document-view-modal"
+                                    data-document-viewer-url="{{ route('permohonan-export.verifikasi.sats-ln.documents.preview', [$permohonan, $selectedSatsLn, $firstSatsLnDocument]) }}"
+                                    data-document-viewer-title="{{ $firstSatsLnDocument->nomor_document }}"
+                                    data-document-viewer-download-url="{{ route('permohonan-export.verifikasi.sats-ln.documents.download', [$permohonan, $selectedSatsLn, $firstSatsLnDocument]) }}">
+                                <i class="size-4 me-1" data-lucide="file-text"></i>{{ __('Lihat Dokumen') }} ({{ $satsLnDocuments->count() }})
+                            </button>
+                        @else
+                            <span class="text-sm text-default-500">{{ __('Belum ada dokumen terlampir.') }}</span>
+                        @endif
+                    </div>
+                </div>
                 <div class="card">
                     @include('permohonan-export.satsln', [
                         'satsLn' => $selectedSatsLn,
@@ -210,6 +232,35 @@
             </div>
         @endcan
     @endforeach
+
+    @if ($selectedSatsLn?->documents->isNotEmpty())
+        {{-- id & data-satsln-document-select sama seperti halaman permohonan-export/show supaya switcher
+             dokumen di permohonan-show.js langsung berlaku di sini. --}}
+        <x-document-viewer-modal id="satsln-document-view-modal">
+            <x-slot:switcher>
+                @if ($selectedSatsLn->documents->count() > 1)
+                    <select class="form-input form-input-sm w-52" data-satsln-document-select>
+                        @foreach ($selectedSatsLn->documents as $document)
+                            <option data-download-url="{{ route('permohonan-export.verifikasi.sats-ln.documents.download', [$permohonan, $selectedSatsLn, $document]) }}"
+                                    data-preview-url="{{ route('permohonan-export.verifikasi.sats-ln.documents.preview', [$permohonan, $selectedSatsLn, $document]) }}"
+                                    data-title="{{ $document->nomor_document }}"
+                                    value="{{ $document->id }}"
+                                    @selected($loop->first)>
+                                {{ $document->nomor_document }} ({{ $document->type_document->label() }})
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
+            </x-slot:switcher>
+            <x-slot:aside>
+                @include('permohonan-export.satsln', [
+                    'satsLn' => $selectedSatsLn,
+                    'permohonan' => $permohonan,
+                    'realisasiNasionalRunningTotalByItemId' => $realisasiNasionalRunningTotalByItemId,
+                ])
+            </x-slot:aside>
+        </x-document-viewer-modal>
+    @endif
 @endsection
 
 @section('scripts')

@@ -27,6 +27,8 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
         // melakukan aksi verifikasi bisa diatur independen satu sama lain.
         Route::get('{permohonan}', [PermohonanVerifikasiController::class, 'show'])->middleware('permission:permohonan.verify-detail')->name('show');
         Route::get('{permohonan}/sats-ln/{satsLn}', [PermohonanVerifikasiController::class, 'show'])->middleware('permission:permohonan.verify-detail')->name('sats-ln.show');
+        Route::get('{permohonan}/sats-ln/{satsLn}/documents/{document}/preview', [PermohonanVerifikasiController::class, 'previewDocument'])->middleware('permission:permohonan.verify-detail')->name('sats-ln.documents.preview');
+        Route::get('{permohonan}/sats-ln/{satsLn}/documents/{document}/download', [PermohonanVerifikasiController::class, 'downloadDocument'])->middleware('permission:permohonan.verify-detail')->name('sats-ln.documents.download');
         Route::post('{permohonan}/disposisi', [PermohonanVerifikasiController::class, 'disposisi'])->middleware('permission:permohonan-export.disposisi')->name('disposisi');
         Route::post('{permohonan}/verify', [PermohonanVerifikasiController::class, 'verify'])->middleware('permission:permohonan-export.verify')->name('verify');
         Route::post('{permohonan}/reject', [PermohonanVerifikasiController::class, 'reject'])->middleware('permission:permohonan-export.verify')->name('reject');

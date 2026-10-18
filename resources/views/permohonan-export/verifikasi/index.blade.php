@@ -13,14 +13,20 @@
         <div class="card-header">
             <form action="{{ route('permohonan-export.verifikasi.index') }}"
                 class="md:flex items-center md:space-y-0 space-y-4 gap-3" method="GET">
-                <select class="form-input form-input-sm" name="status" onchange="this.form.submit()">
-                    @foreach (\App\Enums\PermohonanStatus::cases() as $status)
-                        <option value="{{ $status->value }}" @selected($activeStatus === $status)>
-                            {{ $status->label() }}
-                        </option>
-                    @endforeach
-                    <option value="" @selected($activeStatus === null)>{{ __('Semua Status') }}</option>
-                </select>
+                @if ($hasFilterAccess)
+                    <select class="form-input form-input-sm" name="status" onchange="this.form.submit()">
+                        @foreach ($allowedStatuses as $status)
+                            <option value="{{ $status->value }}" @selected($activeStatus === $status)>
+                                {{ $status->label() }}
+                            </option>
+                        @endforeach
+                        @if ($canFilterAll)
+                            <option value="all" @selected($activeStatus === null)>{{ __('Semua Status') }}</option>
+                        @endif
+                    </select>
+                @else
+                    <p class="text-sm text-default-500">{{ __('Anda tidak memiliki akses filter status.') }}</p>
+                @endif
             </form>
         </div>
         <div class="flex flex-col">

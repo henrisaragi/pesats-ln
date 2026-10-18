@@ -15,6 +15,12 @@ enum PermohonanStatus: string
     case DitandatanganiSebagian = 'ditandatangani_sebagian';
     case SiapDiambil = 'siap_diambil';
 
+    /**
+     * Permission untuk opsi filter "Semua Status" di halaman verifikasi
+     * (permohonan-export/verifikasi). Filter per status memakai verifikasiFilterPermission().
+     */
+    public const VERIFIKASI_FILTER_ALL_PERMISSION = 'permohonan.verify.filter.all';
+
     public function label(): string
     {
         return match ($this) {
@@ -39,6 +45,15 @@ enum PermohonanStatus: string
             self::DicetakSebagian, self::DitandatanganiSebagian => 'border-primary/30 bg-primary/10 text-primary',
             self::SiapDiambil => 'border-success/30 bg-success/10 text-success',
         };
+    }
+
+    /**
+     * Permission yang mengaktifkan filter status ini di halaman verifikasi, di-assign ke role
+     * lewat UI Roles/Permissions.
+     */
+    public function verifikasiFilterPermission(): string
+    {
+        return 'permohonan.verify.filter.'.$this->value;
     }
 
     public function isEditable(): bool

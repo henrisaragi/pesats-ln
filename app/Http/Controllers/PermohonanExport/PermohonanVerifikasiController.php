@@ -7,6 +7,7 @@ namespace App\Http\Controllers\PermohonanExport;
 use App\Enums\PermohonanStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PermohonanExport\DisposisiRequest;
+use App\Models\Document;
 use App\Models\Permohonan;
 use App\Models\SatsLn;
 use App\Models\User;
@@ -14,6 +15,7 @@ use App\Services\PermohonanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class PermohonanVerifikasiController extends Controller
@@ -22,14 +24,31 @@ class PermohonanVerifikasiController extends Controller
 
     public function index(Request $request): View
     {
-        $status = $request->filled('status')
-            ? PermohonanStatus::tryFrom($request->string('status')->toString())
-            : PermohonanStatus::AntrianVerifikasi;
+        $user = $request->user();
+        $allowedStatuses = array_values(array_filter(
+            PermohonanStatus::cases(),
+            fn (PermohonanStatus $status): bool => $user->can($status->verifikasiFilterPermission()),
+        ));
+        $canFilterAll = $user->can(PermohonanStatus::VERIFIKASI_FILTER_ALL_PERMISSION);
+
+        if ($request->filled('status')) {
+            $requested = $request->string('status')->toString();
+            $status = $requested === 'all' ? null : PermohonanStatus::tryFrom($requested);
+
+            abort_unless($status === null ? $requested === 'all' && $canFilterAll : in_array($status, $allowedStatuses, true), 403);
+        } else {
+            $status = in_array(PermohonanStatus::AntrianVerifikasi, $allowedStatuses, true)
+                ? PermohonanStatus::AntrianVerifikasi
+                : ($allowedStatuses[0] ?? null);
+        }
+
+        $hasFilterAccess = $status !== null || $canFilterAll;
 
         $permohonan = Permohonan::query()
             ->with(['entitas', 'verifiedBy'])
             ->withCount('satsLn')
             ->when($status !== null, fn ($query) => $query->where('status', $status))
+            ->when(! $hasFilterAccess, fn ($query) => $query->whereRaw('1 = 0'))
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -37,6 +56,9 @@ class PermohonanVerifikasiController extends Controller
         return view('permohonan-export.verifikasi.index', [
             'permohonan' => $permohonan,
             'activeStatus' => $status,
+            'allowedStatuses' => $allowedStatuses,
+            'canFilterAll' => $canFilterAll,
+            'hasFilterAccess' => $hasFilterAccess,
         ]);
     }
 
@@ -60,6 +82,7 @@ class PermohonanVerifikasiController extends Controller
             'satsLn.items.kuotaNasional.species',
             'satsLn.items.kuotaPerusahaan.kuotaNasional.tradeCode',
             'satsLn.items.kuotaPerusahaan.kuotaNasional.source',
+            'satsLn.documents',
         ]);
 
         $selectedSatsLn = $satsLn ?? $permohonan->satsLn->last();
@@ -75,6 +98,27 @@ class PermohonanVerifikasiController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name']),
         ]);
+    }
+
+    /**
+     * Pratinjau dokumen lampiran SATS-LN untuk staf verifikasi - sengaja tidak lewat
+     * documents.preview (yang mensyaratkan documents.view-all untuk lintas entitas), aksesnya
+     * dibatasi ke dokumen yang memang terlampir di SATS-LN Permohonan ini.
+     */
+    public function previewDocument(Permohonan $permohonan, SatsLn $satsLn, Document $document): RedirectResponse
+    {
+        $this->authorizeSatsLnDocument($permohonan, $satsLn, $document);
+
+        return redirect(Storage::disk('s3')->temporaryUrl($document->path, now()->addMinutes(10)));
+    }
+
+    public function downloadDocument(Permohonan $permohonan, SatsLn $satsLn, Document $document): RedirectResponse
+    {
+        $this->authorizeSatsLnDocument($permohonan, $satsLn, $document);
+
+        return redirect(Storage::disk('s3')->temporaryUrl($document->path, now()->addMinutes(10), [
+            'ResponseContentDisposition' => 'attachment; filename="'.basename($document->path).'"',
+        ]));
     }
 
     public function disposisi(DisposisiRequest $request, Permohonan $permohonan): RedirectResponse
@@ -133,5 +177,11 @@ class PermohonanVerifikasiController extends Controller
         $this->permohonanService->recomputeStatus($permohonan);
 
         return redirect()->route('permohonan-export.verifikasi.show', $permohonan)->with('success', __('SATS-LN ditandai sudah ditandatangani.'));
+    }
+
+    private function authorizeSatsLnDocument(Permohonan $permohonan, SatsLn $satsLn, Document $document): void
+    {
+        abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
+        abort_unless($satsLn->documents()->whereKey($document->id)->exists(), 404);
     }
 }
