@@ -23,12 +23,14 @@ use App\Models\Permohonan;
 use App\Models\Port;
 use App\Models\PurposeOfTransaction;
 use App\Models\SatsLn;
+use App\Models\SatsLnPrint;
 use App\Models\SourceStatus;
 use App\Models\Species;
 use App\Models\TradeCode;
 use App\Models\User;
 use App\Notifications\AppNotification;
 use App\Services\PermohonanService;
+use App\Services\SatsLnPdfService;
 use Database\Seeders\MasterDataPermissionSeeder;
 use Database\Seeders\PenandatanganSeeder;
 use Database\Seeders\RoleSeeder;
@@ -2387,8 +2389,10 @@ class PermohonanExportTest extends TestCase
             'exportir' => 'X', 'importir' => 'Y', 'date_valid' => '', 'port_destination' => '',
             'port_departur' => '', 'purpose' => '', 'publication_date' => '',
             'ttd' => $signer,
+            'sisaTinggi' => 3.3,
             'realisasiNasionalRunningTotalByItemId' => [],
         ])->render();
+        $this->assertStringContainsString('height:3.3cm', $html);
         $this->assertStringContainsString('00001/IV/SATS-LN/2026', $html);
         $this->assertStringContainsString('Pejabat Penandatangan', $html);
         $this->assertStringContainsString('Security Stamp No: SN-000001', $html);
@@ -2425,5 +2429,84 @@ class PermohonanExportTest extends TestCase
             ->assertSee('Pejabat Penandatangan')
             ->assertDontSee('Penandatangan Nonaktif')
             ->assertSee(route('permohonan-export.verifikasi.sats-ln.print', [$permohonan, $satsLn]), false);
+    }
+
+    public function test_print_preview_validates_sisa_tinggi(): void
+    {
+        [$permohonan, $satsLn, $printer, $signer] = $this->makeApprovedSatsLnWithPrinterAndSigner();
+        $url = fn (array $query): string => route('permohonan-export.verifikasi.sats-ln.print', [$permohonan, $satsLn, ...$query]);
+
+        $this->actingAs($printer)->get($url(['penandatangan_id' => $signer->id, 'sisa_tinggi' => 4.5]))
+            ->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->actingAs($printer)->get($url(['penandatangan_id' => $signer->id, 'sisa_tinggi' => 99]))
+            ->assertSessionHasErrors('sisa_tinggi');
+    }
+
+    public function test_print_stores_settings_and_frozen_pdf_that_does_not_change_with_later_data(): void
+    {
+        Storage::fake('s3');
+        [$permohonan, $satsLn, $printer, $signer] = $this->makeApprovedSatsLnWithPrinterAndSigner();
+
+        $response = $this->actingAs($printer)
+            ->postJson(route('permohonan-export.verifikasi.sats-ln.prints.store', [$permohonan, $satsLn]), [
+                'penandatangan_id' => $signer->id,
+                'sisa_tinggi' => 4.5,
+            ])
+            ->assertCreated();
+
+        $print = SatsLnPrint::sole();
+        $this->assertSame($satsLn->id, $print->sats_ln_id);
+        $this->assertSame($signer->id, $print->penandatangan_id);
+        $this->assertSame($printer->id, $print->printed_by_id);
+        $this->assertSame('4.50', $print->sisa_tinggi);
+        Storage::disk('s3')->assertExists($print->pdf_path);
+        $this->assertNotNull($satsLn->refresh()->printed_at);
+        $this->assertSame($printer->id, $satsLn->printed_user_id);
+        $this->assertSame(PermohonanStatus::DicetakSebagian, $permohonan->refresh()->status);
+        $frozenPdf = Storage::disk('s3')->get($print->pdf_path);
+
+        $pdfUrl = route('permohonan-export.verifikasi.sats-ln.prints.show', [$permohonan, $satsLn, $print]);
+        $response->assertJson(['pdf_url' => $pdfUrl]);
+
+        $satsLn->update(['special_conditions' => 'Diubah setelah dicetak']);
+
+        $stored = $this->actingAs($printer)->get($pdfUrl)->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertSame($frozenPdf, $stored->streamedContent());
+
+        $this->actingAs($printer)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertSee($pdfUrl, false);
+    }
+
+    public function test_stored_print_404s_under_another_sats_ln_and_requires_print_permission(): void
+    {
+        Storage::fake('s3');
+        [$permohonan, $satsLn, $printer, $signer] = $this->makeApprovedSatsLnWithPrinterAndSigner();
+        $print = app(SatsLnPdfService::class)->store($satsLn, $signer, 4, $printer);
+        $otherSatsLn = $this->addSatsLnToPermohonan($satsLn);
+
+        $this->actingAs($printer)
+            ->get(route('permohonan-export.verifikasi.sats-ln.prints.show', [$permohonan, $otherSatsLn, $print]))
+            ->assertNotFound();
+        $this->actingAs($this->makeStaffVerifier())
+            ->get(route('permohonan-export.verifikasi.sats-ln.prints.show', [$permohonan, $satsLn, $print]))
+            ->assertForbidden();
+        $this->actingAs($this->makeStaffVerifier())
+            ->postJson(route('permohonan-export.verifikasi.sats-ln.prints.store', [$permohonan, $satsLn]), ['penandatangan_id' => $signer->id])
+            ->assertForbidden();
+    }
+
+    public function test_print_is_forbidden_outside_the_print_stage_and_stores_nothing(): void
+    {
+        Storage::fake('s3');
+        [$permohonan, $satsLn, $printer, $signer] = $this->makeApprovedSatsLnWithPrinterAndSigner();
+        $permohonan->update(['status' => PermohonanStatus::Ditolak]);
+
+        $this->actingAs($printer)
+            ->postJson(route('permohonan-export.verifikasi.sats-ln.prints.store', [$permohonan, $satsLn]), ['penandatangan_id' => $signer->id])
+            ->assertForbidden();
+
+        $this->assertSame(0, SatsLnPrint::count());
+        $this->assertNull($satsLn->refresh()->printed_at);
     }
 }

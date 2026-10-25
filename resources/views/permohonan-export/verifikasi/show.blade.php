@@ -579,6 +579,22 @@
                                 @endforeach
                             </select>
                         @endif
+                        @if ($lastSatsLnPrint)
+                            <div class="mt-4 flex items-center justify-between gap-3 rounded-lg border border-default-200 bg-default-50 p-3">
+                                <p class="text-xs text-default-500">
+                                    {{ __('Cetak terakhir: :tanggal, penandatangan :nama', [
+                                        'tanggal' => $lastSatsLnPrint->created_at->translatedFormat('d M Y, H:i'),
+                                        'nama' => $lastSatsLnPrint->penandatangan?->name,
+                                    ]) }}
+                                </p>
+                                <button class="btn btn-sm bg-default-150 shrink-0"
+                                        data-document-viewer-title="{{ $selectedSatsLn->issuedNumberLabel() }}"
+                                        data-document-viewer-url="{{ route('permohonan-export.verifikasi.sats-ln.prints.show', [$permohonan, $selectedSatsLn, $lastSatsLnPrint]) }}"
+                                        data-hs-overlay="#satsln-print-history-modal" type="button">
+                                    <i class="size-4 me-1" data-lucide="history"></i>{{ __('Lihat') }}
+                                </button>
+                            </div>
+                        @endif
                     </div>
                     <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
                         <button class="btn bg-default-150" data-hs-overlay="#verifikasi-action-modal-print" type="button">
@@ -601,7 +617,35 @@
         </div>
 
         @if ($canPrintSelectedSatsLn && $penandatanganOptions->isNotEmpty())
-            <x-document-viewer-modal id="satsln-print-viewer-modal" />
+            {{-- Margin mengubah tinggi baris kosong tabel spesies (pratinjau dirender ulang), Print
+                 menyimpan PDF + pengaturannya ke sats_ln_prints lalu mencetak PDF tersimpan itu. --}}
+            <x-document-viewer-modal id="satsln-print-viewer-modal">
+                <x-slot:switcher>
+                    <label class="flex items-center gap-2 text-sm text-default-700" for="satsln-print-sisa-tinggi">
+                        {{ __('Margin (cm)') }}
+                        <input class="form-input form-input-sm w-24" data-satsln-print-sisa-tinggi id="satsln-print-sisa-tinggi"
+                               max="{{ \App\Models\SatsLnPrint::MAX_SISA_TINGGI }}" min="0" step="0.1" type="number"
+                               value="{{ \App\Models\SatsLnPrint::DEFAULT_SISA_TINGGI }}">
+                    </label>
+                    <span class="hidden text-xs text-danger" data-satsln-print-error role="alert">{{ __('Gagal menyimpan cetak SATS-LN.') }}</span>
+                    <button class="btn btn-sm bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
+                            data-satsln-print-submit
+                            data-satsln-print-store-url="{{ route('permohonan-export.verifikasi.sats-ln.prints.store', [$permohonan, $selectedSatsLn]) }}"
+                            type="button">
+                        <i class="size-4 me-1" data-lucide="printer"></i>{{ __('Print') }}
+                    </button>
+                </x-slot:switcher>
+            </x-document-viewer-modal>
+        @endif
+
+        @if ($lastSatsLnPrint)
+            <x-document-viewer-modal id="satsln-print-history-modal">
+                <x-slot:switcher>
+                    <button class="btn btn-sm bg-primary text-white hover:bg-primary/90" data-satsln-print-frame type="button">
+                        <i class="size-4 me-1" data-lucide="printer"></i>{{ __('Print') }}
+                    </button>
+                </x-slot:switcher>
+            </x-document-viewer-modal>
         @endif
     @endcan
 

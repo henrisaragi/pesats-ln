@@ -126,13 +126,13 @@ FIxing
 </head>
 
 <body>
-    <table style="border-collapse: collapse; margin:auto;  width:100%; border:1px solid red 3px;">
+    <table style="border-collapse: collapse; margin:auto;  width:100%; border:1px solid red 1px;">
 
         <!-- bagian alamat -->
         <tr>
-            <td class="no" style="vertical-align: middle; height: 0.4cm; border:3px solid #000; border-right:none;">
+            <td class="no" style="vertical-align: middle; height: 0.4cm; border:1px solid #000; border-right:none;">
             </td>
-            <td colspan="7" style="border:3px solid #000;border-left:none;font-size:6pt; ">
+            <td colspan="7" style="border:1px solid #000;border-left:none;font-size:6pt; ">
                 <div class="row ">
                     <div class="col-1 hg-1">
                         <b><u>Alamat</u><br>
@@ -152,9 +152,9 @@ FIxing
 
         <!-- bagian 1  diberikan kepada (eksportir) -->
         <tr>
-            <td class="no" style="vertical-align: middle; height: 0.4cm;border:3px solid #000; border-right:none;">
+            <td class="no" style="vertical-align: middle; height: 0.4cm;border:1px solid #000; border-right:none;">
                 I.</td>
-            <td colspan="7" style="border:3px solid #000; border-left:none;">
+            <td colspan="7" style="border:1px solid #000; border-left:none;">
                 <div class="row ">
                     <div class="col-3 hg-1">
                         <b><u>Surat Angkut Tumbuhan dan Satwa Liar</u><br>
@@ -175,9 +175,9 @@ FIxing
 
         <!-- bagian 2 diberikan kepada (eksportir) -->
         <tr>
-            <td class="no" style="vertical-align: middle; height: 0.4cm;border:3px solid #000; border-right:none;">
+            <td class="no" style="vertical-align: middle; height: 0.4cm;border:1px solid #000; border-right:none;">
                 II.</td>
-            <td colspan="7" style="border:3px solid #000; border-left:none;">
+            <td colspan="7" style="border:1px solid #000; border-left:none;">
                 <div class="row ">
                     <div class="col-3 hg-1">
                         <b><u>Diberikan kepada (nama, alamat, negara)</u><br>
@@ -194,9 +194,9 @@ FIxing
         </tr>
         <!-- bagian 3 -->
         <tr>
-            <td class="no" style="vertical-align: middle; height: 0.4cm;border:3px solid #000; border-right:none;">
+            <td class="no" style="vertical-align: middle; height: 0.4cm;border:1px solid #000; border-right:none;">
                 III.</td>
-            <td colspan="7" style=" height: 0.4cm;border:3px solid #000; border-left:none;">
+            <td colspan="7" style=" height: 0.4cm;border:1px solid #000; border-left:none;">
                 <div class="row">
                     <div class="col-3 hg-1">
                         <b><u>Dikirim kepada (nama, alamat, negara)</u><br>
@@ -228,9 +228,9 @@ FIxing
         @endphp
 
         <tr>
-            <td style="vertical-align: middle; text-align:center; border:3px solid #000; border-right:none;"><b>IV.</b>
+            <td style="vertical-align: middle; text-align:center; border:1px solid #000; border-right:none;"><b>IV.</b>
             </td>
-            <td colspan="7" style="border:3px solid #000; border-left:none;">
+            <td colspan="7" style="border:1px solid #000; border-left:none;">
                 <div class="row">
                     <div class="col-3 hg-1"><u><b>Berlaku sampai dengan</b></u><br><b><i>Valid until</i></b></div>
                     <div class="col-sp hg-1" style="vertical-align: middle;"><b>:</b></div>
@@ -249,9 +249,9 @@ FIxing
 
         <!-- bagian 6 dan 7 berlaku dan Pelabuhan Tujuan -->
         <tr>
-            <td style="vertical-align: middle; text-align:center;border:3px solid #000; border-right:none;"><b>VI.</b>
+            <td style="vertical-align: middle; text-align:center;border:1px solid #000; border-right:none;"><b>VI.</b>
             </td>
-            <td colspan="7" style="vertical-align: middle; border:3px solid #000; border-left:none;">
+            <td colspan="7" style="vertical-align: middle; border:1px solid #000; border-left:none;">
                 <div class="row">
                     <div class="col-3 hg-1"><u><b>Pelabuhan Pemberangkatan</b></u><br><b><i>Port of exportation</i></b>
                     </div>
@@ -269,11 +269,11 @@ FIxing
         <!-- bagian 8 -->
         <tr>
             <td
-                style="vertical-align: middle; text-align:center; border:3px solid #000; border-right:none;height: 0.8cm;">
+                style="vertical-align: middle; text-align:center; border:1px solid #000; border-right:none;height: 0.8cm;">
                 <b>VIII.</b>
             </td>
 
-            <td colspan="7" style="text-align: center; border:3px solid #000; border-left:none;">
+            <td colspan="7" style="text-align: center; border:1px solid #000; border-left:none;">
                 <div class="row">
 
                 </div>
@@ -285,26 +285,26 @@ FIxing
         </tr>
         <!-- bagian Header spesies -->
         <tr>
-            <td style="vertical-align: middle; text-align:center; border: 3px solid #000;"><b>No.</b></td>
-            <td style="width:7cm; vertical-align: middle; text-align:center; border: 3px solid #000; font-size:7pt;">
+            <td style="vertical-align: middle; text-align:center; border: 1px solid #000;"><b>No.</b></td>
+            <td style="width:7cm; vertical-align: middle; text-align:center; border: 1px solid #000; font-size:7pt;">
                 <b><u>Nama Jenis</u></b><br>
                 <b><i>Name of species <br>(Scientific Name, Indonesia, Common)</i></b>
             </td>
-            <td style="width:2cm; vertical-align: middle; text-align:center; border: 3px solid #000; font-size:7pt;">
+            <td style="width:2cm; vertical-align: middle; text-align:center; border: 1px solid #000; font-size:7pt;">
                 <b><u>Jumlah</u></b><br>
                 <b><i>Quantity</i></b>
             </td>
-            <td style="width:5cm; vertical-align: middle; text-align:center; border: 3px solid #000; font-size:7pt;">
+            <td style="width:5cm; vertical-align: middle; text-align:center; border: 1px solid #000; font-size:7pt;">
                 <b><u>Keterangan</u></b><br>
                 <b><i>Description</i></b>
             </td>
             <td colspan="2"
-                style="width:2.5cm; vertical-align: middle; text-align:center; border: 3px solid #000; font-size:7pt;">
+                style="width:2.5cm; vertical-align: middle; text-align:center; border: 1px solid #000; font-size:7pt;">
                 <b>Appendiks <u>(Sumber) </u></b><br>
                 <b><i>Appendices (Source)</i></b>
             </td>
             <td colspan="2" class="col-5"
-                style="width:3.8cm; vertical-align: middle; text-align:center; border: 3px solid #000; font-size:7pt;">
+                style="width:3.8cm; vertical-align: middle; text-align:center; border: 1px solid #000; font-size:7pt;">
                 <b><u>Realisasi Kuota</u></b><br>
                 <b><i>Total Exported Quota (Year)</i></b>
             </td>
@@ -312,18 +312,14 @@ FIxing
 
         <!-- bagian Looping spesies -->
         @php
-            $jumlahBaris = $satsLn->items->count();
             $maxBaris = 15;
-            $tinggiTabel = 9; // Tinggi total tabel dalam cm
             $dataTampil = $satsLn->items->take($maxBaris);
             $jumlahTampil = $dataTampil->count();
             $tinggiPerBaris = 0.5; // Tinggi per baris
-            $sisaTinggi = $tinggiTabel - $tinggiPerBaris * $jumlahTampil; // Tinggi baris kosong terakhir
+            // $sisaTinggi (tinggi baris kosong terakhir, cm) dikirim dari SatsLnPdfService - bisa diatur
+            // dari input "Margin" di modal Print/Cetak, default SatsLnPrint::DEFAULT_SISA_TINGGI.
 
-            // Tinggi baris kosong terakhir per jumlah baris supaya tabel spesies tetap pas di kertas standar.
-            $sisaTinggi = [1 => 8, 2 => 8, 3 => 6, 4 => 6.5, 5 => 6, 6 => 5, 7 => 5, 8 => 4, 9 => 2.7, 10 => 3.2, 11 => 1.5, 12 => 2, 13 => 0, 14 => 0.4][$jumlahBaris] ?? $sisaTinggi;
-
-            $formatQty = fn ($tradeCode, $value): string => $tradeCode
+            $formatQty = fn($tradeCode, $value): string => $tradeCode
                 ? $tradeCode->formatQuota($value)
                 : number_format((float) $value, 2, ',', '.');
             $totalTradeCode = $satsLn->items->first()?->kuotaNasional?->tradeCode;
@@ -339,26 +335,26 @@ FIxing
 
             <tr style="background: {{ $bgColor }};">
                 <td
-                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:3px solid #000; text-align:center;padding-top:10px;">
+                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:1px solid #000; text-align:center;padding-top:10px;">
                     {{ $loop->iteration }}.</td>
                 <td
-                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:3px solid #000; padding-left:10px; padding-top:10px;">
+                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:1px solid #000; padding-left:10px; padding-top:10px;">
                     {{ collect([$item->species?->scientific_name, $item->species?->local_name, $item->species?->common_name])->filter()->implode(', ') }}
                 </td>
                 <td
-                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:3px solid #000;text-align:left;  padding-left:10px; padding-top:10px;">
+                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:1px solid #000;text-align:left;  padding-left:10px; padding-top:10px;">
                     {{ $formatQty($tradeCode, $item->qty) }} {{ $tradeCode?->unit_name }}
                 </td>
                 <td
-                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:3px solid #000; text-align:left; padding-left:10px; padding-top:10px;">
+                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:1px solid #000; text-align:left; padding-left:10px; padding-top:10px;">
                     {{ $item->description ?? '' }}</td>
                 <td colspan="2"
-                    style="height: {{ $tinggiPerBaris }}cm;  vertical-align:top; border:3px solid #000; text-align:center;padding-top:10px; ">
+                    style="height: {{ $tinggiPerBaris }}cm;  vertical-align:top; border:1px solid #000; text-align:center;padding-top:10px; ">
                     {{ $item->species?->trade_status }}
-                    {{ $item->kuotaNasional?->source?->code ? '('.$item->kuotaNasional->source->code.')' : '' }}
+                    {{ $item->kuotaNasional?->source?->code ? '(' . $item->kuotaNasional->source->code . ')' : '' }}
                 </td>
                 <td colspan="2"
-                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:3px solid #000; text-align:right; padding-right:10px;padding-top:10px;">
+                    style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:1px solid #000; text-align:right; padding-right:10px;padding-top:10px;">
                     {{ $formatQty($tradeCode, $realisasiNasionalBerjalan) }} /
                     {{ $formatQty($tradeCode, $item->kuotaNasional?->quota ?? 0) }}
                     ({{ $item->kuotaNasional?->year ?? $satsLn->year }})
@@ -369,7 +365,7 @@ FIxing
         <!-- Baris kosong terakhir -->
         @if ($jumlahTampil < $maxBaris)
             <tr>
-                <td style="border: 3px solid #000; padding: 5px 5px; vertical-align: middle; height:{{ $sisaTinggi }}cm;"
+                <td style="border: 1px solid #000; padding: 5px 5px; vertical-align: middle; height:{{ $sisaTinggi }}cm;"
                     colspan="8"></td>
             </tr>
         @endif
@@ -377,10 +373,10 @@ FIxing
         <!-- akhir dari bagian Looping spesies -->
         <tr>
             <td colspan="2"
-                style=" height:0.6cm; vertical-align: middle;  border:3px solid #000; border-right:none; ">
+                style=" height:0.6cm; vertical-align: middle;  border:1px solid #000; border-right:none; ">
             </td>
             <td colspan="6"
-                style=" height:0.6cm; vertical-align: middle;border:3px solid #000;  border-left:none; ">
+                style=" height:0.6cm; vertical-align: middle;border:1px solid #000;  border-left:none; ">
                 <b>Total
                     {{ $formatQty($totalTradeCode, $totalQty) }} {{ $totalTradeCode?->unit_name }}
                     @if ($totalTradeCode)
@@ -391,11 +387,11 @@ FIxing
         </tr>
         <tr>
             <td
-                style=" height:0.4cm; border:3px solid #000; vertical-align: top; text-align:center; border-right:none; border-bottom:none; border-bottom:none;padding-top: 20px;">
+                style=" height:0.4cm; border:1px solid #000; vertical-align: top; text-align:center; border-right:none; border-bottom:none; border-bottom:none;padding-top: 20px;">
                 <b>IX.</b>
             </td>
             <td colspan="7"
-                style=" height:0.4cm; border:3px solid #000; border-left:none; border-bottom:none; vertical-align: top; padding-left: 20px;">
+                style=" height:0.4cm; border:1px solid #000; border-left:none; border-bottom:none; vertical-align: top; padding-left: 20px;">
                 <div class="row">
                     <div class="col1set hg-1">
                         <b> <u> Syarat khusus</u><br>
@@ -419,7 +415,7 @@ FIxing
         </tr>
         <tr>
             <td colspan="7"
-                style="height: 1.2cm; vertical-align: top;padding-left: 35px; padding-top: 8px; border:3px solid #000; border-right:none;border-top:none;">
+                style="height: 1.2cm; vertical-align: top;padding-left: 35px; padding-top: 8px; border:1px solid #000; border-right:none;border-top:none;">
 
                 @if (!empty($satsLn->security_stamp))
                     Security Stamp No: {{ $satsLn->security_stamp }}<br>
@@ -428,21 +424,21 @@ FIxing
                 {!! nl2br(e($satsLn->special_conditions ?? '')) !!}
             </td>
             <td colspan="1"
-                style="vertical-align: middle; text-align:right; height: 1.2cm; padding-right:25px; border:3px solid #000; border-left:none; border-top:none;">
+                style="vertical-align: middle; text-align:right; height: 1.2cm; padding-right:25px; border:1px solid #000; border-left:none; border-top:none;">
             </td>
         </tr>
         <tr>
             <td
-                style="border:#000 3px solid; vertical-align: top;text-align:center;border-right:none; border-bottom:none; padding-top:8px; ">
+                style="border:#000 1px solid; vertical-align: top;text-align:center;border-right:none; border-bottom:none; padding-top:8px; ">
                 <b>X.</b>
             </td>
             <td colspan="2"
-                style="vertical-align:top;border-bottom:none; border:#000 3px solid;border-left:none;border-right:none; border-bottom:none;padding-top:8px;">
+                style="vertical-align:top;border-bottom:none; border:#000 1px solid;border-left:none;border-right:none; border-bottom:none;padding-top:8px;">
                 <b><u>Sertifikat ini diterbitkan oleh</u></b><br>
                 <b><i> This permit is issued by</i></b>
             </td>
             <td colspan="5"
-                style="font-size:5pt; text-align: center; border:#000 3px solid; border-left:none; border-bottom:none;">
+                style="font-size:5pt; text-align: center; border:#000 1px solid; border-left:none; border-bottom:none;">
                 <b>ATAS NAMA DIREKTUR JENDERAL<br>
                     <u>KONSERVASI SUMBER DAYA ALAM DAN EKOSISTEM</u></b><br>
                 <span> FOR THE DIRECTOR GENERAL<br>OF ECOSYSTEM AND NATURAL RESOURCES CONSERVATION</span>
@@ -450,23 +446,23 @@ FIxing
         </tr>
         <tr>
             <td
-                style="border:#000 3px solid; vertical-align: top;text-align:center;border-right:none; border-bottom:none; border-top:none; padding-top:8px;">
+                style="border:#000 1px solid; vertical-align: top;text-align:center;border-right:none; border-bottom:none; border-top:none; padding-top:8px;">
                 <b></b>
             </td>
             <td
-                style="vertical-align:bottom; border:#000 3px solid;border-left:none;border-right:none; border-top:none; padding-top:8px; height:1.9cm;">
+                style="vertical-align:bottom; border:#000 1px solid;border-left:none;border-right:none; border-top:none; padding-top:8px; height:1.9cm;">
                 <div style="text-align:center; width:2cm;">
                     <b>Jakarta</b>
                 </div>
             </td>
             <td
-                style="vertical-align:bottom; border:#000 3px solid;border-left:none;border-right:none; border-top:none; padding-top:8px; height:1cm;">
+                style="vertical-align:bottom; border:#000 1px solid;border-left:none;border-right:none; border-top:none; padding-top:8px; height:1cm;">
                 <div style="margin-left:-4cm; width:2cm; text-align:center;">
                     <b>{{ $publication_date }}</b>
                 </div>
             </td>
             <td colspan="5"
-                style="text-align: center; border:#000 3px solid;border-top:none; border-bottom:none; border-left:none;vertical-align:bottom; ">
+                style="text-align: center; border:#000 1px solid;border-top:none; border-bottom:none; border-left:none;vertical-align:bottom; ">
                 <b><br>
                     {{ $ttd->name }}</b><br>
             </td>
@@ -475,12 +471,12 @@ FIxing
         <!-- bagian petugas -->
 
         <tr>
-            <td colspan="8" style="border:3px solid #000; padding: 0.1cm; height:2cm;">
+            <td colspan="8" style="border:1px solid #000; padding: 0.1cm; height:2cm;">
                 <div class="row">
-                    <div class="col-7" style="border:3px solid #000;">
+                    <div class="col-7" style="border:1px solid #000;">
                         <div class="row">
                             <div class="col-12"
-                                style="text-align: center; padding:3px; border-bottom:#000 3px solid;">
+                                style="text-align: center; padding:3px; border-bottom:#000 1px solid;">
                                 <b>XI. Diisi oleh petugas pemeriksa pengiriman</b><br>
                                 To be completed by official who inspect the shipment
                             </div>
@@ -491,16 +487,16 @@ FIxing
                                 <table style="border-collapse: collapse; width: 100%;">
                                     <tr>
                                         <td colspan="2"
-                                            style="font-size:7pt; text-align:center; border:3px solid #000; border-left:none; border-top:none; height:0.5cm;">
+                                            style="font-size:7pt; text-align:center; border:1px solid #000; border-left:none; border-top:none; height:0.5cm;">
                                             Lihat kolom jenis / See column of species
                                         </td>
                                     </tr>
                                     <tr>
                                         <td
-                                            style="border:3px solid #000; width:0.7cm; text-align:center; padding: 8px; border-left:none;">
+                                            style="border:1px solid #000; width:0.7cm; text-align:center; padding: 8px; border-left:none;">
                                             No.
                                         </td>
-                                        <td style="border:3px solid #000; text-align:center; padding: 8px;">
+                                        <td style="border:1px solid #000; text-align:center; padding: 8px;">
                                             Jumlah / Quantity
                                         </td>
                                     </tr>
@@ -508,11 +504,11 @@ FIxing
                                     <?php for ($i = 1; $i <= 15; $i++): ?>
                                     <tr>
                                         <td
-                                            style="border:3px solid #000;height:0.3cm; text-align:center;border-bottom:none; border-left:none;">
+                                            style="border:1px solid #000;height:0.3cm; text-align:center;border-bottom:none; border-left:none;">
                                             <?= $i ?>.
                                         </td>
                                         <td
-                                            style="border:3px solid #000;height:0.3cm; border-left:none; border-bottom:none;">
+                                            style="border:1px solid #000;height:0.3cm; border-left:none; border-bottom:none;">
                                         </td>
                                     </tr>
                                     <?php endfor; ?>
@@ -564,10 +560,10 @@ FIxing
                     </div>
 
                     <!-- Bagian XII: Pembaharuan -->
-                    <div class="col-5" style="border:3px solid #000;">
+                    <div class="col-5" style="border:1px solid #000;">
                         <div class="row">
                             <div class="col-12"
-                                style="text-align: center; padding:5px; border-bottom:#000 3px solid;">
+                                style="text-align: center; padding:5px; border-bottom:#000 1px solid;">
                                 <b><u>XII. Pembaharuan</u></b><br>Renewal
                             </div>
                         </div>

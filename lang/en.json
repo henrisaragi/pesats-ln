@@ -772,5 +772,9 @@
     "Belum ada user dengan permission penandatangan.": "No user has the signer permission yet.",
     "Penandatangan": "Signer",
     "Pilih penandatangan": "Select signer",
-    "Tampilkan PDF": "Show PDF"
+    "Tampilkan PDF": "Show PDF",
+    "Cetak terakhir: :tanggal, penandatangan :nama": "Last printed: :tanggal, signer :nama",
+    "Print": "Print",
+    "Gagal menyimpan cetak SATS-LN.": "Failed to save the SATS-LN print.",
+    "Margin (cm)": "Margin (cm)"
 }

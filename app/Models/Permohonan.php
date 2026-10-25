@@ -87,6 +87,20 @@ class Permohonan extends Model
             && $this->satsLn->every(fn (SatsLn $satsLn): bool => $satsLn->status_satsln?->isDecided() ?? false);
     }
 
+    /**
+     * Tahap cetak/tanda tangan: SATS-LN boleh ditandai dicetak (termasuk lewat tombol Print) atau
+     * ditandatangani.
+     */
+    public function isInPrintStage(): bool
+    {
+        return in_array($this->status, [
+            PermohonanStatus::DalamProsesVerifikasi,
+            PermohonanStatus::AntrianCetak,
+            PermohonanStatus::DicetakSebagian,
+            PermohonanStatus::DitandatanganiSebagian,
+        ], true);
+    }
+
     public function activities(): HasMany
     {
         return $this->hasMany(ActivitySatsLn::class);

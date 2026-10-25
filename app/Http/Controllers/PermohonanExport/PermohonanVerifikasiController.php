@@ -15,9 +15,10 @@ use App\Http\Requests\PermohonanExport\VerifySatsLnRequest;
 use App\Models\Document;
 use App\Models\Permohonan;
 use App\Models\SatsLn;
+use App\Models\SatsLnPrint;
 use App\Models\User;
 use App\Services\PermohonanService;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\SatsLnPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,10 +26,14 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PermohonanVerifikasiController extends Controller
 {
-    public function __construct(private readonly PermohonanService $permohonanService) {}
+    public function __construct(
+        private readonly PermohonanService $permohonanService,
+        private readonly SatsLnPdfService $satsLnPdfService,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -131,46 +136,52 @@ class PermohonanVerifikasiController extends Controller
             'penandatanganOptions' => $request->user()->can('permohonan-export.print')
                 ? User::penandatangan()->orderBy('name')->get(['id', 'name', 'jabatan'])
                 : collect(),
+            'lastSatsLnPrint' => $selectedSatsLn?->prints()->with('penandatangan')->latest('id')->first(),
         ]);
     }
 
     /**
-     * PDF SATS-LN (template resmi resources/views/pdf/cites-export.blade.php) dengan penandatangan
-     * terpilih - hanya untuk SATS-LN yang sudah disetujui verifikator (nomor & tanggal sudah terbit).
+     * Pratinjau PDF SATS-LN (template resmi resources/views/pdf/cites-export.blade.php) dengan
+     * penandatangan & sisa tinggi terpilih - hanya untuk SATS-LN yang sudah disetujui verifikator.
      */
     public function printSatsLn(PrintSatsLnRequest $request, Permohonan $permohonan, SatsLn $satsLn): Response
     {
-        abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
-        abort_unless($satsLn->status_satsln === SatsLnStatus::Disetujui, 403);
+        $this->authorizePrint($permohonan, $satsLn);
 
-        $satsLn->load([
-            'customerCompany.country',
-            'purposeOfTransaction',
-            'portOfExportation',
-            'portOfDestination',
-            'items.species',
-            'items.kuotaNasional.source',
-            'items.kuotaNasional.tradeCode',
+        return $this->satsLnPdfService
+            ->render($satsLn, $request->penandatangan(), $request->sisaTinggi())
+            ->stream($this->satsLnPdfService->filename($satsLn));
+    }
+
+    /**
+     * Tombol Print: bekukan PDF + pengaturannya ke sats_ln_prints, tandai SATS-LN dicetak (sama
+     * seperti mark-printed), lalu kembalikan URL PDF tersimpan yang dicetak browser.
+     */
+    public function storeSatsLnPrint(PrintSatsLnRequest $request, Permohonan $permohonan, SatsLn $satsLn): JsonResponse
+    {
+        $this->authorizePrint($permohonan, $satsLn);
+        abort_unless($permohonan->isInPrintStage(), 403);
+
+        $print = $this->satsLnPdfService->store(
+            $satsLn,
+            $request->penandatangan(),
+            $request->sisaTinggi(),
+            $request->user(),
+        );
+        $this->permohonanService->markSatsLnPrinted($permohonan, $satsLn, $request->user());
+
+        return response()->json([
+            'pdf_url' => route('permohonan-export.verifikasi.sats-ln.prints.show', [$permohonan, $satsLn, $print]),
+        ], 201);
+    }
+
+    public function showSatsLnPrint(Permohonan $permohonan, SatsLn $satsLn, SatsLnPrint $print): StreamedResponse
+    {
+        abort_unless($satsLn->permohonan_id === $permohonan->id && $print->sats_ln_id === $satsLn->id, 404);
+
+        return Storage::disk(SatsLnPdfService::DISK)->response($print->pdf_path, $this->satsLnPdfService->filename($satsLn), [
+            'Content-Type' => 'application/pdf',
         ]);
-        $entitas = $permohonan->entitas;
-        $customer = $satsLn->customerCompany;
-
-        return Pdf::loadView('pdf.cites-export', [
-            'satsLn' => $satsLn,
-            'nomorsatln' => $satsLn->issuedNumberLabel(),
-            'tipedoc' => $satsLn->type_satsln,
-            'exportir' => collect([$entitas?->name, $entitas?->address, 'INDONESIA'])->filter()->implode(', '),
-            'importir' => collect([$customer?->name, $customer?->address, $customer?->country?->name])->filter()->implode(', '),
-            'date_valid' => $satsLn->valid_until?->format('d F Y') ?? '',
-            'port_destination' => $satsLn->portOfDestination?->name ?? '',
-            'port_departur' => $satsLn->portOfExportation?->name ?? '',
-            'purpose' => $satsLn->purposeOfTransaction?->name ?? '',
-            'publication_date' => $satsLn->publish_date?->format('d F Y') ?? '',
-            'ttd' => $request->penandatangan(),
-            'realisasiNasionalRunningTotalByItemId' => $this->permohonanService->realisasiKuotaNasionalRunningTotalForItems($satsLn->items),
-        ])
-            ->setPaper('a4')
-            ->stream('SATS-LN-'.($satsLn->satsln_number_issued ?? $satsLn->nomor_urut).'.pdf');
     }
 
     /**
@@ -294,13 +305,12 @@ class PermohonanVerifikasiController extends Controller
         return redirect()->route('permohonan-export.verifikasi.index')->with('success', __('Permohonan berhasil ditolak.'));
     }
 
-    public function markPrinted(Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
+    public function markPrinted(Request $request, Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
     {
         abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
-        abort_unless($permohonan->status === PermohonanStatus::DalamProsesVerifikasi || $permohonan->status === PermohonanStatus::AntrianCetak || $permohonan->status === PermohonanStatus::DicetakSebagian || $permohonan->status === PermohonanStatus::DitandatanganiSebagian, 403);
+        abort_unless($permohonan->isInPrintStage(), 403);
 
-        $satsLn->update(['printed_at' => now(), 'printed_user_id' => Auth::id()]);
-        $this->permohonanService->recomputeStatus($permohonan);
+        $this->permohonanService->markSatsLnPrinted($permohonan, $satsLn, $request->user());
 
         return redirect()->route('permohonan-export.verifikasi.show', $permohonan)->with('success', __('SATS-LN ditandai sudah dicetak.'));
     }
@@ -308,12 +318,18 @@ class PermohonanVerifikasiController extends Controller
     public function markSigned(Permohonan $permohonan, SatsLn $satsLn): RedirectResponse
     {
         abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
-        abort_unless($permohonan->status === PermohonanStatus::DalamProsesVerifikasi || $permohonan->status === PermohonanStatus::AntrianCetak || $permohonan->status === PermohonanStatus::DicetakSebagian || $permohonan->status === PermohonanStatus::DitandatanganiSebagian, 403);
+        abort_unless($permohonan->isInPrintStage(), 403);
 
         $satsLn->update(['signed_at' => now(), 'issued_by_id' => Auth::id()]);
         $this->permohonanService->recomputeStatus($permohonan);
 
         return redirect()->route('permohonan-export.verifikasi.show', $permohonan)->with('success', __('SATS-LN ditandai sudah ditandatangani.'));
+    }
+
+    private function authorizePrint(Permohonan $permohonan, SatsLn $satsLn): void
+    {
+        abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
+        abort_unless($satsLn->status_satsln === SatsLnStatus::Disetujui, 403);
     }
 
     private function authorizeSatsLnDocument(Permohonan $permohonan, SatsLn $satsLn, Document $document): void

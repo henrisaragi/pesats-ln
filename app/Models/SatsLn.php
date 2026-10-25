@@ -181,6 +181,11 @@ class SatsLn extends Model
         return $this->hasMany(SatsLnItem::class);
     }
 
+    public function prints(): HasMany
+    {
+        return $this->hasMany(SatsLnPrint::class);
+    }
+
     public function activities(): HasMany
     {
         return $this->hasMany(ActivitySatsLn::class);

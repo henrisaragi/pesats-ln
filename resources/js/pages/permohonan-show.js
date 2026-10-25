@@ -383,27 +383,121 @@ function setupSatsLnNumberCheck(form) {
     });
 });
 
-// Modal Print/Cetak (verifikasi/show): URL PDF baru lengkap setelah penandatangan dipilih -
-// ditaruh di data-document-viewer-url tombol "Tampilkan PDF" supaya modal viewer fullscreen
-// (document-viewer.js) yang membuka PDF-nya.
-document.addEventListener('change', function (event) {
-    const select = event.target.closest('[data-satsln-print-signer]');
+// Modal Print/Cetak (verifikasi/show): URL pratinjau PDF dibangun dari penandatangan (modal
+// Print/Cetak) + Margin (header modal viewer) - ditaruh di data-document-viewer-url tombol
+// "Tampilkan PDF" supaya modal viewer fullscreen (document-viewer.js) yang membukanya. Mengubah
+// Margin merender ulang pratinjau di iframe.
+function satsLnPrintParams() {
+    const signer = document.querySelector('[data-satsln-print-signer]');
+    const sisaTinggi = document.querySelector('[data-satsln-print-sisa-tinggi]');
+    const params = new URLSearchParams();
 
-    if (!select) {
-        return;
+    if (signer?.value) {
+        params.set('penandatangan_id', signer.value);
     }
 
+    if (sisaTinggi?.value !== '' && sisaTinggi?.value !== undefined) {
+        params.set('sisa_tinggi', sisaTinggi.value);
+    }
+
+    return signer?.value ? params : null;
+}
+
+function satsLnPrintPreviewUrl() {
     const button = document.querySelector('[data-satsln-print-show]');
+    const params = satsLnPrintParams();
 
-    if (!button) {
+    return button && params ? button.dataset.satslnPrintUrl + '?' + params.toString() : '';
+}
+
+document.addEventListener('change', function (event) {
+    if (event.target.closest('[data-satsln-print-signer]')) {
+        const button = document.querySelector('[data-satsln-print-show]');
+        const url = satsLnPrintPreviewUrl();
+
+        if (button) {
+            button.setAttribute('data-document-viewer-url', url);
+            button.disabled = !url;
+        }
+
         return;
     }
 
-    const url = select.value
-        ? button.dataset.satslnPrintUrl + '?penandatangan_id=' + encodeURIComponent(select.value)
-        : '';
+    if (event.target.closest('[data-satsln-print-sisa-tinggi]')) {
+        const frame = document.querySelector('#satsln-print-viewer-modal [data-document-viewer-frame]');
+        const url = satsLnPrintPreviewUrl();
 
-    button.setAttribute('data-document-viewer-url', url);
-    button.setAttribute('data-document-viewer-download-url', url);
-    button.disabled = !url;
+        if (frame && url) {
+            frame.src = withToolbarHidden(url);
+        }
+    }
+});
+
+function printFrame(frame) {
+    frame.contentWindow?.focus();
+    frame.contentWindow?.print();
+}
+
+// Print: simpan PDF + pengaturan (sats_ln_prints) dulu, lalu cetak PDF TERSIMPAN (bukan pratinjau)
+// supaya yang tercetak persis sama dengan yang diarsipkan. PDF tersimpan disajikan dari origin
+// yang sama, jadi contentWindow.print() iframe diizinkan browser.
+document.addEventListener('click', async function (event) {
+    const historyPrint = event.target.closest('[data-satsln-print-frame]');
+
+    if (historyPrint) {
+        const frame = historyPrint.closest('[data-document-viewer-modal]')?.querySelector('[data-document-viewer-frame]');
+
+        if (frame) {
+            printFrame(frame);
+        }
+
+        return;
+    }
+
+    const button = event.target.closest('[data-satsln-print-submit]');
+    const params = satsLnPrintParams();
+
+    if (!button || !params) {
+        return;
+    }
+
+    const modal = button.closest('[data-document-viewer-modal]');
+    const frame = modal?.querySelector('[data-document-viewer-frame]');
+    const errorText = modal?.querySelector('[data-satsln-print-error]');
+    button.disabled = true;
+    errorText?.classList.add('hidden');
+
+    try {
+        const response = await fetch(button.dataset.satslnPrintStoreUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            body: JSON.stringify(Object.fromEntries(params)),
+        });
+
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+
+        const { pdf_url: pdfUrl } = await response.json();
+
+        // Print juga menandai SATS-LN "Dicetak" (status Permohonan ikut berubah) - muat ulang
+        // halaman saat viewer ditutup supaya badge/status yang tampil tidak basi.
+        modal.addEventListener('close.hs.overlay', function () {
+            window.location.reload();
+        }, { once: true });
+
+        frame.addEventListener('load', function () {
+            printFrame(frame);
+        }, { once: true });
+        frame.src = withToolbarHidden(pdfUrl);
+    } catch (error) {
+        console.error('[satsln-print] gagal menyimpan cetak SATS-LN', error);
+        errorText?.classList.remove('hidden');
+    } finally {
+        button.disabled = false;
+    }
 });

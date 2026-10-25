@@ -221,6 +221,15 @@ class PermohonanService
      * Hitung ulang status Permohonan berdasarkan progres cetak/tanda-tangan seluruh SATS-LN di dalamnya.
      * Dipanggil setelah verify/reject/markPrinted/markSigned.
      */
+    /**
+     * Tandai SATS-LN sudah dicetak lalu hitung ulang status Permohonan (Dicetak Sebagian dst.).
+     */
+    public function markSatsLnPrinted(Permohonan $permohonan, SatsLn $satsLn, User $user): void
+    {
+        $satsLn->update(['printed_at' => now(), 'printed_user_id' => $user->id]);
+        $this->recomputeStatus($permohonan);
+    }
+
     public function recomputeStatus(Permohonan $permohonan): void
     {
         if (in_array($permohonan->status, [
