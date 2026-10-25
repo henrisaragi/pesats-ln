@@ -538,8 +538,75 @@
         </div>
     @endif
 
+    @can('permohonan-export.print')
+        @php
+            $canPrintSelectedSatsLn = $selectedSatsLn?->status_satsln === \App\Enums\SatsLnStatus::Disetujui;
+        @endphp
+        <div aria-labelledby="verifikasi-action-modal-print-label" id="verifikasi-action-modal-print"
+            class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+            role="dialog" tabindex="-1">
+            <div
+                class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                    <div class="card-header">
+                        <h3 class="font-bold text-default-800 text-base" id="verifikasi-action-modal-print-label">
+                            {{ __('Print/Cetak') }}
+                            @if ($selectedSatsLn)
+                                - {{ __('SATS-LN Ke #:nomor', ['nomor' => $selectedSatsLn->nomor_urut]) }}
+                            @endif
+                        </h3>
+                        <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                data-hs-overlay="#verifikasi-action-modal-print" type="button">
+                            <span class="sr-only">{{ __('Tutup') }}</span>
+                            <i class="size-5" data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="p-4 text-sm text-default-600">
+                        @if (! $canPrintSelectedSatsLn)
+                            <p>{{ __('SATS-LN baru bisa dicetak setelah disetujui verifikator.') }}</p>
+                        @elseif ($penandatanganOptions->isEmpty())
+                            <p>{{ __('Belum ada user dengan permission penandatangan.') }}</p>
+                        @else
+                            <label class="block text-sm font-medium text-default-800 mb-2" for="satsln-print-penandatangan">
+                                {{ __('Penandatangan') }}
+                            </label>
+                            <select class="form-input" data-satsln-print-signer id="satsln-print-penandatangan">
+                                <option value="">{{ __('Pilih penandatangan') }}</option>
+                                @foreach ($penandatanganOptions as $penandatangan)
+                                    <option value="{{ $penandatangan->id }}">
+                                        {{ $penandatangan->name }}@if ($penandatangan->jabatan) - {{ $penandatangan->jabatan }}@endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </div>
+                    <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
+                        <button class="btn bg-default-150" data-hs-overlay="#verifikasi-action-modal-print" type="button">
+                            {{ __('Tutup') }}
+                        </button>
+                        @if ($canPrintSelectedSatsLn && $penandatanganOptions->isNotEmpty())
+                            <button class="btn bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
+                                    data-document-viewer-title="{{ $selectedSatsLn->issuedNumberLabel() }}"
+                                    data-document-viewer-url=""
+                                    data-hs-overlay="#satsln-print-viewer-modal"
+                                    data-satsln-print-show
+                                    data-satsln-print-url="{{ route('permohonan-export.verifikasi.sats-ln.print', [$permohonan, $selectedSatsLn]) }}"
+                                    disabled type="button">
+                                <i class="size-4 me-1" data-lucide="file-text"></i>{{ __('Tampilkan PDF') }}
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if ($canPrintSelectedSatsLn && $penandatanganOptions->isNotEmpty())
+            <x-document-viewer-modal id="satsln-print-viewer-modal" />
+        @endif
+    @endcan
+
     @foreach ($verifikasiActions as $action)
-        @continue($action['key'] === 'disposisi')
+        @continue(in_array($action['key'], ['disposisi', 'print'], true))
         @can($action['permission'])
             <div aria-labelledby="verifikasi-action-modal-{{ $action['key'] }}-label"
                 id="verifikasi-action-modal-{{ $action['key'] }}"

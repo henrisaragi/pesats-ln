@@ -30,6 +30,7 @@ use App\Models\User;
 use App\Notifications\AppNotification;
 use App\Services\PermohonanService;
 use Database\Seeders\MasterDataPermissionSeeder;
+use Database\Seeders\PenandatanganSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -49,6 +50,7 @@ class PermohonanExportTest extends TestCase
 
         $this->seed(RoleSeeder::class);
         $this->seed(MasterDataPermissionSeeder::class);
+        $this->seed(PenandatanganSeeder::class);
     }
 
     private function makeUser(string $entityType, ?string $role = null): User
@@ -2350,5 +2352,78 @@ class PermohonanExportTest extends TestCase
         // Sudah dikirim - tombol hilang dan tidak bisa dikirim ulang.
         $this->actingAs($verifier)->get($showUrl)->assertOk()->assertDontSee('verifikasi-disposisi-cetak-modal');
         $this->actingAs($verifier)->post($disposisiCetakUrl)->assertForbidden();
+    }
+
+    /**
+     * @return array{0: Permohonan, 1: SatsLn, 2: User, 3: User}
+     */
+    private function makeApprovedSatsLnWithPrinterAndSigner(): array
+    {
+        [$permohonan, $satsLn] = $this->makeAntrianVerifikasiSatsLn();
+        $verifier = $this->makeStaffVerifier();
+        $this->actingAs($verifier)->post(route('permohonan-export.verifikasi.sats-ln.verify', [$permohonan, $satsLn]), $this->verifySatsLnPayload());
+
+        $printer = $this->makeStaffUser(['permohonan-export.print', 'permohonan.verify-detail'], 'Petugas Cetak');
+        $signer = $this->makeStaffUser(User::PENANDATANGAN_PERMISSION, 'Pejabat Penandatangan');
+
+        return [$permohonan->refresh(), $satsLn->refresh(), $printer, $signer];
+    }
+
+    public function test_print_streams_sats_ln_pdf_signed_by_the_selected_penandatangan(): void
+    {
+        [$permohonan, $satsLn, $printer, $signer] = $this->makeApprovedSatsLnWithPrinterAndSigner();
+
+        $response = $this->actingAs($printer)
+            ->get(route('permohonan-export.verifikasi.sats-ln.print', [$permohonan, $satsLn, 'penandatangan_id' => $signer->id]))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+
+        $html = view('pdf.cites-export', [
+            'satsLn' => $satsLn->load('items.species', 'items.kuotaNasional.tradeCode', 'items.kuotaNasional.source'),
+            'nomorsatln' => $satsLn->issuedNumberLabel(),
+            'tipedoc' => $satsLn->type_satsln,
+            'exportir' => 'X', 'importir' => 'Y', 'date_valid' => '', 'port_destination' => '',
+            'port_departur' => '', 'purpose' => '', 'publication_date' => '',
+            'ttd' => $signer,
+            'realisasiNasionalRunningTotalByItemId' => [],
+        ])->render();
+        $this->assertStringContainsString('00001/IV/SATS-LN/2026', $html);
+        $this->assertStringContainsString('Pejabat Penandatangan', $html);
+        $this->assertStringContainsString('Security Stamp No: SN-000001', $html);
+    }
+
+    public function test_print_rejects_a_signer_without_the_penandatangan_permission_and_unapproved_sats_ln(): void
+    {
+        [$permohonan, $satsLn, $printer, $signer] = $this->makeApprovedSatsLnWithPrinterAndSigner();
+        $notSigner = $this->makeStaffUser('permohonan-export.print', 'Bukan Penandatangan');
+
+        $this->actingAs($printer)
+            ->get(route('permohonan-export.verifikasi.sats-ln.print', [$permohonan, $satsLn, 'penandatangan_id' => $notSigner->id]))
+            ->assertSessionHasErrors('penandatangan_id');
+
+        $satsLn->update(['status_satsln' => SatsLnStatus::OnHold]);
+        $this->actingAs($printer)
+            ->get(route('permohonan-export.verifikasi.sats-ln.print', [$permohonan, $satsLn, 'penandatangan_id' => $signer->id]))
+            ->assertForbidden();
+
+        $this->actingAs($this->makeStaffVerifier())
+            ->get(route('permohonan-export.verifikasi.sats-ln.print', [$permohonan, $satsLn, 'penandatangan_id' => $signer->id]))
+            ->assertForbidden();
+    }
+
+    public function test_print_modal_lists_only_active_users_with_the_penandatangan_permission(): void
+    {
+        [$permohonan, $satsLn, $printer] = $this->makeApprovedSatsLnWithPrinterAndSigner();
+        $this->makeStaffUser(User::PENANDATANGAN_PERMISSION, 'Penandatangan Nonaktif')->update(['is_active' => false]);
+
+        $this->actingAs($printer)
+            ->get(route('permohonan-export.verifikasi.sats-ln.show', [$permohonan, $satsLn]))
+            ->assertOk()
+            ->assertSee('data-satsln-print-signer', false)
+            ->assertSee('Pejabat Penandatangan')
+            ->assertDontSee('Penandatangan Nonaktif')
+            ->assertSee(route('permohonan-export.verifikasi.sats-ln.print', [$permohonan, $satsLn]), false);
     }
 }

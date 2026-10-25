@@ -6,8 +6,10 @@ namespace App\Http\Controllers\PermohonanExport;
 
 use App\Enums\MasaBerlakuSatsLn;
 use App\Enums\PermohonanStatus;
+use App\Enums\SatsLnStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PermohonanExport\DisposisiRequest;
+use App\Http\Requests\PermohonanExport\PrintSatsLnRequest;
 use App\Http\Requests\PermohonanExport\ReopenSatsLnRequest;
 use App\Http\Requests\PermohonanExport\VerifySatsLnRequest;
 use App\Models\Document;
@@ -15,9 +17,11 @@ use App\Models\Permohonan;
 use App\Models\SatsLn;
 use App\Models\User;
 use App\Services\PermohonanService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -87,7 +91,7 @@ class PermohonanVerifikasiController extends Controller
         ]);
     }
 
-    public function show(Permohonan $permohonan, ?SatsLn $satsLn = null): View
+    public function show(Request $request, Permohonan $permohonan, ?SatsLn $satsLn = null): View
     {
         if ($satsLn !== null) {
             abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
@@ -124,7 +128,49 @@ class PermohonanVerifikasiController extends Controller
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name']),
+            'penandatanganOptions' => $request->user()->can('permohonan-export.print')
+                ? User::penandatangan()->orderBy('name')->get(['id', 'name', 'jabatan'])
+                : collect(),
         ]);
+    }
+
+    /**
+     * PDF SATS-LN (template resmi resources/views/pdf/cites-export.blade.php) dengan penandatangan
+     * terpilih - hanya untuk SATS-LN yang sudah disetujui verifikator (nomor & tanggal sudah terbit).
+     */
+    public function printSatsLn(PrintSatsLnRequest $request, Permohonan $permohonan, SatsLn $satsLn): Response
+    {
+        abort_unless($satsLn->permohonan_id === $permohonan->id, 404);
+        abort_unless($satsLn->status_satsln === SatsLnStatus::Disetujui, 403);
+
+        $satsLn->load([
+            'customerCompany.country',
+            'purposeOfTransaction',
+            'portOfExportation',
+            'portOfDestination',
+            'items.species',
+            'items.kuotaNasional.source',
+            'items.kuotaNasional.tradeCode',
+        ]);
+        $entitas = $permohonan->entitas;
+        $customer = $satsLn->customerCompany;
+
+        return Pdf::loadView('pdf.cites-export', [
+            'satsLn' => $satsLn,
+            'nomorsatln' => $satsLn->issuedNumberLabel(),
+            'tipedoc' => $satsLn->type_satsln,
+            'exportir' => collect([$entitas?->name, $entitas?->address, 'INDONESIA'])->filter()->implode(', '),
+            'importir' => collect([$customer?->name, $customer?->address, $customer?->country?->name])->filter()->implode(', '),
+            'date_valid' => $satsLn->valid_until?->format('d F Y') ?? '',
+            'port_destination' => $satsLn->portOfDestination?->name ?? '',
+            'port_departur' => $satsLn->portOfExportation?->name ?? '',
+            'purpose' => $satsLn->purposeOfTransaction?->name ?? '',
+            'publication_date' => $satsLn->publish_date?->format('d F Y') ?? '',
+            'ttd' => $request->penandatangan(),
+            'realisasiNasionalRunningTotalByItemId' => $this->permohonanService->realisasiKuotaNasionalRunningTotalForItems($satsLn->items),
+        ])
+            ->setPaper('a4')
+            ->stream('SATS-LN-'.($satsLn->satsln_number_issued ?? $satsLn->nomor_urut).'.pdf');
     }
 
     /**

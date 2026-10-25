@@ -7,6 +7,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Entitas\Entitas;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,6 +20,11 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+
+    /**
+     * Permission yang menandai user sebagai penandatangan SATS-LN (lihat PenandatanganSeeder).
+     */
+    public const PENANDATANGAN_PERMISSION = 'penandatanganan';
 
     /**
      * The attributes that are mass assignable.
@@ -69,6 +75,14 @@ class User extends Authenticatable
     public function entity(): BelongsTo
     {
         return $this->belongsTo(Entitas::class, 'entity_id');
+    }
+
+    /**
+     * User aktif yang memiliki permission penandatangan (langsung maupun lewat role).
+     */
+    public function scopePenandatangan(Builder $query): void
+    {
+        $query->permission(self::PENANDATANGAN_PERMISSION)->where('is_active', true);
     }
 
     public function initials(): string

@@ -382,3 +382,28 @@ function setupSatsLnNumberCheck(form) {
         syncSatsLnValidUntil(event.target.closest('[data-satsln-verify-form]'));
     });
 });
+
+// Modal Print/Cetak (verifikasi/show): URL PDF baru lengkap setelah penandatangan dipilih -
+// ditaruh di data-document-viewer-url tombol "Tampilkan PDF" supaya modal viewer fullscreen
+// (document-viewer.js) yang membuka PDF-nya.
+document.addEventListener('change', function (event) {
+    const select = event.target.closest('[data-satsln-print-signer]');
+
+    if (!select) {
+        return;
+    }
+
+    const button = document.querySelector('[data-satsln-print-show]');
+
+    if (!button) {
+        return;
+    }
+
+    const url = select.value
+        ? button.dataset.satslnPrintUrl + '?penandatangan_id=' + encodeURIComponent(select.value)
+        : '';
+
+    button.setAttribute('data-document-viewer-url', url);
+    button.setAttribute('data-document-viewer-download-url', url);
+    button.disabled = !url;
+});

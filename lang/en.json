@@ -767,5 +767,10 @@
     "Permohonan Siap Dicetak": "Application Ready to Print",
     "Permohonan :nomor telah dikirim ke Divisi Cetak.": "Application :nomor has been sent to the Print Division.",
     "Disetujui": "Approved",
-    "On Hold": "On Hold"
+    "On Hold": "On Hold",
+    "SATS-LN baru bisa dicetak setelah disetujui verifikator.": "SATS-LN can only be printed after it is approved by the verifier.",
+    "Belum ada user dengan permission penandatangan.": "No user has the signer permission yet.",
+    "Penandatangan": "Signer",
+    "Pilih penandatangan": "Select signer",
+    "Tampilkan PDF": "Show PDF"
 }
