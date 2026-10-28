@@ -23,6 +23,14 @@ class SatsLnPdfService
 
     public function render(SatsLn $satsLn, User $penandatangan, float $sisaTinggi): DomPdf
     {
+        return Pdf::loadView('pdf.cites-export', $this->viewData($satsLn, $penandatangan, $sisaTinggi))->setPaper('a4');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function viewData(SatsLn $satsLn, User $penandatangan, float $sisaTinggi): array
+    {
         $satsLn->loadMissing([
             'permohonan.entitas',
             'customerCompany.country',
@@ -36,7 +44,7 @@ class SatsLnPdfService
         $entitas = $satsLn->permohonan->entitas;
         $customer = $satsLn->customerCompany;
 
-        return Pdf::loadView('pdf.cites-export', [
+        return [
             'satsLn' => $satsLn,
             'nomorsatln' => $satsLn->issuedNumberLabel(),
             'tipedoc' => $satsLn->type_satsln,
@@ -50,7 +58,7 @@ class SatsLnPdfService
             'ttd' => $penandatangan,
             'sisaTinggi' => $sisaTinggi,
             'realisasiNasionalRunningTotalByItemId' => $this->permohonanService->realisasiKuotaNasionalRunningTotalForItems($satsLn->items),
-        ])->setPaper('a4');
+        ];
     }
 
     /**

@@ -356,7 +356,7 @@ FIxing
                 <td colspan="2"
                     style="height: {{ $tinggiPerBaris }}cm; vertical-align:top; border:1px solid #000; text-align:right; padding-right:10px;padding-top:10px;">
                     {{ $formatQty($tradeCode, $realisasiNasionalBerjalan) }} /
-                    {{ $formatQty($tradeCode, $item->kuotaNasional?->quota ?? 0) }}
+                    {{ $item->kuotaNasional?->show_in_sats_ln ? $formatQty($tradeCode, $item->kuotaNasional->quota) : '*' }}
                     ({{ $item->kuotaNasional?->year ?? $satsLn->year }})
                 </td>
             </tr>
@@ -391,7 +391,7 @@ FIxing
                 <b>IX.</b>
             </td>
             <td colspan="7"
-                style=" height:0.4cm; border:1px solid #000; border-left:none; border-bottom:none; vertical-align: top; padding-left: 20px;">
+                style=" height:0.4cm; border:1px solid #000; border-left:none; border-bottom:none; vertical-align: top; padding-left: 1px;">
                 <div class="row">
                     <div class="col1set hg-1">
                         <b> <u> Syarat khusus</u><br>
@@ -474,76 +474,149 @@ FIxing
             <td colspan="8" style="border:1px solid #000; padding: 0.1cm; height:2cm;">
                 <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
                     <tr>
-                    <td style="width:58.33%; border:1px solid #000; padding:0; vertical-align:top;">
-                        <div class="row">
-                            <div class="col-12"
-                                style="text-align: center; padding:3px; border-bottom:#000 1px solid;">
-                                <b>XI. Diisi oleh petugas pemeriksa pengiriman</b><br>
-                                To be completed by official who inspect the shipment
+                        <td style="width:58.33%; border:1px solid #000; padding:0; vertical-align:top;">
+                            <div class="row">
+                                <div class="col-12"
+                                    style="text-align: center; padding:3px; border-bottom:#000 1px solid;">
+                                    <b>XI. Diisi oleh petugas pemeriksa pengiriman</b><br>
+                                    To be completed by official who inspect the shipment
+                                </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <!-- Tabel Kiri -->
-                            <div style="display: inline-block; width: 48%; vertical-align: top;">
-                                <table style="border-collapse: collapse; width: 100%;">
-                                    <tr>
-                                        <td colspan="2"
-                                            style="font-size:7pt; text-align:center; border:1px solid #000; border-left:none; border-top:none; height:0.5cm;">
-                                            Lihat kolom jenis / See column of species
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td
-                                            style="border:1px solid #000; width:0.7cm; text-align:center; padding: 8px; border-left:none;">
-                                            No.
-                                        </td>
-                                        <td style="border:1px solid #000; text-align:center; padding: 8px;">
-                                            Jumlah / Quantity
-                                        </td>
-                                    </tr>
-                                    <!-- Looping untuk No 1 - 15 -->
-                                    <?php for ($i = 1; $i <= 15; $i++): ?>
-                                    <tr>
-                                        <td
-                                            style="border:1px solid #000;height:0.3cm; text-align:center;border-bottom:none; border-left:none;">
-                                            <?= $i ?>.
-                                        </td>
-                                        <td
-                                            style="border:1px solid #000;height:0.3cm; border-left:none; border-bottom:none;">
-                                        </td>
-                                    </tr>
-                                    <?php endfor; ?>
-                                </table>
-                            </div>
+                            <div class="row">
+                                <!-- Tabel Kiri -->
+                                <div style="display: inline-block; width: 48%; vertical-align: top;">
+                                    <table style="border-collapse: collapse; width: 100%;">
+                                        <tr>
+                                            <td colspan="2"
+                                                style="font-size:7pt; text-align:center; border:1px solid #000; border-left:none; border-top:none; height:0.5cm;">
+                                                Lihat kolom jenis / See column of species
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td
+                                                style="border:1px solid #000; width:0.7cm; text-align:center; padding: 8px; border-left:none;">
+                                                No.
+                                            </td>
+                                            <td style="border:1px solid #000; text-align:center; padding: 8px;">
+                                                Jumlah / Quantity
+                                            </td>
+                                        </tr>
+                                        <!-- Looping untuk No 1 - 15 -->
+                                        <?php for ($i = 1; $i <= 15; $i++): ?>
+                                        <tr>
+                                            <td
+                                                style="border:1px solid #000;height:0.3cm; text-align:center;border-bottom:none; border-left:none;">
+                                                <?= $i ?>.
+                                            </td>
+                                            <td
+                                                style="border:1px solid #000;height:0.3cm; border-left:none; border-bottom:none;">
+                                            </td>
+                                        </tr>
+                                        <?php endfor; ?>
+                                    </table>
+                                </div>
 
-                            <!-- Tabel Kanan -->
-                            <div style="display: inline-block; width: 48%; vertical-align: top; text-align: right;">
+                                <!-- Tabel Kanan -->
+                                <div
+                                    style="display: inline-block; width: 48%; vertical-align: top; text-align: right;">
+                                    <table style="width: 100%;">
+                                        <tr>
+                                            <td style="padding: 10px; text-align:left; font-size:6pt;">
+                                                <u>No. Bukti Pengiriman</u><br>
+                                                <i>Bill of Ladding (Airway bill number)</i>
+                                            </td>
+                                            <td style="text-align: left; width:1cm;">:</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 10px; text-align:left; font-size:6pt; height:1.5cm;">
+                                                <u>Tanggal</u><br>
+                                                <i>Date</i>
+                                            </td>
+                                            <td style="text-align: left; width:1cm;">:</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 10px; text-align:left; font-size:6pt;">
+                                                <u>Pelabuhan pemberangkatan</u><br>
+                                                <i>Port of exportation</i>
+                                            </td>
+                                            <td style="text-align: left; width:1cm;">:</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2"
+                                                style="font-size:6pt; text-align:center; vertical-align:bottom;">
+                                                <div class="row" style="padding-top:2cm;">
+                                                    <div class="col-6">
+                                                        <span style="visibility: hidden">
+                                                            {{ $ttd->name }}</span><br>
+                                                        <u>Cap</u><br>Official Stamp
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <span style="visibility: hidden">
+                                                            {{ $ttd->name }}</span><br>
+                                                        <u>Tanda Tangan</u><br>Signature
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Bagian XII: Pembaharuan -->
+                        <td style="width:41.67%; border:1px solid #000; padding:0; vertical-align:top;">
+                            <div class="row">
+                                <div class="col-12"
+                                    style="text-align: center; padding:5px; border-bottom:#000 1px solid;">
+                                    <b><u>XII. Pembaharuan</u></b><br>Renewal
+                                </div>
+                            </div>
+                            <div style="display: inline-block; width: 100%; vertical-align: top; text-align: right;">
                                 <table style="width: 100%;">
                                     <tr>
                                         <td style="padding: 10px; text-align:left; font-size:6pt;">
-                                            <u>No. Bukti Pengiriman</u><br>
-                                            <i>Bill of Ladding (Airway bill number)</i>
+                                            <b><u>Berlaku sampai dengan</u><br>
+                                                <i>Valid until</i></b>
                                         </td>
-                                        <td style="text-align: left; width:1cm;">:</td>
+                                        <td style="text-align: left; vertical-align:middle; width:3cm;">:</td>
                                     </tr>
                                     <tr>
-                                        <td style="padding: 10px; text-align:left; font-size:6pt; height:1.5cm;">
-                                            <u>Tanggal</u><br>
-                                            <i>Date</i>
+                                        <td colspan="2" style="padding-left: 15px;">
+                                            <span style="visibility:hidden; font-size:6pt;">{{ $date_valid }}</span>
                                         </td>
-                                        <td style="text-align: left; width:1cm;">:</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 10px; text-align:left; font-size:6pt;">
-                                            <u>Pelabuhan pemberangkatan</u><br>
-                                            <i>Port of exportation</i>
+                                            <b><u>Dikirim kepada (nama, alamat, negara)</u><br>
+                                                <i>Importir (name, address, country)</i></b>
                                         </td>
                                         <td style="text-align: left; width:1cm;">:</td>
                                     </tr>
                                     <tr>
+                                        <td colspan="2" style="padding-left: 15px;">
+                                            <span
+                                                style="visibility:hidden; display: block; font-size: {{ strlen($importir) > 128 ? '4.8pt' : '6pt' }};">
+                                                {{ $importir }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 10px; text-align:left; font-size:6pt;">
+                                            <b><u>Pelabuhan pemberangkatan</u><br>
+                                                <i>Port of exportation</i></b>
+                                        </td>
+                                        <td style="text-align: left; width:1cm;">:</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding-left: 15px;">
+                                            <span
+                                                style="visibility:hidden; font-size:6pt;">{{ $port_departur }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <td colspan="2"
-                                            style="font-size:6pt; text-align:center; vertical-align:bottom;">
-                                            <div class="row" style="padding-top:2cm;">
+                                            style="font-size:6pt; text-align:center; vertical-align:bottom; ">
+                                            <div class="row" style="padding-top:1.7cm;">
                                                 <div class="col-6">
                                                     <span style="visibility: hidden"> {{ $ttd->name }}</span><br>
                                                     <u>Cap</u><br>Official Stamp
@@ -557,76 +630,7 @@ FIxing
                                     </tr>
                                 </table>
                             </div>
-                        </div>
-                    </td>
-
-                    <!-- Bagian XII: Pembaharuan -->
-                    <td style="width:41.67%; border:1px solid #000; padding:0; vertical-align:top;">
-                        <div class="row">
-                            <div class="col-12"
-                                style="text-align: center; padding:5px; border-bottom:#000 1px solid;">
-                                <b><u>XII. Pembaharuan</u></b><br>Renewal
-                            </div>
-                        </div>
-                        <div style="display: inline-block; width: 100%; vertical-align: top; text-align: right;">
-                            <table style="width: 100%;">
-                                <tr>
-                                    <td style="padding: 10px; text-align:left; font-size:6pt;">
-                                        <b><u>Berlaku sampai dengan</u><br>
-                                            <i>Valid until</i></b>
-                                    </td>
-                                    <td style="text-align: left; vertical-align:middle; width:3cm;">:</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2" style="padding-left: 15px;">
-                                        <span style="visibility:hidden; font-size:6pt;">{{ $date_valid }}</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 10px; text-align:left; font-size:6pt;">
-                                        <b><u>Dikirim kepada (nama, alamat, negara)</u><br>
-                                            <i>Importir (name, address, country)</i></b>
-                                    </td>
-                                    <td style="text-align: left; width:1cm;">:</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2" style="padding-left: 15px;">
-                                        <span
-                                            style="visibility:hidden; display: block; font-size: {{ strlen($importir) > 128 ? '4.8pt' : '6pt' }};">
-                                            {{ $importir }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 10px; text-align:left; font-size:6pt;">
-                                        <b><u>Pelabuhan pemberangkatan</u><br>
-                                            <i>Port of exportation</i></b>
-                                    </td>
-                                    <td style="text-align: left; width:1cm;">:</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2" style="padding-left: 15px;">
-                                        <span style="visibility:hidden; font-size:6pt;">{{ $port_departur }}</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2"
-                                        style="font-size:6pt; text-align:center; vertical-align:bottom; ">
-                                        <div class="row" style="padding-top:1.7cm;">
-                                            <div class="col-6">
-                                                <span style="visibility: hidden"> {{ $ttd->name }}</span><br>
-                                                <u>Cap</u><br>Official Stamp
-                                            </div>
-                                            <div class="col-6">
-                                                <span style="visibility: hidden"> {{ $ttd->name }}</span><br>
-                                                <u>Tanda Tangan</u><br>Signature
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                    </td>
+                        </td>
                     </tr>
                 </table>
             </td>

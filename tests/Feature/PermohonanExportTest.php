@@ -1808,6 +1808,38 @@ class PermohonanExportTest extends TestCase
             ->assertSee('18,00', false);
     }
 
+    /**
+     * PDF SATS-LN: kolom "Realisasi Kuota" menampilkan kuota nasional hanya jika "Tampilkan Data
+     * Kuota di SATS-LN" dicentang; selain itu diganti tanda bintang (realisasi / *).
+     */
+    public function test_cites_export_pdf_hides_kuota_nasional_behind_asterisk_when_not_shown_in_sats_ln(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaNasional = $this->makeKuotaPerusahaan($user->entity, 100)->kuotaNasional;
+        $satsLn = $this->makeSatsLnForItems($user);
+        $this->actingAs($user)->post(route('permohonan-export.sats-ln.items.store', [$satsLn->permohonan, $satsLn]), [
+            'source_id' => (string) $kuotaNasional->source_id,
+            'komoditas_id' => (string) $kuotaNasional->komoditas_id,
+            'trade_code_id' => (string) $kuotaNasional->trade_code_id,
+            'species_id' => (string) $kuotaNasional->species_id,
+            'qty' => '10',
+        ])->assertSessionHasNoErrors();
+
+        $render = function () use ($satsLn, $user): string {
+            $data = app(SatsLnPdfService::class)->viewData($satsLn->fresh(), $user, 4);
+
+            return preg_replace('/\s+/', ' ', view('pdf.cites-export', $data)->render());
+        };
+
+        $kuotaNasional->update(['show_in_sats_ln' => true]);
+        $this->assertStringContainsString('10,00 / 150,00', $render());
+
+        $kuotaNasional->update(['show_in_sats_ln' => false]);
+        $html = $render();
+        $this->assertStringContainsString('10,00 / *', $html);
+        $this->assertStringNotContainsString('150,00', $html);
+    }
+
     public function test_realisasi_kuota_nasional_accumulates_across_different_entities(): void
     {
         $service = app(PermohonanService::class);
