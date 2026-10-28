@@ -183,6 +183,7 @@
     @can('permohonan-export.disposisi')
         @php
             $isDisposisiRedisplay = old('_modal') === 'verifikasi-action-modal-disposisi';
+            $canBeDisposisi = $permohonan->canBeDisposisi();
         @endphp
         <div aria-labelledby="verifikasi-action-modal-disposisi-label" id="verifikasi-action-modal-disposisi"
             class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
@@ -213,8 +214,8 @@
                             </label>
                             <x-select id="disposisi-verifikator-id" name="verifikator_id"
                                       :options="$verifikatorOptions"
-                                      :selected="$isDisposisiRedisplay ? old('verifikator_id') : null"
-                                      :placeholder="__('Pilih Verifikator')" required />
+                                      :selected="$isDisposisiRedisplay ? old('verifikator_id') : $permohonan->verified_by"
+                                      :placeholder="__('Pilih Verifikator')" :disabled="! $canBeDisposisi" required />
                             @if ($isDisposisiRedisplay && $errors->has('verifikator_id'))
                                 <p class="mt-1 text-xs text-danger">{{ $errors->first('verifikator_id') }}</p>
                             @endif
@@ -223,7 +224,8 @@
                             <button class="btn bg-default-150" data-hs-overlay="#verifikasi-action-modal-disposisi" type="button">
                                 {{ __('Batal') }}
                             </button>
-                            <button class="btn bg-primary text-white hover:bg-primary/90" type="submit">
+                            <button class="btn bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
+                                    type="submit" @disabled(! $canBeDisposisi)>
                                 {{ __('Disposisi') }}
                             </button>
                         </div>

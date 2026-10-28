@@ -129,8 +129,12 @@ class PermohonanVerifikasiController extends Controller
             'realisasiNasionalRunningTotalByItemId' => $this->permohonanService->realisasiKuotaNasionalRunningTotalForItems(
                 $selectedSatsLn?->items ?? collect()
             ),
-            'verifikatorOptions' => User::whereHas('roles', fn ($query) => $query->where('name', 'verifikator'))
-                ->where('is_active', true)
+            // Verifikator yang sudah didisposisi tetap disertakan walau kini nonaktif/lepas role,
+            // supaya namanya tetap tampil di select Disposisi yang terkunci.
+            'verifikatorOptions' => User::where(fn ($query) => $query
+                ->whereHas('roles', fn ($query) => $query->where('name', 'verifikator'))
+                ->where('is_active', true))
+                ->when($permohonan->verified_by, fn ($query, $verifiedBy) => $query->orWhere('id', $verifiedBy))
                 ->orderBy('name')
                 ->get(['id', 'name']),
             'penandatanganOptions' => $request->user()->can('permohonan-export.print')
@@ -179,9 +183,15 @@ class PermohonanVerifikasiController extends Controller
     {
         abort_unless($satsLn->permohonan_id === $permohonan->id && $print->sats_ln_id === $satsLn->id, 404);
 
-        return Storage::disk(SatsLnPdfService::DISK)->response($print->pdf_path, $this->satsLnPdfService->filename($satsLn), [
-            'Content-Type' => 'application/pdf',
-        ]);
+        // Sengaja tidak pakai Storage::response(): itu memanggil HeadObject (ukuran file) yang
+        // ditolak 403 oleh S3 biodiversity.id, sedangkan GetObject diizinkan.
+        $stream = Storage::disk(SatsLnPdfService::DISK)->readStream($print->pdf_path);
+        abort_unless(is_resource($stream), 404);
+
+        return response()->streamDownload(function () use ($stream): void {
+            fpassthru($stream);
+            fclose($stream);
+        }, $this->satsLnPdfService->filename($satsLn), ['Content-Type' => 'application/pdf'], 'inline');
     }
 
     /**
@@ -207,7 +217,7 @@ class PermohonanVerifikasiController extends Controller
 
     public function disposisi(DisposisiRequest $request, Permohonan $permohonan): RedirectResponse
     {
-        abort_unless($permohonan->status === PermohonanStatus::Submitted, 403);
+        abort_unless($permohonan->canBeDisposisi(), 403);
 
         $this->permohonanService->changeStatus($permohonan, PermohonanStatus::AntrianVerifikasi, [
             'verified_by' => $request->validated('verifikator_id'),

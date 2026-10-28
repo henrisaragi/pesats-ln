@@ -472,8 +472,9 @@ FIxing
 
         <tr>
             <td colspan="8" style="border:1px solid #000; padding: 0.1cm; height:2cm;">
-                <div class="row">
-                    <div class="col-7" style="border:1px solid #000;">
+                <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+                    <tr>
+                    <td style="width:58.33%; border:1px solid #000; padding:0; vertical-align:top;">
                         <div class="row">
                             <div class="col-12"
                                 style="text-align: center; padding:3px; border-bottom:#000 1px solid;">
@@ -557,10 +558,10 @@ FIxing
                                 </table>
                             </div>
                         </div>
-                    </div>
+                    </td>
 
                     <!-- Bagian XII: Pembaharuan -->
-                    <div class="col-5" style="border:1px solid #000;">
+                    <td style="width:41.67%; border:1px solid #000; padding:0; vertical-align:top;">
                         <div class="row">
                             <div class="col-12"
                                 style="text-align: center; padding:5px; border-bottom:#000 1px solid;">
@@ -625,8 +626,9 @@ FIxing
                                 </tr>
                             </table>
                         </div>
-                    </div>
-                </div>
+                    </td>
+                    </tr>
+                </table>
             </td>
         </tr>
         <tr>

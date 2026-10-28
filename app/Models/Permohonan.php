@@ -77,6 +77,15 @@ class Permohonan extends Model
     }
 
     /**
+     * Disposisi ke verifikator hanya sekali, selagi masih Diajukan - setelahnya modal Disposisi
+     * cuma menampilkan verifikator terpilih (read-only).
+     */
+    public function canBeDisposisi(): bool
+    {
+        return $this->status === PermohonanStatus::Submitted;
+    }
+
+    /**
      * Tombol Disposisi Cetak: masih tahap verifikasi dan SETIAP SATS-LN sudah diputuskan
      * (disetujui/ditolak) - satu yang masih belum/on hold menahan seluruh Permohonan.
      */

@@ -695,6 +695,27 @@ class PermohonanExportTest extends TestCase
             ->assertDontSee($nonVerifikatorStaff->name);
     }
 
+    public function test_disposisi_modal_is_locked_to_the_assigned_verifikator_after_disposisi(): void
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $permohonan = $this->makeSubmittedPermohonan($user, $kuotaPerusahaan);
+        $kordinator = $this->makeStaffUser(['permohonan-export.disposisi', 'permohonan.verify-detail'], 'Kordinator Test');
+        $showUrl = route('permohonan-export.verifikasi.show', $permohonan);
+
+        $html = $this->actingAs($kordinator)->get($showUrl)->assertOk()->getContent();
+        $this->assertDoesNotMatchRegularExpression('/<select\s[^>]*disabled[^>]*id="disposisi-verifikator-id"/s', $html);
+
+        $assigned = $this->makeVerifikatorUser(true, 'Verifikator Terpilih');
+        $permohonan->update(['status' => PermohonanStatus::AntrianVerifikasi, 'verified_by' => $assigned->id]);
+        $assigned->update(['is_active' => false]);
+
+        $html = $this->actingAs($kordinator)->get($showUrl)->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/<select\s[^>]*disabled[^>]*id="disposisi-verifikator-id"/s', $html);
+        $this->assertMatchesRegularExpression('/<option value="'.$assigned->id.'"\s+selected[^>]*>\s*Verifikator Terpilih/', $html);
+        $this->assertMatchesRegularExpression('/<button[^>]*type="submit"\s+disabled[^>]*>\s*Disposisi\s*</s', $html);
+    }
+
     public function test_cannot_exceed_max_25_sats_ln_per_permohonan(): void
     {
         $user = $this->makeUser('perusahaan');

@@ -30,6 +30,12 @@
     @apply cursor-not-allowed opacity-70 bg-default-100/80;
 }
 
+/* choices.min.css mewarnai item select yang disabled dengan #fff (selector-nya lebih spesifik
+   dari .choices__list--single .choices__item di bawah) - nilai terpilih jadi tak terbaca. */
+.choices.is-disabled .choices__item {
+    @apply text-default-800;
+}
+
 .choices[data-type*='select-one']::after {
     /* This ::after is choices.min.css's CSS-triangle arrow (width/height:0, only the
        top border colored, the rest transparent - see its own ::after rule). Setting
