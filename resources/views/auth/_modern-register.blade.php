@@ -59,6 +59,7 @@
                                     <label class="block font-medium text-default-900 text-sm mb-2" for="name">{{ __('Nama Lengkap') }}</label>
                                     <input class="form-input" id="name" name="name" placeholder="{{ __('Masukkan Nama Lengkap') }}"
                                            type="text" value="{{ old('name') }}"/>
+                                    <p class="mt-1 text-xs text-default-500 text-left">{{ __('Nama lengkap Anda sebagai pengguna akun, bukan nama perusahaan/entitas.') }}</p>
                                 </div>
                                 <div class="mb-4">
                                     <label class="block font-medium text-default-900 text-sm mb-2" for="email">{{ __('Email') }}</label>

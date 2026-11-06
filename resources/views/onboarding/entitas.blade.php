@@ -12,7 +12,7 @@
             <div class="flex flex-col gap-y-4">
                 <div>
                     <label class="inline-block mb-2 text-sm font-medium" for="onboarding-entitas-name">
-                        {{ __('Nama Entitas') }}
+                        {{ $nameLabel }}
                     </label>
                     <input class="form-input" data-tour="entitas-name" id="onboarding-entitas-name" name="name"
                            type="text" value="{{ old('name', $entity->name) }}"/>

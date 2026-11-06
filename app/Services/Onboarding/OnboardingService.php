@@ -26,6 +26,22 @@ class OnboardingService
 
     public function __construct(private readonly EntityProfileService $profileService) {}
 
+    /**
+     * Label for the entity name field on the onboarding "Data Entitas" step,
+     * worded per entity_type so the user enters the entity's name rather than
+     * their own (users.name is the individual's name from registration).
+     */
+    public function entityNameLabel(?string $entityType): string
+    {
+        return match ($entityType) {
+            'perusahaan' => __('Nama Perusahaan'),
+            'penangkaran' => __('Nama Unit Penangkaran'),
+            'perorangan' => __('Nama Lengkap Sesuai Identitas Paspor/KTP'),
+            'upt_ksda' => __('Nama Lengkap Sesuai Identitas'),
+            default => __('Nama Entitas'),
+        };
+    }
+
     public function hasSelectedType(User $user): bool
     {
         return $user->entity !== null;

@@ -48,7 +48,7 @@ class OnboardingController extends Controller
         $entity->entity_type = $request->validated('entity_type');
 
         if ($isNew) {
-            $entity->name = $user->name;
+            $entity->name = '';
         }
 
         $entity->save();
@@ -75,6 +75,7 @@ class OnboardingController extends Controller
 
         return view('onboarding.entitas', [
             'entity' => $user->entity,
+            'nameLabel' => $this->onboardingService->entityNameLabel($user->entity->entity_type),
         ]);
     }
 
