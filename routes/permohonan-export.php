@@ -41,6 +41,7 @@ Route::middleware('auth')->prefix('permohonan-export')->name('permohonan-export.
         Route::post('{permohonan}/sats-ln/{satsLn}/prints', [PermohonanVerifikasiController::class, 'storeSatsLnPrint'])->middleware('permission:permohonan-export.print')->name('sats-ln.prints.store');
         Route::get('{permohonan}/sats-ln/{satsLn}/prints/{print}', [PermohonanVerifikasiController::class, 'showSatsLnPrint'])->middleware('permission:permohonan-export.print')->name('sats-ln.prints.show');
         Route::post('{permohonan}/sats-ln/{satsLn}/mark-printed', [PermohonanVerifikasiController::class, 'markPrinted'])->middleware('permission:permohonan-export.verify')->name('mark-printed');
+        Route::post('{permohonan}/update-status', [PermohonanVerifikasiController::class, 'updateSignedStatus'])->middleware('permission:permohonan-export.update-status')->name('update-status');
         Route::post('{permohonan}/sats-ln/{satsLn}/mark-signed', [PermohonanVerifikasiController::class, 'markSigned'])->middleware('permission:permohonan-export.verify')->name('mark-signed');
     });
 

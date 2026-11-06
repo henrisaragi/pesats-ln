@@ -74,6 +74,14 @@ class SatsLn extends Model
     }
 
     /**
+     * Penandatanganan hanya untuk SATS-LN yang sudah dicetak dan belum ditandatangani.
+     */
+    public function canBeMarkedSigned(): bool
+    {
+        return $this->printed_at !== null && $this->signed_at === null;
+    }
+
+    /**
      * Security Stamp wajib (dan baru ditampilkan) kalau ada spesies Appendix I/II/III di SATS-LN
      * ini - spesies Non Appendix tidak memakai stamp. Butuh relasi items.species.
      */

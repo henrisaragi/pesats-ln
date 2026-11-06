@@ -501,3 +501,38 @@ document.addEventListener('click', async function (event) {
         button.disabled = false;
     }
 });
+
+// Modal Update Status (Dalam Proses Penandatanganan): "Tandai Semua" mencentang semua SATS-LN
+// yang masih bisa ditandai, dan ikut tercentang/indeterminate mengikuti centang per item.
+function syncSatsLnSignAll(group) {
+    const all = group.querySelector('[data-satsln-sign-all]');
+    const items = [...group.querySelectorAll('[data-satsln-sign-item]')];
+
+    if (!all || items.length === 0) {
+        return;
+    }
+
+    const checkedCount = items.filter((item) => item.checked).length;
+    all.checked = checkedCount === items.length;
+    all.indeterminate = checkedCount > 0 && checkedCount < items.length;
+}
+
+document.addEventListener('change', function (event) {
+    const group = event.target.closest('[data-satsln-sign-group]');
+
+    if (!group) {
+        return;
+    }
+
+    if (event.target.matches('[data-satsln-sign-all]')) {
+        group.querySelectorAll('[data-satsln-sign-item]').forEach((item) => {
+            item.checked = event.target.checked;
+        });
+    }
+
+    syncSatsLnSignAll(group);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-satsln-sign-group]').forEach(syncSatsLnSignAll);
+});

@@ -651,8 +651,88 @@
         @endif
     @endcan
 
+    @can('permohonan-export.update-status')
+        @php
+            $isUpdateStatusRedisplay = old('_modal') === 'verifikasi-action-modal-update-status';
+            $oldSignedSatsLnIds = $isUpdateStatusRedisplay ? (array) old('sats_ln_ids', []) : [];
+            $canUpdateSignedStatus = $permohonan->isInPrintStage();
+            $hasSignableSatsLn = $permohonan->satsLn->contains(fn ($satsLn) => $satsLn->canBeMarkedSigned());
+        @endphp
+        <div aria-labelledby="verifikasi-action-modal-update-status-label" id="verifikasi-action-modal-update-status"
+            class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
+            role="dialog" tabindex="-1">
+            <div
+                class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-2xl sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                    <form action="{{ route('permohonan-export.verifikasi.update-status', $permohonan) }}" method="POST">
+                        @csrf
+                        <input name="_modal" type="hidden" value="verifikasi-action-modal-update-status">
+                        <div class="card-header">
+                            <h3 class="font-bold text-default-800 text-base" id="verifikasi-action-modal-update-status-label">
+                                {{ __('Update Status (Dalam Proses Penandatanganan)') }}
+                            </h3>
+                            <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                    data-hs-overlay="#verifikasi-action-modal-update-status" type="button">
+                                <span class="sr-only">{{ __('Tutup') }}</span>
+                                <i class="size-5" data-lucide="x"></i>
+                            </button>
+                        </div>
+                        <div class="p-4 text-sm text-default-600" data-satsln-sign-group>
+                            @if (! $canUpdateSignedStatus)
+                                <p>{{ __('Status penandatanganan baru bisa diperbarui pada tahap cetak/tanda tangan.') }}</p>
+                            @elseif ($permohonan->satsLn->isEmpty())
+                                <p>{{ __('Belum ada SATS-LN.') }}</p>
+                            @else
+                                <p class="mb-3">{{ __('Centang SATS-LN yang sudah ditandatangani. Hanya SATS-LN yang sudah dicetak yang bisa ditandai.') }}</p>
+                                @if ($permohonan->satsLn->count() > 1)
+                                    <label class="flex items-center gap-2 mb-3 pb-3 border-b border-dashed border-default-200 font-medium text-default-800 cursor-pointer">
+                                        <input class="form-checkbox" data-satsln-sign-all type="checkbox" @disabled(! $hasSignableSatsLn)>
+                                        {{ __('Tandai Semua') }}
+                                    </label>
+                                @endif
+                                <div class="grid sm:grid-cols-3 grid-cols-1 gap-3">
+                                    @foreach ($permohonan->satsLn as $satsLn)
+                                        @php
+                                            $isSignable = $satsLn->canBeMarkedSigned();
+                                        @endphp
+                                        <label class="flex items-start gap-2 {{ $isSignable ? 'cursor-pointer text-default-800' : 'opacity-60' }}">
+                                            <input class="form-checkbox mt-0.5" type="checkbox" value="{{ $satsLn->public_id }}"
+                                                   @if ($isSignable) data-satsln-sign-item name="sats_ln_ids[]" @endif
+                                                   @checked($satsLn->signed_at !== null || in_array($satsLn->public_id, $oldSignedSatsLnIds, true))
+                                                   @disabled(! $isSignable)>
+                                            <span class="break-all">
+                                                {{ $satsLn->issuedNumberLabel() ?? __('SATS-LN Ke #:nomor', ['nomor' => $satsLn->nomor_urut]) }}
+                                                @if ($satsLn->signed_at !== null)
+                                                    <span class="block text-xs text-success">{{ __('Ditandatangani') }}</span>
+                                                @elseif ($satsLn->printed_at === null)
+                                                    <span class="block text-xs text-default-500">{{ __('Belum dicetak') }}</span>
+                                                @endif
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                                @if ($isUpdateStatusRedisplay && $errors->has('sats_ln_ids*'))
+                                    <p class="mt-2 text-xs text-danger">{{ $errors->first('sats_ln_ids*') }}</p>
+                                @endif
+                            @endif
+                        </div>
+                        <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
+                            <button class="btn bg-default-150" data-hs-overlay="#verifikasi-action-modal-update-status" type="button">
+                                {{ __('Batal') }}
+                            </button>
+                            <button class="btn bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
+                                    type="submit" @disabled(! $canUpdateSignedStatus || ! $hasSignableSatsLn)>
+                                {{ __('Simpan') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endcan
+
     @foreach ($verifikasiActions as $action)
-        @continue(in_array($action['key'], ['disposisi', 'print'], true))
+        @continue(in_array($action['key'], ['disposisi', 'print', 'update-status'], true))
         @can($action['permission'])
             <div aria-labelledby="verifikasi-action-modal-{{ $action['key'] }}-label"
                 id="verifikasi-action-modal-{{ $action['key'] }}"

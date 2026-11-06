@@ -230,6 +230,25 @@ class PermohonanService
         $this->recomputeStatus($permohonan);
     }
 
+    /**
+     * Tandai beberapa SATS-LN sekaligus sudah ditandatangani (modal Update Status). Hanya yang
+     * memenuhi SatsLn::canBeMarkedSigned() yang diubah, lalu status Permohonan dihitung ulang.
+     *
+     * @param  list<string>  $satsLnPublicIds
+     */
+    public function markSatsLnSigned(Permohonan $permohonan, array $satsLnPublicIds, User $user): void
+    {
+        DB::transaction(function () use ($permohonan, $satsLnPublicIds, $user): void {
+            $permohonan->satsLn()
+                ->whereIn('public_id', $satsLnPublicIds)
+                ->whereNotNull('printed_at')
+                ->whereNull('signed_at')
+                ->update(['signed_at' => now(), 'issued_by_id' => $user->id]);
+
+            $this->recomputeStatus($permohonan);
+        });
+    }
+
     public function recomputeStatus(Permohonan $permohonan): void
     {
         if (in_array($permohonan->status, [

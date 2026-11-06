@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PermohonanExport\DisposisiRequest;
 use App\Http\Requests\PermohonanExport\PrintSatsLnRequest;
 use App\Http\Requests\PermohonanExport\ReopenSatsLnRequest;
+use App\Http\Requests\PermohonanExport\UpdateSignedStatusRequest;
 use App\Http\Requests\PermohonanExport\VerifySatsLnRequest;
 use App\Models\Document;
 use App\Models\Permohonan;
@@ -334,6 +335,15 @@ class PermohonanVerifikasiController extends Controller
         $this->permohonanService->recomputeStatus($permohonan);
 
         return redirect()->route('permohonan-export.verifikasi.show', $permohonan)->with('success', __('SATS-LN ditandai sudah ditandatangani.'));
+    }
+
+    public function updateSignedStatus(UpdateSignedStatusRequest $request, Permohonan $permohonan): RedirectResponse
+    {
+        abort_unless($permohonan->isInPrintStage(), 403);
+
+        $this->permohonanService->markSatsLnSigned($permohonan, $request->validated('sats_ln_ids'), $request->user());
+
+        return redirect()->back()->with('success', __('Status SATS-LN berhasil diperbarui.'));
     }
 
     private function authorizePrint(Permohonan $permohonan, SatsLn $satsLn): void

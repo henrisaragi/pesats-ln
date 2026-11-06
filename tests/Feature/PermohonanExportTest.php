@@ -716,6 +716,72 @@ class PermohonanExportTest extends TestCase
         $this->assertMatchesRegularExpression('/<button[^>]*type="submit"\s+disabled[^>]*>\s*Disposisi\s*</s', $html);
     }
 
+    /**
+     * @return array{0: Permohonan, 1: SatsLn, 2: SatsLn, 3: SatsLn}
+     */
+    private function makePermohonanInSigningStage(): array
+    {
+        $user = $this->makeUser('perusahaan');
+        $kuotaPerusahaan = $this->makeKuotaPerusahaan($user->entity, 100);
+        $permohonan = $this->makeSubmittedPermohonan($user, $kuotaPerusahaan);
+        $first = $permohonan->satsLn()->firstOrFail();
+        $first->update(['satsln_number_issued' => '2600001', 'year' => 2026, 'printed_at' => now()]);
+
+        $second = $first->replicate(['public_id']);
+        $second->fill(['nomor_urut' => 2, 'satsln_number_issued' => '2600002'])->save();
+
+        $unprinted = $first->replicate(['public_id']);
+        $unprinted->fill(['nomor_urut' => 3, 'satsln_number_issued' => '2600003', 'printed_at' => null])->save();
+
+        $permohonan->update(['status' => PermohonanStatus::DicetakSebagian]);
+
+        return [$permohonan->refresh(), $first, $second, $unprinted];
+    }
+
+    public function test_update_status_modal_lists_permit_numbers_with_mark_all(): void
+    {
+        [$permohonan, $first, , $unprinted] = $this->makePermohonanInSigningStage();
+        $staff = $this->makeStaffUser(['permohonan-export.update-status', 'permohonan.verify-detail']);
+
+        $html = $this->actingAs($staff)->get(route('permohonan-export.verifikasi.show', $permohonan))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-satsln-sign-all', $html);
+        $this->assertStringContainsString('00001/IV/SATS-LN/2026', $html);
+        $this->assertStringContainsString('00003/IV/SATS-LN/2026', $html);
+        $this->assertMatchesRegularExpression('/value="'.$first->public_id.'"\s+data-satsln-sign-item name="sats_ln_ids\[\]"/', $html);
+        $this->assertMatchesRegularExpression('/value="'.$unprinted->public_id.'"\s+disabled/', $html);
+    }
+
+    public function test_update_status_marks_checked_printed_sats_ln_as_signed(): void
+    {
+        [$permohonan, $first, $second, $unprinted] = $this->makePermohonanInSigningStage();
+        $staff = $this->makeStaffUser(['permohonan-export.update-status', 'permohonan.verify-detail']);
+        $url = route('permohonan-export.verifikasi.update-status', $permohonan);
+
+        $this->actingAs($staff)->post($url, ['sats_ln_ids' => [$unprinted->public_id]])
+            ->assertSessionHasErrors('sats_ln_ids.0');
+        $this->assertNull($unprinted->refresh()->signed_at);
+
+        $this->actingAs($staff)->post($url, ['sats_ln_ids' => [$first->public_id, $second->public_id]])
+            ->assertSessionHasNoErrors();
+
+        $this->assertNotNull($first->refresh()->signed_at);
+        $this->assertSame($staff->id, $first->issued_by_id);
+        $this->assertNotNull($second->refresh()->signed_at);
+        $this->assertNull($unprinted->refresh()->signed_at);
+        $this->assertSame(PermohonanStatus::DitandatanganiSebagian, $permohonan->refresh()->status);
+    }
+
+    public function test_update_status_requires_permission(): void
+    {
+        [$permohonan, $first] = $this->makePermohonanInSigningStage();
+        $staff = $this->makeStaffUser(['permohonan.verify-detail']);
+
+        $this->actingAs($staff)->post(route('permohonan-export.verifikasi.update-status', $permohonan), ['sats_ln_ids' => [$first->public_id]])
+            ->assertForbidden();
+        $this->assertNull($first->refresh()->signed_at);
+    }
+
     public function test_cannot_exceed_max_25_sats_ln_per_permohonan(): void
     {
         $user = $this->makeUser('perusahaan');
