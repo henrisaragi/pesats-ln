@@ -33,6 +33,10 @@
                 'title' => __('Wilayah'),
                 'description' => __('Pilih Provinsi, Kota, Kecamatan, lalu Kelurahan secara berurutan - setiap pilihan akan memuat pilihan berikutnya secara otomatis.'),
             ],
+            'coordinates' => [
+                'title' => __('Titik Koordinat'),
+                'description' => __('Klik "Ambil Lokasi Saat Ini" untuk mengisi Latitude dan Longitude dari lokasi perangkat, atau isi secara manual.'),
+            ],
             'next' => [
                 'title' => __('Lanjutkan'),
                 'description' => __('Klik tombol ini untuk menyimpan data entitas dan melanjutkan.'),

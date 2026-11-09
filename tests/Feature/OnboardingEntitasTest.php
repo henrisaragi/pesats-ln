@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Kecamatan;
+use App\Models\Kelurahan;
+use App\Models\Kota;
+use App\Models\Provinsi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -65,5 +69,57 @@ class OnboardingEntitasTest extends TestCase
             ->get(route('onboarding.entitas.show'))
             ->assertOk()
             ->assertSee($label);
+    }
+
+    /**
+     * @return array<string, int|string>
+     */
+    private function entitasPayload(): array
+    {
+        $provinsi = Provinsi::create(['code' => '31', 'name' => 'DKI Jakarta']);
+        $kota = Kota::create(['provinsi_id' => $provinsi->id, 'code' => '31.71', 'name' => 'Jakarta Pusat']);
+        $kecamatan = Kecamatan::create(['kota_id' => $kota->id, 'code' => '31.71.01', 'name' => 'Gambir']);
+        $kelurahan = Kelurahan::create(['kecamatan_id' => $kecamatan->id, 'code' => '31.71.01.1001', 'name' => 'Gambir']);
+
+        return [
+            'name' => 'PT Satwa Lestari',
+            'address' => 'Jl. Merdeka No. 1',
+            'provinsi_id' => $provinsi->id,
+            'kota_id' => $kota->id,
+            'kecamatan_id' => $kecamatan->id,
+            'kelurahan_id' => $kelurahan->id,
+            'latitude' => '-6.1753924',
+            'longitude' => '106.8271528',
+        ];
+    }
+
+    public function test_entitas_step_saves_coordinates(): void
+    {
+        $user = $this->makeOnboardingUser();
+        $this->actingAs($user)->post(route('onboarding.type.store'), ['entity_type' => 'perusahaan']);
+
+        $this->actingAs($user->fresh())
+            ->post(route('onboarding.entitas.store'), $this->entitasPayload())
+            ->assertRedirect(route('onboarding.detail.show'));
+
+        $entity = $user->fresh()->entity;
+        $this->assertSame('-6.1753924', $entity->latitude);
+        $this->assertSame('106.8271528', $entity->longitude);
+    }
+
+    public function test_entitas_step_rejects_missing_or_out_of_range_coordinates(): void
+    {
+        $user = $this->makeOnboardingUser();
+        $this->actingAs($user)->post(route('onboarding.type.store'), ['entity_type' => 'perusahaan']);
+
+        $this->actingAs($user->fresh())
+            ->post(route('onboarding.entitas.store'), [
+                ...$this->entitasPayload(),
+                'latitude' => '',
+                'longitude' => '200',
+            ])
+            ->assertSessionHasErrors(['latitude', 'longitude']);
+
+        $this->assertNull($user->fresh()->entity->latitude);
     }
 }

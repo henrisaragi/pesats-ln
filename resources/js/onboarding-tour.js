@@ -40,6 +40,7 @@ function stepsFor(pageKey) {
             { element: '[data-tour="entitas-name"]', popover: t.entitas.name },
             { element: '[data-tour="entitas-address"]', popover: t.entitas.address },
             { element: '[data-tour="entitas-region"]', popover: t.entitas.region },
+            { element: '[data-tour="entitas-coordinates"]', popover: t.entitas.coordinates },
             { element: '[data-tour="entitas-next"]', popover: t.entitas.next },
         ];
     }

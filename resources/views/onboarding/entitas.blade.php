@@ -73,6 +73,46 @@
                         @endif
                     </div>
                 </div>
+                <div data-tour="entitas-coordinates">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium">{{ __('Titik Koordinat') }}</span>
+                        <button class="btn btn-sm bg-primary/10 text-primary" id="onboarding-entitas-locate"
+                                type="button">
+                            {{ __('Ambil Lokasi Saat Ini') }}
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="inline-block mb-2 text-sm font-medium" for="onboarding-entitas-latitude">
+                                {{ __('Latitude') }}
+                            </label>
+                            <input class="form-input" id="onboarding-entitas-latitude" inputmode="decimal"
+                                   name="latitude" placeholder="-6.2000000" type="text"
+                                   value="{{ old('latitude', $entity->latitude) }}"/>
+                            @if ($errors->has('latitude'))
+                                <p class="mt-1 text-xs text-danger">{{ $errors->first('latitude') }}</p>
+                            @endif
+                        </div>
+                        <div>
+                            <label class="inline-block mb-2 text-sm font-medium" for="onboarding-entitas-longitude">
+                                {{ __('Longitude') }}
+                            </label>
+                            <input class="form-input" id="onboarding-entitas-longitude" inputmode="decimal"
+                                   name="longitude" placeholder="106.8166667" type="text"
+                                   value="{{ old('longitude', $entity->longitude) }}"/>
+                            @if ($errors->has('longitude'))
+                                <p class="mt-1 text-xs text-danger">{{ $errors->first('longitude') }}</p>
+                            @endif
+                        </div>
+                    </div>
+                    <p class="mt-1 text-xs text-default-500" id="onboarding-entitas-locate-status"
+                       data-locating="{{ __('Mengambil lokasi...') }}"
+                       data-success="{{ __('Lokasi berhasil diambil.') }}"
+                       data-unsupported="{{ __('Browser Anda tidak mendukung pengambilan lokasi. Isi koordinat secara manual.') }}"
+                       data-denied="{{ __('Gagal mengambil lokasi. Izinkan akses lokasi di browser atau isi koordinat secara manual.') }}">
+                        {{ __('Klik tombol untuk mengisi otomatis dari lokasi perangkat, atau isi secara manual.') }}
+                    </p>
+                </div>
             </div>
             <div class="mt-8 flex justify-between">
                 <a class="btn bg-default-150" href="{{ route('onboarding.type.show') }}">
@@ -87,5 +127,5 @@
 @endsection
 
 @section('scripts')
-    @vite(['resources/js/onboarding-tour.js'])
+    @vite(['resources/js/onboarding-tour.js', 'resources/js/pages/onboarding-entitas.js'])
 @endsection

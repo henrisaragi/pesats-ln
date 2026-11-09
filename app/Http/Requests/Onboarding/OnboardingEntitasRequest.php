@@ -25,6 +25,8 @@ class OnboardingEntitasRequest extends FormRequest
             'kota_id' => ['required', 'integer', 'exists:kota,id'],
             'kecamatan_id' => ['required', 'integer', 'exists:kecamatan,id'],
             'kelurahan_id' => ['required', 'integer', 'exists:kelurahan,id'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
         ];
     }
 }

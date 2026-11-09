@@ -33,7 +33,20 @@ class Entitas extends Model
         'kota_id',
         'kecamatan_id',
         'kelurahan_id',
+        'latitude',
+        'longitude',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
+        ];
+    }
 
     public function provinsi(): BelongsTo
     {
