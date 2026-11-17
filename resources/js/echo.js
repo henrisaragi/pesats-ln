@@ -15,6 +15,7 @@ window.Echo = new Echo({
     wsHost: import.meta.env.VITE_REVERB_HOST,
     wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
     wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+    // Public URL prefix (e.g. /satsln-v4); the reverse proxy strips it, Reverb itself serves at /app.
     wsPath: import.meta.env.VITE_REVERB_PATH ?? '',
     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
     enabledTransports: ['ws', 'wss'],
