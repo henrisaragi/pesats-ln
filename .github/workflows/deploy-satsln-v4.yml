@@ -45,7 +45,12 @@ jobs:
           php artisan migrate --force
           php artisan storage:link || true
           php artisan optimize:clear
-          php artisan optimize
+          # No route:cache (so not `artisan optimize`): the cached matcher strips the trailing slash
+          # from REQUEST_URI, which breaks base-path detection for /satsln-v4/ and lands on the
+          # {any} catch-all route ("Too few arguments to RoutingController::root()").
+          php artisan config:cache
+          php artisan event:cache
+          php artisan view:cache
           php artisan queue:restart
 
           sudo chown -R henri:www storage bootstrap/cache
