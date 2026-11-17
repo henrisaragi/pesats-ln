@@ -54,7 +54,7 @@ class ServerStatusTest extends TestCase
         $response = $this->actingAs($user)->get(route('settings.server-status.index'));
 
         $response->assertOk();
-        $response->assertSee('php artisan queue:work', false);
+        $response->assertSee('php artisan queue:work --queue=default,whatsapp --tries=3 --sleep=3', false);
         $response->assertSee('php artisan queue:work --queue=notifications --tries=3 --sleep=1', false);
         $response->assertSee('php artisan reverb:start', false);
         $response->assertSee(__('Queue Worker (Default)'));

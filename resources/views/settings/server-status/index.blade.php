@@ -7,7 +7,7 @@
         $cards = [
             [
                 'title' => __('Queue Worker (Default)'),
-                'command' => 'php artisan queue:work',
+                'command' => 'php artisan queue:work --queue=default,whatsapp --tries=3 --sleep=3',
                 'status' => $statuses['queue_default'],
             ],
             [

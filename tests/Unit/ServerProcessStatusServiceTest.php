@@ -64,6 +64,35 @@ class ServerProcessStatusServiceTest extends TestCase
     }
 
     /**
+     * Jalur produksi tanpa shell_exec: command line dibaca dari /proc/<pid>/cmdline
+     * (argumen dipisah NUL), di sini lewat folder procfs palsu.
+     */
+    public function test_reads_processes_from_proc_filesystem(): void
+    {
+        $procPath = sys_get_temp_dir().'/fake-proc-'.uniqid();
+        $commands = [
+            101 => ['/usr/bin/php', '/app/artisan', 'queue:work', '--queue=default,whatsapp', '--tries=3'],
+            102 => ['/usr/bin/php', '/app/artisan', 'queue:work', '--queue=notifications', '--tries=3', '--sleep=1'],
+            103 => ['/usr/sbin/httpd', '-DFOREGROUND'],
+        ];
+
+        foreach ($commands as $pid => $argv) {
+            mkdir("{$procPath}/{$pid}", 0777, true);
+            file_put_contents("{$procPath}/{$pid}/cmdline", implode("\0", $argv)."\0");
+        }
+
+        $statuses = (new ServerProcessStatusService($procPath))->getStatuses();
+
+        $this->assertTrue($statuses['queue_default']);
+        $this->assertTrue($statuses['queue_notifications']);
+        $this->assertFalse($statuses['reverb']);
+
+        array_map('unlink', glob("{$procPath}/*/cmdline"));
+        array_map('rmdir', glob("{$procPath}/*"));
+        rmdir($procPath);
+    }
+
+    /**
      * Smoke test murni untuk jalur produksi (argumen null -> ambil dari shell_exec("ps ...")
      * sungguhan) - tidak bisa memastikan isi statusnya (tergantung proses OS yang benar-benar
      * berjalan saat test dijalankan), cuma memastikan tidak crash dan bentuk array-nya benar.
