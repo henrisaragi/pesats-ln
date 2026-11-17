@@ -39,7 +39,7 @@
                                 </td>
                                 <td class="px-3.5 py-3 text-sm">
                                     <a class="flex gap-3 items-center" href="#">
-                                        <img alt="" class="h-6 rounded-full" src="/images/user/user-1.jpg"/>
+                                        <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-1.jpg') }}"/>
                                         <h6 class="text-heading font-medium">Willie Torres</h6>
                                     </a>
                                 </td>
@@ -79,7 +79,7 @@
                                 <td class="px-3.5 py-3 text-sm text-primary">#TWE1001524</td>
                                 <td class="px-3.5 py-3 text-sm">
                                     <a class="flex gap-3 items-center" href="#">
-                                        <img alt="" class="h-6 rounded-full" src="/images/user/user-2.jpg"/>
+                                        <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-2.jpg') }}"/>
                                         <h6 class="text-heading font-medium">Patricia Garcia</h6>
                                     </a>
                                 </td>
@@ -112,7 +112,7 @@
                                 <td class="px-3.5 py-3 text-sm text-primary">#TWE1001506</td>
                                 <td class="px-3.5 py-3 text-sm">
                                     <a class="flex gap-3 items-center" href="#">
-                                        <img alt="" class="h-6 rounded-full" src="/images/user/user-3.jpg"/>
+                                        <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-3.jpg') }}"/>
                                         <h6 class="text-heading font-medium">Tonya Johnson</h6>
                                     </a>
                                 </td>
@@ -145,7 +145,7 @@
                                 <td class="px-3.5 py-3 text-sm text-primary">#TWE1001502</td>
                                 <td class="px-3.5 py-3 text-sm">
                                     <a class="flex gap-3 items-center" href="#">
-                                        <img alt="" class="h-6 rounded-full" src="/images/user/user-4.jpg"/>
+                                        <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-4.jpg') }}"/>
                                         <h6 class="text-heading font-medium">Jose White</h6>
                                     </a>
                                 </td>
@@ -178,7 +178,7 @@
                                 <td class="px-3.5 py-3 text-sm text-primary">#TWE1001503</td>
                                 <td class="px-3.5 py-3 text-sm">
                                     <a class="flex gap-3 items-center" href="#">
-                                        <img alt="" class="h-6 rounded-full" src="/images/user/user-1.jpg"/>
+                                        <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-1.jpg') }}"/>
                                         <h6 class="text-heading font-medium">Juliette Fecteau</h6>
                                     </a>
                                 </td>
@@ -211,7 +211,7 @@
                                 <td class="px-3.5 py-3 text-sm text-primary">#TWE1001504</td>
                                 <td class="px-3.5 py-3 text-sm">
                                     <a class="flex gap-3 items-center" href="#">
-                                        <img alt="" class="h-6 rounded-full" src="/images/user/user-2.jpg"/>
+                                        <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-2.jpg') }}"/>
                                         <h6 class="text-heading font-medium">Jonas Frederiksen</h6>
                                     </a>
                                 </td>
@@ -244,7 +244,7 @@
                                 <td class="px-3.5 py-3 text-sm text-primary">#TWE1001505</td>
                                 <td class="px-3.5 py-3 text-sm">
                                     <a class="flex gap-3 items-center" href="#">
-                                        <img alt="" class="h-6 rounded-full" src="/images/user/user-4.jpg"/>
+                                        <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-4.jpg') }}"/>
                                         <h6 class="text-heading font-medium">Kim Broberg</h6>
                                     </a>
                                 </td>

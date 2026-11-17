@@ -264,7 +264,7 @@
                             </button>
                         </div>
                         <div class="text-center">
-                            <img alt="" class="size-12 mx-auto" src="/images/delete.png" />
+                            <img alt="" class="size-12 mx-auto" src="{{ asset('images/delete.png') }}" />
                             <div class="mt-5 text-center">
                                 <h5 class="mb-1 text-lg font-semibold text-default-800">
                                     {{ __('Anda yakin?') }}

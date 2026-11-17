@@ -9,6 +9,12 @@ function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 }
 
+function appUrl(path) {
+    const base = document.querySelector('meta[name="app-url"]')?.getAttribute('content') ?? '';
+
+    return base.replace(/\/+$/, '') + path;
+}
+
 function escapeHtml(value) {
     const div = document.createElement('div');
     div.textContent = value ?? '';
@@ -81,7 +87,7 @@ function renderDropdown(dropdown, payload) {
 }
 
 function fetchNotifications(dropdown) {
-    return fetch('/notifications', {
+    return fetch(appUrl('/notifications'), {
         headers: {
             Accept: 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
@@ -101,7 +107,7 @@ const pendingAlerts = [];
 let alertShowing = false;
 
 function playNotificationSound() {
-    const audio = new Audio('/sounds/notification.mp3');
+    const audio = new Audio(appUrl('/sounds/notification.mp3'));
     audio.play().catch(() => {
         // Browsers block autoplay before the user has interacted with the page at all -
         // nothing to do about that, the popup itself still shows.
@@ -179,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const id = alertModal.dataset.notificationAlertId;
         const url = alertModal.dataset.notificationAlertUrl;
 
-        fetch(`/notifications/${id}/read`, {
+        fetch(appUrl(`/notifications/${id}/read`), {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -217,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault();
         }
 
-        fetch(`/notifications/${id}/read`, {
+        fetch(appUrl(`/notifications/${id}/read`), {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -236,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const markAllButton = dropdown.querySelector('[data-notification-mark-all]');
 
     markAllButton?.addEventListener('click', function () {
-        fetch('/notifications/read-all', {
+        fetch(appUrl('/notifications/read-all'), {
             method: 'POST',
             headers: {
                 Accept: 'application/json',

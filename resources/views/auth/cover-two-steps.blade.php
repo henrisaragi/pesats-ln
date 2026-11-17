@@ -11,8 +11,8 @@
             <div class="bg-default-50 rounded-lg w-lg relative">
                 <div class="text-center px-10 py-12">
                     <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
-                        <img alt="logo dark" class="h-6 block dark:hidden" src="/images/logo-dark.png"/>
-                        <img alt="" class="h-6 hidden dark:block" src="/images/logo-light.png"/>
+                        <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
+                        <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                     </a>
                     <div class="mt-8">
                         <h4 class="mb-2 text-primary text-xl font-semibold">Verify Email</h4>

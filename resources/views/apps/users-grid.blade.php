@@ -29,7 +29,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="relative flex items-center justify-center mx-auto text-lg rounded-full size-16 bg-default-100">
-                    <img alt="" class="rounded-full size-16" src="/images/user/avatar-1.png" />
+                    <img alt="" class="rounded-full size-16" src="{{ asset('images/user/avatar-1.png') }}" />
                     <span class="absolute bg-success border-2 border-white rounded-full size-3 end-0 bottom-1"></span>
                 </div>
                 <div class="mt-4 text-center text-default-500">
@@ -74,7 +74,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="relative flex items-center justify-center mx-auto text-lg rounded-full size-16 bg-default-100">
-                    <img alt="" class="rounded-full size-16" src="/images/user/avatar-2.png" />
+                    <img alt="" class="rounded-full size-16" src="{{ asset('images/user/avatar-2.png') }}" />
                     <span class="absolute bg-success border-2 border-white rounded-full size-3 end-0 bottom-1"></span>
                 </div>
                 <div class="mt-4 text-center text-default-500">
@@ -119,7 +119,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="relative flex items-center justify-center mx-auto text-lg rounded-full size-16 bg-default-100">
-                    <img alt="" class="rounded-full size-16" src="/images/user/avatar-3.png" />
+                    <img alt="" class="rounded-full size-16" src="{{ asset('images/user/avatar-3.png') }}" />
                     <span class="absolute bg-success border-2 border-white rounded-full size-3 end-0 bottom-1"></span>
                 </div>
                 <div class="mt-4 text-center text-default-500">
@@ -209,7 +209,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="relative flex items-center justify-center mx-auto text-lg rounded-full size-16 bg-default-100">
-                    <img alt="" class="rounded-full size-16" src="/images/user/avatar-4.png" />
+                    <img alt="" class="rounded-full size-16" src="{{ asset('images/user/avatar-4.png') }}" />
                     <span class="absolute bg-danger border-2 border-white rounded-full size-3 end-0 bottom-1"></span>
                 </div>
                 <div class="mt-4 text-center text-default-500">
@@ -299,7 +299,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="relative flex items-center justify-center mx-auto text-lg rounded-full size-16 bg-default-100">
-                    <img alt="" class="rounded-full size-16" src="/images/user/avatar-5.png" />
+                    <img alt="" class="rounded-full size-16" src="{{ asset('images/user/avatar-5.png') }}" />
                     <span class="absolute bg-danger border-2 border-white rounded-full size-3 end-0 bottom-1"></span>
                 </div>
                 <div class="mt-4 text-center text-default-500">
@@ -344,7 +344,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="relative flex items-center justify-center mx-auto text-lg rounded-full size-16 bg-default-100">
-                    <img alt="" class="rounded-full size-16" src="/images/user/avatar-6.png" />
+                    <img alt="" class="rounded-full size-16" src="{{ asset('images/user/avatar-6.png') }}" />
                     <span class="absolute bg-success border-2 border-white rounded-full size-3 end-0 bottom-1"></span>
                 </div>
                 <div class="mt-4 text-center text-default-500">
@@ -389,7 +389,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="relative flex items-center justify-center mx-auto text-lg rounded-full size-16 bg-default-100">
-                    <img alt="" class="rounded-full size-16" src="/images/user/avatar-7.png" />
+                    <img alt="" class="rounded-full size-16" src="{{ asset('images/user/avatar-7.png') }}" />
                     <span class="absolute bg-success border-2 border-white rounded-full size-3 end-0 bottom-1"></span>
                 </div>
                 <div class="mt-4 text-center text-default-500">
@@ -434,7 +434,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="relative flex items-center justify-center mx-auto text-lg rounded-full size-16 bg-default-100">
-                    <img alt="" class="rounded-full size-16" src="/images/user/avatar-8.png" />
+                    <img alt="" class="rounded-full size-16" src="{{ asset('images/user/avatar-8.png') }}" />
                     <span class="absolute bg-success border-2 border-white rounded-full size-3 end-0 bottom-1"></span>
                 </div>
                 <div class="mt-4 text-center text-default-500">

@@ -226,7 +226,7 @@
                     <a class="mb-3 btn bg-primary text-white transition-all"
                         href="{{ route('second', ['apps', 'mailbox']) }}">Compose Email</a>
                     <div class="flex justify-end">
-                        <img alt="" class="-scale-x-100 h-48" src="/images/email-dashboard.png" />
+                        <img alt="" class="-scale-x-100 h-48" src="{{ asset('images/email-dashboard.png') }}" />
                     </div>
                 </div>
             </div>

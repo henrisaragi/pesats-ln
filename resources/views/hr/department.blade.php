@@ -202,7 +202,7 @@
                 </div>
 
                 <h3 class="font-semibold text-base text-default-800  text-center">
-                    <img src="/images/delete.png" alt="" class="size-12 mx-auto">
+                    <img src="{{ asset('images/delete.png') }}" alt="" class="size-12 mx-auto">
                     <div class="mt-5 text-center">
                         <h5 class="mb-1 text-lg font-semibold text-default-800">Are you sure?</h5>
                         <p class="text-default-500 text-sm font-normal">Are you certain you want to delete this record?</p>

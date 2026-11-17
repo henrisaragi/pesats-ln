@@ -16,7 +16,7 @@
     <div
         class="relative flex flex-row w-full overflow-hidden bg-gradient-to-r from-blue-900 h-screen to-blue-800 dark:to-blue-900 dark:from-blue-950">
         <div class="absolute inset-0 opacity-20">
-            <img alt="" src="/images/modern.svg"/>
+            <img alt="" src="{{ asset('images/modern.svg') }}"/>
         </div>
         <div class="mx-4 m-4 w-160 py-14 px-10 bg-card flex justify-center rounded-md text-center relative z-10">
             <div class="flex flex-col h-full w-full">
@@ -26,7 +26,7 @@
                         <button aria-expanded="false" aria-haspopup="menu" aria-label="Dropdown"
                                 class="hs-dropdown-toggle py-2 px-4 bg-transparent border border-default-200 text-default-600 hover:border-primary rounded-md hover:text-primary font-medium text-sm gap-2 flex items-center"
                                 type="button">
-                            <img alt="" class="size-5 rounded-full" src="/images/flags/{{ $locales[$activeLocale]['flag'] }}"/>
+                            <img alt="" class="size-5 rounded-full" src="{{ asset('images/flags/'.$locales[$activeLocale]['flag']) }}"/>
                             {{ __($locales[$activeLocale]['label']) }}
                         </button>
                         <div aria-labelledby="dropdown-menu" aria-orientation="vertical" class="hs-dropdown-menu"
@@ -34,7 +34,7 @@
                             @foreach ($locales as $code => $locale)
                                 <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded{{ $code === $activeLocale ? ' bg-default-150' : '' }}"
                                    href="{{ route('locale.switch', $code) }}">
-                                    <img alt="" class="size-4 rounded-full" src="/images/flags/{{ $locale['flag'] }}"/>
+                                    <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/'.$locale['flag']) }}"/>
                                     {{ __($locale['label']) }}
                                 </a>
                             @endforeach
@@ -121,9 +121,9 @@
         <div class="relative z-10 flex items-center justify-center min-h-screen px-10 py-14 grow">
             <div>
                 <a class="" href="{{ route('second', ['dashboards', 'index']) }}">
-                    <img alt="" class="h-7 mb-14 mx-auto block" src="/images/logo-light.png"/>
+                    <img alt="" class="h-7 mb-14 mx-auto block" src="{{ asset('images/logo-light.png') }}"/>
                 </a>
-                <img alt="" class="mx-auto rounded-xl block object-cover w-md" src="/images/auth-modern.png"/>
+                <img alt="" class="mx-auto rounded-xl block object-cover w-md" src="{{ asset('images/auth-modern.png') }}"/>
                 <div class="mt-10 text-center">
                     <h3 class="mb-3 text-blue-50 text-2xl font-semibold text-center">{{ __('Bergabung Bersama Kami') }}</h3>
                     <p class="text-blue-300 text-base w-2xl text-center">{{ __('Daftar untuk mengelola perizinan dan transaksi satwa liar Anda.') }}</p>

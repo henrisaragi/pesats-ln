@@ -12,8 +12,8 @@
                 <div class="text-center px-10 py-12">
                     <!-- Logo -->
                     <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
-                        <img alt="logo dark" class="h-6 flex dark:hidden" src="/images/logo-dark.png"/>
-                        <img alt="" class="h-6 hidden dark:flex" src="/images/logo-light.png"/>
+                        <img alt="logo dark" class="h-6 flex dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
+                        <img alt="" class="h-6 hidden dark:flex" src="{{ asset('images/logo-light.png') }}"/>
                     </a>
                     <div class="mt-8 text-center">
                         <h4 class="mb-2.5 text-xl font-semibold text-primary">Welcome Back !</h4>

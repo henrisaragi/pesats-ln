@@ -127,7 +127,7 @@
                         class="relative before:absolute before:border-s-2 before:border-default-200 before:start-3.5 before:end-3.5 before:top-1.5 before:-bottom-1.5 pb-4">
                         <div class="relative flex gap-2">
                             <img alt="" class="size-8 p-0.5 bg-card border rounded-full shrink-0 border-default-200"
-                                 src="/images/user/avatar-1.png"/>
+                                 src="{{ asset('images/user/avatar-1.png') }}"/>
                             <div>
                                 <h6 class="mb-1 text-sm text-heading font-semibold">Purchased by James Price</h6>
                                 <p class="mb-2 text-default-500">Product noise evolve smartwatch</p>
@@ -139,7 +139,7 @@
                         class="relative before:absolute before:border-s-2 before:border-default-200 before:start-3.5 before:end-3.5 before:top-1.5 before:-bottom-1.5 pb-4">
                         <div class="relative flex gap-2">
                             <img alt="" class="size-8 p-0.5 bg-card border rounded-full shrink-0 border-default-200"
-                                 src="/images/user/avatar-2.png"/>
+                                 src="{{ asset('images/user/avatar-2.png') }}"/>
                             <div>
                                 <h6 class="mb-1 text-sm text-heading font-semibold">Natasha Carey have liked the
                                     products</h6>
@@ -153,7 +153,7 @@
                         class="relative before:absolute before:border-s-2 before:border-default-200 before:start-3.5 before:end-3.5 before:top-1.5 before:-bottom-1.5 pb-4">
                         <div class="relative flex gap-2">
                             <img alt="" class="size-8 p-0.5 bg-card border rounded-full shrink-0 border-default-200"
-                                 src="/images/user/avatar-3.png"/>
+                                 src="{{ asset('images/user/avatar-3.png') }}"/>
                             <div>
                                 <h6 class="mb-1 text-sm text-heading font-semibold">Today offers by Digitech Galaxy</h6>
                                 <p class="mb-2 text-default-500">Offer is valid on orders of $230 Or above for selected
@@ -165,7 +165,7 @@
                     <div class="relative">
                         <div class="relative flex gap-2">
                             <img alt="" class="size-8 p-0.5 bg-card border rounded-full shrink-0 border-default-200"
-                                 src="/images/user/avatar-3.png"/>
+                                 src="{{ asset('images/user/avatar-3.png') }}"/>
                             <div>
                                 <h6 class="mb-1 text-sm text-heading font-semibold">New ticket received</h6>
                                 <p class="mb-2 text-default-500">User <a class="text-primary" href="#">Erica245</a>

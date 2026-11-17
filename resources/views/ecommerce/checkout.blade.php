@@ -371,7 +371,7 @@
                             class="flex lg:flex-nowrap flex-wrap justify-between border border-default-200 w-full peer-checked:border-primary rounded-md p-5 gap-4"
                             for="radio_1">
                             <div class="flex gap-4">
-                                <img alt="" class="h-12" src="/images/brand/delivery-1.png"/>
+                                <img alt="" class="h-12" src="{{ asset('images/brand/delivery-1.png') }}"/>
                                 <span class="grow">
 <span class="block mb-1 font-semibold text-default-800 text-[15px]">Express Delivery</span>
 <span class="text-default-500 text-sm">Expected delivery: 01 Nov, Wednesday</span>
@@ -386,7 +386,7 @@
                             class="flex flex-wrap justify-between border border-default-200 w-full peer-checked:border-primary rounded-md p-5 gap-4"
                             for="radio_2">
                             <div class="flex gap-4">
-                                <img alt="" class="h-12" src="/images/brand/delivery-2.png"/>
+                                <img alt="" class="h-12" src="{{ asset('images/brand/delivery-2.png') }}"/>
                                 <span class="grow">
 <span class="block mb-1 font-semibold text-[15px] text-default-800">Air Logistic Delivery</span>
 <span class="text-default-500 text-sm">Expected delivery: 06 Nov, Monday</span>
@@ -401,7 +401,7 @@
                             class="flex flex-wrap justify-between border border-default-200 w-full peer-checked:border-primary rounded-md p-5 gap-4"
                             for="radio_3">
                             <div class="flex gap-4">
-                                <img alt="" class="h-12" src="/images/brand/delivery-3.png"/>
+                                <img alt="" class="h-12" src="{{ asset('images/brand/delivery-3.png') }}"/>
                                 <span class="grow">
 <span class="block mb-1 font-semibold text-default-800 text-[15px]">Free Delivery</span>
 <span class="text-default-500 text-sm">Expected delivery: 11 Nov, Saturday</span>
@@ -442,10 +442,10 @@
                     <h6 class="inline-block mb-2 text-sm text-default-800 font-medium">We accept the following
                         cards</h6>
                     <div class="flex items-center gap-2">
-                        <img alt="" class="h-8" src="/images/payment/img-01.png"/>
-                        <img alt="" class="h-8" src="/images/payment/img-02.png"/>
-                        <img alt="" class="h-8" src="/images/payment/img-03.png"/>
-                        <img alt="" class="h-8" src="/images/payment/img-04.png"/>
+                        <img alt="" class="h-8" src="{{ asset('images/payment/img-01.png') }}"/>
+                        <img alt="" class="h-8" src="{{ asset('images/payment/img-02.png') }}"/>
+                        <img alt="" class="h-8" src="{{ asset('images/payment/img-03.png') }}"/>
+                        <img alt="" class="h-8" src="{{ asset('images/payment/img-04.png') }}"/>
                     </div>
                 </div>
             </div>
@@ -460,7 +460,7 @@
                     <div class="flex justify-between items-center gap-5 py-4 border-b border-dashed border-default-200">
                         <div class="flex items-center gap-3">
                             <div class="flex items-center justify-center rounded-md size-12 bg-default-100">
-                                <img alt="" class="h-8" src="/images/product/img-08.png"/>
+                                <img alt="" class="h-8" src="{{ asset('images/product/img-08.png') }}"/>
                             </div>
                             <div class="">
                                 <h6 class="mb-1 text-[15px] text-default-800 font-semibold"><a
@@ -475,7 +475,7 @@
                     <div class="flex justify-between items-center gap-5 py-4 border-b border-dashed border-default-200">
                         <div class="flex items-center gap-3">
                             <div class="flex items-center justify-center rounded-md size-12 bg-default-100">
-                                <img alt="" class="h-8" src="/images/product/img-04.png"/>
+                                <img alt="" class="h-8" src="{{ asset('images/product/img-04.png') }}"/>
                             </div>
                             <div class="">
                                 <h6 class="mb-1 text-[15px] text-default-800 font-semibold"><a
@@ -489,7 +489,7 @@
                     <div class="flex justify-between items-center gap-5 py-4 border-b border-dashed border-default-200">
                         <div class="flex items-center gap-3">
                             <div class="flex items-center justify-center rounded-md size-12 bg-default-100">
-                                <img alt="" class="h-8" src="/images/product/img-01.png"/>
+                                <img alt="" class="h-8" src="{{ asset('images/product/img-01.png') }}"/>
                             </div>
                             <div class="">
                                 <h6 class="mb-1 text-[15px] text-default-800 font-semibold"><a

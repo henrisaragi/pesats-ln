@@ -19,7 +19,7 @@
                 <div class="grid lg:grid-cols-12 grid-cols-1 gap-5">
                     <div class="lg:col-span-2 col-span-1">
                         <div class="p-4 rounded-md bg-default-150 flex justify-center">
-                            <img alt="" class="" src="/images/product/img-08.png" />
+                            <img alt="" class="" src="{{ asset('images/product/img-08.png') }}" />
                         </div>
                     </div>
                     <div class="lg:col-span-3 col-span-1 flex flex-col justify-between">
@@ -66,7 +66,7 @@
                 <div class="grid lg:grid-cols-12 grid-cols-1 gap-5">
                     <div class="lg:col-span-2 col-span-1">
                         <div class="p-4 rounded-md bg-default-150 flex justify-center">
-                            <img alt="" class="" src="/images/product/img-04.png" />
+                            <img alt="" class="" src="{{ asset('images/product/img-04.png') }}" />
                         </div>
                     </div>
                     <div class="lg:col-span-3 col-span-1 flex flex-col justify-between">
@@ -114,7 +114,7 @@
                 <div class="grid lg:grid-cols-12 grid-cols-1 gap-5">
                     <div class="lg:col-span-2 col-span-1">
                         <div class="p-4 rounded-md bg-default-150 flex justify-center">
-                            <img alt="" class="" src="/images/product/img-01.png" />
+                            <img alt="" class="" src="{{ asset('images/product/img-01.png') }}" />
                         </div>
                     </div>
                     <div class="lg:col-span-3 col-span-1 flex flex-col justify-between">
@@ -240,7 +240,7 @@
                 </div>
 
                 <h3 class="font-semibold text-base text-default-800 dark:text-white text-center">
-                    <img src="/images/delete.png" alt="" class="size-12 mx-auto">
+                    <img src="{{ asset('images/delete.png') }}" alt="" class="size-12 mx-auto">
 
                     <div class="mt-5 text-center">
                         <h5 class="mb-1 text-lg font-semibold text-default-800">Are you sure?</h5>

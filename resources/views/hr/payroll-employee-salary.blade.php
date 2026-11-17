@@ -106,7 +106,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/user-1.jpg"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-1.jpg') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Willie Torres</h6>
                                     </a>
@@ -155,7 +155,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/avatar-3.png"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/avatar-3.png') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Patricia Garcia</h6>
                                     </a>
@@ -204,7 +204,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/avatar-6.png"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/avatar-6.png') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Tonya Johnson</h6>
                                     </a>
@@ -253,7 +253,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/user-dummy-img.jpg"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-dummy-img.jpg') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Jose White</h6>
                                     </a>
@@ -302,7 +302,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/user-3.jpg"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-3.jpg') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Juliette Fecteau</h6>
                                     </a>
@@ -351,7 +351,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/user-2.jpg"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/user-2.jpg') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Jonas Frederiksen</h6>
                                     </a>
@@ -400,7 +400,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/avatar-8.png"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/avatar-8.png') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Kim Broberg</h6>
                                     </a>
@@ -449,7 +449,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/avatar-10.png"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/avatar-10.png') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Nancy Reynolds</h6>
                                     </a>
@@ -498,7 +498,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/avatar-9.png"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/avatar-9.png') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Thomas Hatfield</h6>
                                     </a>
@@ -547,7 +547,7 @@
                                 <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                     <a class="flex items-center gap-3" href="#">
                                         <div class="rounded-full size-6 shrink-0 bg-default-100">
-                                            <img alt="" class="h-6 rounded-full" src="/images/user/avatar-4.png"/>
+                                            <img alt="" class="h-6 rounded-full" src="{{ asset('images/user/avatar-4.png') }}"/>
                                         </div>
                                         <h6 class="text-sm text-default-800">Holly Kavanaugh</h6>
                                     </a>

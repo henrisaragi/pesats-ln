@@ -10,7 +10,7 @@
         <div class="card relative">
             <div class="card-body">
                 <div class="absolute top-0 end-0 opacity-30">
-                    <img alt="" src="/images/download.png"/>
+                    <img alt="" src="{{ asset('images/download.png') }}"/>
                 </div>
                 <div class="text-center">
                     <h5 class="inline-block relative text-lg text-default-800 font-semibold">
@@ -98,7 +98,7 @@
                         </p>
                     </div>
                     <div class="flex flex-col lg:justify-end text-center lg:items-end items-center">
-                        <img alt="" class="h-12" src="/images/signature.png"/>
+                        <img alt="" class="h-12" src="{{ asset('images/signature.png') }}"/>
                         <h6 class="text-default-800 font-semibold text-sm">Authorized Sign</h6>
                     </div>
                 </div>

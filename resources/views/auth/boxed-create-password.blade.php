@@ -52,8 +52,8 @@
                             <div class="flex items-center justify-between gap-3">
                                 <div>
                                     <a href="{{ route('second', ['dashboards', 'index']) }}">
-                                        <img alt="logo dark" class="h-6 block dark:hidden" src="/images/logo-dark.png"/>
-                                        <img alt="" class="h-6 hidden dark:block" src="/images/logo-light.png"/>
+                                        <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
+                                        <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                                     </a>
                                 </div>
                                 <div>
@@ -62,52 +62,52 @@
                                         <button aria-expanded="false" aria-haspopup="menu" aria-label="Dropdown"
                                                 class="hs-dropdown-toggle py-2 px-4 bg-transparent border border-default-200 text-default-600 hover:border-primary rounded-md hover:text-primary font-medium text-sm gap-2 flex items-center"
                                                 type="button">
-                                            <img alt="" class="size-5 rounded-full" src="/images/flags/us.jpg"/>
+                                            <img alt="" class="size-5 rounded-full" src="{{ asset('images/flags/us.jpg') }}"/>
                                             English
                                         </button>
                                         <div aria-labelledby="dropdown-menu" aria-orientation="vertical"
                                              class="hs-dropdown-menu" role="menu">
                                             <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
                                                href="#">
-                                                <img alt="" class="size-4 rounded-full" src="/images/flags/us.jpg"/>
+                                                <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/us.jpg') }}"/>
                                                 English
                                             </a>
                                             <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
                                                href="#">
-                                                <img alt="" class="size-4 rounded-full" src="/images/flags/spain.jpg"/>
+                                                <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/spain.jpg') }}"/>
                                                 Spanish
                                             </a>
                                             <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
                                                href="#">
                                                 <img alt="" class="size-4 rounded-full"
-                                                     src="/images/flags/germany.jpg"/>
+                                                     src="{{ asset('images/flags/germany.jpg') }}"/>
                                                 German
                                             </a>
                                             <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
                                                href="#">
-                                                <img alt="" class="size-4 rounded-full" src="/images/flags/french.jpg"/>
+                                                <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/french.jpg') }}"/>
                                                 French
                                             </a>
                                             <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
                                                href="#">
                                                 <img alt="" class="size-4 rounded-full"
-                                                     src="/images/flags/japanese.svg"/>
+                                                     src="{{ asset('images/flags/japanese.svg') }}"/>
                                                 Japanese
                                             </a>
                                             <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
                                                href="#">
-                                                <img alt="" class="size-4 rounded-full" src="/images/flags/italy.jpg"/>
+                                                <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/italy.jpg') }}"/>
                                                 Italian
                                             </a>
                                             <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
                                                href="#">
-                                                <img alt="" class="size-4 rounded-full" src="/images/flags/russia.jpg"/>
+                                                <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/russia.jpg') }}"/>
                                                 Russian
                                             </a>
                                             <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded"
                                                href="#">
                                                 <img alt="" class="size-4 rounded-full"
-                                                     src="/images/flags/arebian.svg"/>
+                                                     src="{{ asset('images/flags/arebian.svg') }}"/>
                                                 Arabic
                                             </a>
                                         </div>
@@ -115,7 +115,7 @@
                                 </div>
                             </div>
                             <div class="mt-auto">
-                                <img alt="" src="/images/boxed.png"/>
+                                <img alt="" src="{{ asset('images/boxed.png') }}"/>
                             </div>
                         </div>
                     </div>

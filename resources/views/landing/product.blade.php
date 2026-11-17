@@ -11,8 +11,8 @@
                 <div class="grid lg:grid-cols-12 md:grid-cols-10 grid-cols-3 items-center">
                     <div class="lg:col-span-2 md:col-span-2 col-span-1">
                         <a href="{{ route('second', ['dashboards', 'index']) }}">
-                            <img alt="logo dark" class="h-6 block dark:hidden" src="/images/logo-dark.png" />
-                            <img alt="" class="h-6 hidden dark:block" src="/images/logo-light.png" />
+                            <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}" />
+                            <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}" />
                         </a>
                     </div>
                     <div class="lg:col-span-8 md:col-span-6 md:block hidden">
@@ -68,8 +68,8 @@
         id="navbarMenu" role="dialog" tabindex="-1">
         <div class="flex items-center justify-between">
             <a href="#">
-                <img alt="logo dark" class="h-6 block dark:hidden" src="/images/logo-dark.png" />
-                <img alt="" class="h-6 hidden dark:block" src="/images/logo-light.png" />
+                <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}" />
+                <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}" />
             </a>
             <button aria-label="Close" class="inline-flex justify-end items-center gap-x-2 rounded-full"
                 data-hs-overlay="#navbarMenu">
@@ -137,7 +137,7 @@
                                 </span>
                             </button>
                             <img alt="" class="lg:ms-40 md:ms-20 w-xl mx-auto"
-                                src="/images/landing/product-home.png" />
+                                src="{{ asset('images/landing/product-home.png') }}" />
                         </div>
                     </div>
                 </div>
@@ -153,7 +153,7 @@
             <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-5 mt-12">
                 <div class="card bg-gradient-to-b from-default-100 to-default-50/40 shadow-none rounded-md">
                     <div class="card-body">
-                        <img alt="" class="mx-auto h-52" src="/images/landing/img-16.png" />
+                        <img alt="" class="mx-auto h-52" src="{{ asset('images/landing/img-16.png') }}" />
                         <div class="mt-3">
                             <p class="mb-3 flex items-center gap-1">
                                 <i class="text-amber-500 size-4" data-lucide="star"></i> (4.8)
@@ -172,7 +172,7 @@
                 </div>
                 <div class="card bg-gradient-to-b from-default-100 to-default-50/40 shadow-none rounded-md">
                     <div class="card-body">
-                        <img alt="" class="mx-auto h-52" src="/images/landing/img-17.png" />
+                        <img alt="" class="mx-auto h-52" src="{{ asset('images/landing/img-17.png') }}" />
                         <div class="mt-3">
                             <p class="mb-3 flex items-center gap-1">
                                 <i class="text-amber-500 size-4" data-lucide="star"></i> (4.4)
@@ -191,7 +191,7 @@
                 </div>
                 <div class="card bg-gradient-to-b from-default-100 to-default-50/40 shadow-none rounded-md">
                     <div class="card-body">
-                        <img alt="" class="mx-auto h-52" src="/images/landing/img-18.png" />
+                        <img alt="" class="mx-auto h-52" src="{{ asset('images/landing/img-18.png') }}" />
                         <div class="mt-3">
                             <p class="mb-3 flex items-center gap-1">
                                 <i class="text-amber-500 size-4" data-lucide="star"></i> (4.9)
@@ -210,7 +210,7 @@
                 </div>
                 <div class="card bg-gradient-to-b from-default-100 to-default-50/40 shadow-none rounded-md">
                     <div class="card-body">
-                        <img alt="" class="mx-auto h-52" src="/images/landing/img-19.png" />
+                        <img alt="" class="mx-auto h-52" src="{{ asset('images/landing/img-19.png') }}" />
                         <div class="mt-3">
                             <p class="mb-3 flex items-center gap-1">
                                 <i class="text-amber-500 size-4" data-lucide="star"></i> (4.6)
@@ -267,7 +267,7 @@
                             <div class="absolute inset-0 bg-gradient-to-b from-purple-500/30 to-accent from-30%"></div>
                         </div>
                         <div class="md:ms-20">
-                            <img alt="" class="w-lg relative inline-block" src="/images/landing/cta.png" />
+                            <img alt="" class="w-lg relative inline-block" src="{{ asset('images/landing/cta.png') }}" />
                         </div>
                     </div>
                 </div>
@@ -282,7 +282,7 @@
                 <div class="relative">
                     <div
                         class="relative before:absolute before:h-full before:w-full before:border-[15px] before:border-double before:border-green-500/10 lg:before:-top-16 lg:before:-end-16 md:before:-top-8 md:before:-end-1 before:-end-1.5 before:-top-8">
-                        <img alt="" class="rounded-lg relative z-20" src="/images/landing/about.jpg" />
+                        <img alt="" class="rounded-lg relative z-20" src="{{ asset('images/landing/about.jpg') }}" />
                     </div>
                 </div>
                 <div class="lg:ms-auto">
@@ -321,7 +321,7 @@
                     <div class="swiper-slide">
                         <div class="p-5 text-center aos-init aos-animate" data-aos="fade-up" data-aos-easing="linear">
                             <div class="mx-auto rounded-full size-20 bg-purple-500/10">
-                                <img alt="" class="rounded-full size-20" src="/images/user/avatar-9.png" />
+                                <img alt="" class="rounded-full size-20" src="{{ asset('images/user/avatar-9.png') }}" />
                             </div>
                             <p class="mt-6 text-default-600 text-base">" ThemesDesign used Anydesk to fix the bug in
                                 Flask and django
@@ -342,7 +342,7 @@
                     <div class="swiper-slide">
                         <div class="p-5 text-center aos-init aos-animate" data-aos="fade-up" data-aos-easing="linear">
                             <div class="mx-auto rounded-full size-20 bg-primary/10">
-                                <img alt="" class="rounded-full size-20" src="/images/user/avatar-2.png" />
+                                <img alt="" class="rounded-full size-20" src="{{ asset('images/user/avatar-2.png') }}" />
                             </div>
                             <p class="mt-6 text-default-600 text-base">" The best templates which is supported multiple
                                 programming languages
@@ -361,7 +361,7 @@
                     <div class="swiper-slide">
                         <div class="p-5 text-center aos-init aos-animate" data-aos="fade-up" data-aos-easing="linear">
                             <div class="mx-auto rounded-full size-20 bg-amber-500/10">
-                                <img alt="" class="rounded-full size-20" src="/images/user/avatar-4.png" />
+                                <img alt="" class="rounded-full size-20" src="{{ asset('images/user/avatar-4.png') }}" />
                             </div>
                             <p class="mt-6 text-default-600 text-base">" I encountered a few errors in the design of the
                                 product detail page
@@ -381,7 +381,7 @@
                     <div class="swiper-slide">
                         <div class="p-5 text-center aos-init aos-animate" data-aos="fade-up" data-aos-easing="linear">
                             <div class="mx-auto rounded-full size-20 bg-danger/10">
-                                <img alt="" class="rounded-full size-20" src="/images/user/avatar-7.png" />
+                                <img alt="" class="rounded-full size-20" src="{{ asset('images/user/avatar-7.png') }}" />
                             </div>
                             <p class="mt-6 text-default-600 text-base">" This theme is very good. I really recommend it.
                                 It's very good
@@ -431,8 +431,8 @@
                 <div class="lg:col-span-4 col-span-12">
                     <div class="mb-5">
                         <a href="#">
-                            <img alt="logo dark" class="h-7 block dark:hidden" src="/images/logo-dark.png" />
-                            <img alt="" class="h-7 hidden dark:block" src="/images/logo-light.png" />
+                            <img alt="logo dark" class="h-7 block dark:hidden" src="{{ asset('images/logo-dark.png') }}" />
+                            <img alt="" class="h-7 hidden dark:block" src="{{ asset('images/logo-light.png') }}" />
                         </a>
                     </div>
                     <p class="mb-5 text-sm text-default-500">

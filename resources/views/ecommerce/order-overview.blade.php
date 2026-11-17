@@ -62,7 +62,7 @@
                         <p class="text-default-500 text-sm">+(78) 120 4843 4714</p>
                     </div>
                     <div class="btn bg-warning/20 text-info size-12 float-end">
-                        <img alt="" src="/images/user/avatar-4.png"/>
+                        <img alt="" src="{{ asset('images/user/avatar-4.png') }}"/>
                     </div>
                 </div>
             </div>
@@ -114,7 +114,7 @@
                             class="flex justify-between items-center gap-5 py-4 border-b border-dashed border-default-200">
                             <div class="flex items-center gap-3">
                                 <div class="btn rounded-md size-12 bg-default-100">
-                                    <img alt="" class="h-8" src="/images/product/img-08.png"/>
+                                    <img alt="" class="h-8" src="{{ asset('images/product/img-08.png') }}"/>
                                 </div>
                                 <div>
                                     <h6 class="mb-1 card-title">
@@ -130,7 +130,7 @@
                             class="flex justify-between items-center gap-5 py-4 border-b border-dashed border-default-200">
                             <div class="flex items-center gap-3">
                                 <div class="btn rounded-md size-12 bg-default-100">
-                                    <img alt="" class="h-8" src="/images/product/img-04.png"/>
+                                    <img alt="" class="h-8" src="{{ asset('images/product/img-04.png') }}"/>
                                 </div>
                                 <div>
                                     <h6 class="mb-1 card-title"><a
@@ -146,7 +146,7 @@
                             class="flex justify-between items-center gap-5 py-4 border-b border-dashed border-default-200">
                             <div class="flex items-center gap-3">
                                 <div class="btn rounded-md size-12 bg-default-100">
-                                    <img alt="" class="h-8" src="/images/product/img-01.png"/>
+                                    <img alt="" class="h-8" src="{{ asset('images/product/img-01.png') }}"/>
                                 </div>
                                 <div>
                                     <h6 class="mb-1 card-title"><a
@@ -283,7 +283,7 @@
                         <a class="underline text-primary" href="#">Track Order</a>
                     </div>
                     <div class="gap-4 flex">
-                        <img alt="" class="h-10" src="/images/brand/delivery-1.png"/>
+                        <img alt="" class="h-10" src="{{ asset('images/brand/delivery-1.png') }}"/>
                         <div>
                             <h6 class="mb-1 card-title">Express Delivery</h6>
                             <p class="text-default-500 text-sm">ID: EDTW1400457854</p>

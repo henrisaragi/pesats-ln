@@ -46,7 +46,7 @@
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm text-primary">#TAD-232100071</td>
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                         <a class="flex items-center gap-2" href="{{ route('second', ['ecommerce', 'product-overview'])}}">
-                                            <img alt="Product images" class="h-6" src="/images/product/img-01.png"/>
+                                            <img alt="Product images" class="h-6" src="{{ asset('images/product/img-01.png') }}"/>
                                             <h6 class="text-default-800">Smartest Printed T-shirt</h6>
                                         </a>
                                     </td>
@@ -94,7 +94,7 @@
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm text-primary">#TAD-232100074</td>
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                         <a class="flex items-center gap-2" href="{{ route('second', ['ecommerce', 'product-overview'])}}">
-                                            <img alt="Product images" class="h-6" src="/images/product/img-06.png"/>
+                                            <img alt="Product images" class="h-6" src="{{ asset('images/product/img-06.png') }}"/>
                                             <h6 class="text-default-800">Techel Black Bluetooth Soundbar</h6>
                                         </a>
                                     </td>
@@ -142,7 +142,7 @@
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm text-primary">#TAD-232100075</td>
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                         <a class="flex items-center gap-2" href="{{ route('second', ['ecommerce', 'product-overview'])}}">
-                                            <img alt="Product images" class="h-6" src="/images/product/img-07.png"/>
+                                            <img alt="Product images" class="h-6" src="{{ asset('images/product/img-07.png') }}"/>
                                             <h6 class="text-default-800">Bovet Fleurier AIFSQ029</h6>
                                         </a>
                                     </td>
@@ -190,7 +190,7 @@
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm text-primary">#TAD-232100077</td>
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                         <a class="flex items-center gap-2" href="{{ route('second', ['ecommerce', 'product-overview'])}}">
-                                            <img alt="Product images" class="h-6" src="/images/product/img-09.png"/>
+                                            <img alt="Product images" class="h-6" src="{{ asset('images/product/img-09.png') }}"/>
                                             <h6 class="text-default-800">Roar Twill Blue Baseball Cap</h6>
                                         </a>
                                     </td>
@@ -238,7 +238,7 @@
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm text-primary">#TAD-232100080</td>
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                         <a class="flex items-center gap-2" href="{{ route('second', ['ecommerce', 'product-overview'])}}">
-                                            <img alt="Product images" class="h-6" src="/images/product/img-08.png"/>
+                                            <img alt="Product images" class="h-6" src="{{ asset('images/product/img-08.png') }}"/>
                                             <h6 class="text-default-800">Aahwan Solid Women Beige Baggy Shorts</h6>
                                         </a>
                                     </td>
@@ -286,7 +286,7 @@
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm text-primary">#TAD-232100072</td>
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                         <a class="flex items-center gap-2" href="{{ route('second', ['ecommerce', 'product-overview'])}}">
-                                            <img alt="Product images" class="h-6" src="/images/product/img-03.png"/>
+                                            <img alt="Product images" class="h-6" src="{{ asset('images/product/img-03.png') }}"/>
                                             <h6 class="text-default-800">Mesh Ergonomic Black Chair</h6>
                                         </a>
                                     </td>
@@ -334,7 +334,7 @@
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm text-primary">#TAD-232100071</td>
                                     <td class="px-3.5 py-2.5 whitespace-nowrap text-sm">
                                         <a class="flex items-center gap-2" href="{{ route('second', ['ecommerce', 'product-overview'])}}">
-                                            <img alt="Product images" class="h-6" src="/images/product/img-02.png"/>
+                                            <img alt="Product images" class="h-6" src="{{ asset('images/product/img-02.png') }}"/>
                                             <h6 class="text-default-800">Smartest Printed T-shirt</h6>
                                         </a>
                                     </td>

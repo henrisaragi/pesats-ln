@@ -10,8 +10,8 @@
             <div class="text-center px-10 py-12">
                 <!-- Logo -->
                 <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
-                    <img alt="logo dark" class="h-6 flex dark:hidden" src="/images/logo-dark.png"/>
-                    <img alt="" class="h-6 hidden dark:flex" src="/images/logo-light.png"/>
+                    <img alt="logo dark" class="h-6 flex dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
+                    <img alt="" class="h-6 hidden dark:flex" src="{{ asset('images/logo-light.png') }}"/>
                 </a>
                 <div class="mt-8 text-center">
                     <h4 class="mb-3 text-xl font-semibold text-primary">Verify Email</h4>
@@ -19,7 +19,7 @@
                             class="text-primary" href="#"> try again</a></p>
                     <button class="btn btn-sm bg-primary text-white" type="button">Skip Now</button>
                     <div class="mt-10 text-center">
-                        <img alt="" class="block w-1/2 mx-auto" src="/images/auth-email.png"/>
+                        <img alt="" class="block w-1/2 mx-auto" src="{{ asset('images/auth-email.png') }}"/>
                     </div>
                 </div>
             </div>

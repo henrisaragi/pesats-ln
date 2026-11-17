@@ -15,27 +15,27 @@
                         <div class="grid md:grid-cols-3 grid-cols-1 gap-5 mb-5">
                             <div class="md:col-span-2 grid-cols-1">
                                 <div class="rounded-md bg-default-100">
-                                    <img alt="" src="/images/product/overview-01.png"/>
+                                    <img alt="" src="{{ asset('images/product/overview-01.png') }}"/>
                                 </div>
                             </div>
                             <div class="col-span-1">
                                 <div class="rounded-md bg-default-100 mb-5">
-                                    <img alt="" src="/images/product/overview-02.png"/>
+                                    <img alt="" src="{{ asset('images/product/overview-02.png') }}"/>
                                 </div>
                                 <div class="rounded-md bg-default-100">
-                                    <img alt="" src="/images/product/img-01.png"/>
+                                    <img alt="" src="{{ asset('images/product/img-01.png') }}"/>
                                 </div>
                             </div>
                         </div>
                         <div class="grid md:grid-cols-3 grid-cols-1 gap-5">
                             <div class="rounded-md bg-default-100">
-                                <img alt="" src="/images/product/img-09.png"/>
+                                <img alt="" src="{{ asset('images/product/img-09.png') }}"/>
                             </div>
                             <div class="rounded-md bg-default-100">
-                                <img alt="" src="/images/product/img-12.png"/>
+                                <img alt="" src="{{ asset('images/product/img-12.png') }}"/>
                             </div>
                             <div class="rounded-md bg-default-100">
-                                <img alt="" src="/images/product/img-13.png"/>
+                                <img alt="" src="{{ asset('images/product/img-13.png') }}"/>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 mt-4">
@@ -410,7 +410,7 @@
                                 <div class="flex justify-between items-center gap-5">
                                     <div class="flex gap-3 items-center">
                                         <div class="bg-sky-50 rounded-full">
-                                            <img alt="" class="h-10 rounded-full" src="/images/user/avatar-2.png"/>
+                                            <img alt="" class="h-10 rounded-full" src="{{ asset('images/user/avatar-2.png') }}"/>
                                         </div>
                                         <div>
                                             <h6 class="card-title"><a href="#">Aubrey Beer</a></h6>
@@ -460,7 +460,7 @@
                                 <div class="flex justify-between items-center gap-5">
                                     <div class="flex gap-3 items-center">
                                         <div class="bg-default-200 rounded-full">
-                                            <img alt="" class="h-10 rounded-full" src="/images/user/avatar-11.png"/>
+                                            <img alt="" class="h-10 rounded-full" src="{{ asset('images/user/avatar-11.png') }}"/>
                                         </div>
                                         <div>
                                             <h6 class="card-title"><a href="#">Theodora Jones</a></h6>
@@ -511,7 +511,7 @@
                                 <div class="flex justify-between items-center gap-5">
                                     <div class="flex gap-3 items-center">
                                         <div class="bg-yellow-100 rounded-full">
-                                            <img alt="" class="h-10 rounded-full" src="/images/user/avatar-5.png"/>
+                                            <img alt="" class="h-10 rounded-full" src="{{ asset('images/user/avatar-5.png') }}"/>
                                         </div>
                                         <div>
                                             <h6 class="card-title"><a href="#">Jordane Dare</a></h6>
@@ -562,7 +562,7 @@
                                 <div class="flex justify-between items-center gap-5">
                                     <div class="flex gap-3 items-center">
                                         <div class="bg-green-100 rounded-full">
-                                            <img alt="" class="h-10 rounded-full" src="/images/user/avatar-8.png"/>
+                                            <img alt="" class="h-10 rounded-full" src="{{ asset('images/user/avatar-8.png') }}"/>
                                         </div>
                                         <div>
                                             <h6 class="card-title"><a href="#">avern Ratke</a></h6>

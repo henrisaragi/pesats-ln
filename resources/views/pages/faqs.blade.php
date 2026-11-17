@@ -35,7 +35,7 @@
                     </div>
                 </div>
                 <div class="lg:col-span-1 lg:block hidden">
-                    <img alt="" class="absolute end-8 -top-28 -rotate-45 h-125" src="/images/faq.png"/>
+                    <img alt="" class="absolute end-8 -top-28 -rotate-45 h-125" src="{{ asset('images/faq.png') }}"/>
                 </div>
             </div>
         </div>

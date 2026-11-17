@@ -34,18 +34,18 @@
                     class="hs-dropdown-toggle btn btn-icon size-8 hover:bg-default-150 rounded-full relative"
                     type="button">
                     <img alt="" class="size-4.5 rounded"
-                        src="{{ app()->getLocale() === 'id' ? '/images/flags/indonesia.svg' : '/images/flags/us.jpg' }}" />
+                        src="{{ asset(app()->getLocale() === 'id' ? 'images/flags/indonesia.svg' : 'images/flags/us.jpg') }}" />
                 </button>
                 <div aria-labelledby="dropdown-menu" aria-orientation="vertical" class="hs-dropdown-menu"
                     role="menu">
                     <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded {{ app()->getLocale() === 'id' ? 'bg-default-150' : '' }}"
                         href="{{ route('locale.switch', 'id') }}">
-                        <img alt="" class="size-4 rounded-full" src="/images/flags/indonesia.svg" />
+                        <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/indonesia.svg') }}" />
                         Indonesia
                     </a>
                     <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded {{ app()->getLocale() === 'en' ? 'bg-default-150' : '' }}"
                         href="{{ route('locale.switch', 'en') }}">
-                        <img alt="" class="size-4 rounded-full" src="/images/flags/us.jpg" />
+                        <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/us.jpg') }}" />
                         English
                     </a>
                 </div>

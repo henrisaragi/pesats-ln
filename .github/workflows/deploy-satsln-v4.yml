@@ -1,0 +1,58 @@
+name: Deploy satsln-v4
+
+# Deploys main to https://pesats.ksdae.kehutanan.go.id/satsln-v4 via the self-hosted
+# runner on 172.16.3.40 (label "satsln-v4"), which updates /www/wwwroot/pesats-v4.local in place.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-satsln-v4
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, satsln-v4]
+    env:
+      APP_DIR: /www/wwwroot/pesats-v4.local
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Deploy
+        run: |
+          set -Eeuo pipefail
+          cd "$APP_DIR"
+
+          git config --global --add safe.directory "$APP_DIR"
+          git fetch origin main
+          git reset --hard "$GITHUB_SHA"
+
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+          npm ci
+          npm run build
+
+          # php-fpm (www) and this runner (henri) both write storage/ and bootstrap/cache/.
+          sudo chown -R henri:www storage bootstrap/cache public/build
+          sudo chmod -R ug+rwX,o-rwx storage bootstrap/cache public/build
+
+          php artisan migrate --force
+          php artisan storage:link || true
+          php artisan optimize:clear
+          php artisan optimize
+          php artisan queue:restart
+
+          sudo chown -R henri:www storage bootstrap/cache
+          sudo chmod -R ug+rwX,o-rwx storage bootstrap/cache
+
+      - name: Smoke test
+        run: |
+          code=$(curl -sk -o /dev/null -w '%{http_code}' https://pesats.ksdae.kehutanan.go.id/satsln-v4/login)
+          echo "GET /satsln-v4/login -> $code"
+          test "$code" = "200"

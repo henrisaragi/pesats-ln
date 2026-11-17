@@ -231,7 +231,7 @@
                     <div class="card-body">
                         <h6 class="mb-4 card-title">Product Card Preview</h6>
                         <div class="px-5 py-8 rounded-md bg-info/10">
-                            <img alt="" class="block mx-auto h-44" src="/images/product/img-03.png"/>
+                            <img alt="" class="block mx-auto h-44" src="{{ asset('images/product/img-03.png') }}"/>
                         </div>
                         <div class="mt-3">
                             <h5 class="mb-2 text-lg text-default-800 font-medium">$145.99 <small

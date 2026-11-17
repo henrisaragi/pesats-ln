@@ -15,7 +15,7 @@
                         class="card rounded-none shadow-none relative flex flex-row h-full max-h-full overflow-hidden divide-x divide-default-200">
                         <div class="card-body flex flex-col justify-between">
                             <a href="#">
-                                <img alt="logo" class="h-8 mx-auto" src="/images/logo-sm.png"/>
+                                <img alt="logo" class="h-8 mx-auto" src="{{ asset('images/logo-sm.png') }}"/>
                             </a>
                             <div class="flex flex-col items-center gap-6 pt-10">
                                 <button class="btn size-9 hover:bg-primary/10 hover:text-primary transition-all">
@@ -43,7 +43,7 @@
                                             class="hs-dropdown-toggle flex justify-center items-center"
                                             hs-dropdown-placement="top-end" type="button">
                                         <img alt="avatar" class="rounded-md bg-pink-500/10 size-12 object-cover"
-                                             src="/images/user/avatar-1.png"/>
+                                             src="{{ asset('images/user/avatar-1.png') }}"/>
                                     </button>
                                     <div class="hs-dropdown-menu" role="menu">
                                         <a class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-sm text-default-600 hover:bg-default-150 rounded"
@@ -83,7 +83,7 @@
                                 <a class="flex gap-3 py-2 px-4 bg-default-200" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/avatar-5.png"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/avatar-5.png') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-green-500"></span>
                                     </div>
@@ -96,7 +96,7 @@
                                 <a class="flex gap-3 py-2 px-4 hover:bg-default-150" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/user-1.jpg"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/user-1.jpg') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
                                     </div>
@@ -109,7 +109,7 @@
                                 <a class="flex gap-3 py-2 px-4 hover:bg-default-150" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/avatar-1.png"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/avatar-1.png') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-green-500"></span>
                                     </div>
@@ -125,7 +125,7 @@
                                 <a class="flex gap-3 py-2 px-4 hover:bg-default-150" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/user-2.jpg"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/user-2.jpg') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-500"></span>
                                     </div>
@@ -149,7 +149,7 @@
                                 <a class="flex gap-3 py-2 px-4 hover:bg-default-150" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/avatar-5.png"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/avatar-5.png') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
                                     </div>
@@ -161,7 +161,7 @@
                                 <a class="flex gap-3 py-2 px-4 hover:bg-default-150" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/user-3.jpg"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/user-3.jpg') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-950"></span>
                                     </div>
@@ -173,7 +173,7 @@
                                 <a class="flex gap-3 py-2 px-4 hover:bg-default-150" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/avatar-8.png"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/avatar-8.png') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-950"></span>
                                     </div>
@@ -185,7 +185,7 @@
                                 <a class="flex gap-3 py-2 px-4 hover:bg-default-150" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/avatar-10.png"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/avatar-10.png') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-green-500"></span>
                                     </div>
@@ -197,7 +197,7 @@
                                 <a class="flex gap-3 py-2 px-4 hover:bg-default-150" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/user-4.jpg"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/user-4.jpg') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-950"></span>
                                     </div>
@@ -209,7 +209,7 @@
                                 <a class="flex gap-3 py-2 px-4 hover:bg-default-150" href="#">
                                     <div
                                         class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                                        <img alt="" class="rounded-full w-9 h-9" src="/images/user/user-2.jpg"/>
+                                        <img alt="" class="rounded-full w-9 h-9" src="{{ asset('images/user/user-2.jpg') }}"/>
                                         <span
                                             class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-500"></span>
                                     </div>
@@ -245,7 +245,7 @@
                                 <i class="size-4 text-default-500 hover:text-primary" data-lucide="chevrons-left"></i>
                             </button>
                             <div class="rounded-full size-10 bg-default-100">
-                                <img alt="" class="h-10 rounded-full" src="/images/user/avatar-7.png"/>
+                                <img alt="" class="h-10 rounded-full" src="{{ asset('images/user/avatar-7.png') }}"/>
                             </div>
                             <div>
                                 <h6 class="text-default-800 mb-1 font-bold text-sm">William Heineman</h6>
@@ -278,7 +278,7 @@
                             <div class="flex gap-3 items-end">
                                 <a class="flex items-center justify-center text-sm font-semibold rounded-full size-9 bg-default-200"
                                    href="#">
-                                    <img alt="" class="object-cover rounded-full h-9" src="/images/user/avatar-7.png"/>
+                                    <img alt="" class="object-cover rounded-full h-9" src="{{ asset('images/user/avatar-7.png') }}"/>
                                 </a>
                                 <div class="p-4 card text-default-700 text-sm">
                                     Sure, I have my pen and paper ready.
@@ -290,7 +290,7 @@
                                 </div>
                                 <a class="flex items-center justify-center text-sm font-semibold rounded-full size-9 bg-default-200"
                                    href="#">
-                                    <img alt="" class="object-cover rounded-full h-9" src="/images/user/avatar-1.png"/>
+                                    <img alt="" class="object-cover rounded-full h-9" src="{{ asset('images/user/avatar-1.png') }}"/>
                                 </a>
                             </div>
                             <div class="flex gap-3 items-end">
@@ -298,7 +298,7 @@
                                     <a class="flex items-center justify-center text-sm font-semibold rounded-full size-9 bg-default-200"
                                        href="#">
                                         <img alt="" class="object-cover rounded-full h-9"
-                                             src="/images/user/avatar-7.png"/>
+                                             src="{{ asset('images/user/avatar-7.png') }}"/>
                                     </a>
                                 </div>
                                 <div class="flex flex-col gap-3">
@@ -308,10 +308,10 @@
                                         </div>
                                         <div class="grid grid-cols-3 gap-4 mt-4">
                                             <a href="#">
-                                                <img alt="" class="rounded-md" src="/images/small/img-3.jpg"/>
+                                                <img alt="" class="rounded-md" src="{{ asset('images/small/img-3.jpg') }}"/>
                                             </a>
                                             <a href="#">
-                                                <img alt="" class="rounded-md" src="/images/small/img-5.jpg"/>
+                                                <img alt="" class="rounded-md" src="{{ asset('images/small/img-5.jpg') }}"/>
                                             </a>
                                         </div>
                                     </div>
@@ -334,13 +334,13 @@
                                 </div>
                                 <a class="flex items-center justify-center text-sm font-semibold rounded-full size-9 bg-default-200"
                                    href="#">
-                                    <img alt="" class="object-cover rounded-full h-9" src="/images/user/avatar-1.png"/>
+                                    <img alt="" class="object-cover rounded-full h-9" src="{{ asset('images/user/avatar-1.png') }}"/>
                                 </a>
                             </div>
                             <div class="flex gap-3 items-end">
                                 <a class="flex items-center justify-center text-sm font-semibold rounded-full size-9 bg-default-200"
                                    href="#">
-                                    <img alt="" class="object-cover rounded-full h-9" src="/images/user/avatar-7.png"/>
+                                    <img alt="" class="object-cover rounded-full h-9" src="{{ asset('images/user/avatar-7.png') }}"/>
                                 </a>
                                 <div class="w-92 p-4 card text-default-700 text-sm">
                                     Yes, thank you 🤩. I have a sales graph I would like to show everyone. This shows how
@@ -353,7 +353,7 @@
                                 </div>
                                 <a class="flex items-center justify-center text-sm font-semibold rounded-full size-9 bg-default-200"
                                    href="#">
-                                    <img alt="" class="object-cover rounded-full h-9" src="/images/user/avatar-1.png"/>
+                                    <img alt="" class="object-cover rounded-full h-9" src="{{ asset('images/user/avatar-1.png') }}"/>
                                 </a>
                             </div>
                         </div>

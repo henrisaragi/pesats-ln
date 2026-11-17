@@ -12,8 +12,8 @@
                 <div class="text-center px-10 py-12">
                     <div id="countDownText">
                         <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
-                            <img alt="logo dark" class="h-6 block dark:hidden" src="/images/logo-dark.png"/>
-                            <img alt="" class="h-6 hidden dark:block" src="/images/logo-light.png"/>
+                            <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
+                            <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                         </a>
                         <div class="mt-8 text-center">
                             <h4 class="mb-2 text-purple-500 text-xl font-semibold">Coming Soon ...</h4>

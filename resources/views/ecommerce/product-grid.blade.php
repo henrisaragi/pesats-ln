@@ -443,7 +443,7 @@
             <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-5 mt-5">
                 <div class="card">
                     <div class="card-body relative">
-                        <img alt="" src="/images/product/img-02.png"/>
+                        <img alt="" src="{{ asset('images/product/img-02.png') }}"/>
                         <i class="size-5 text-danger fill-danger/15 absolute top-6 end-6" data-lucide="heart"></i>
                     </div>
                     <div class="pb-5 px-5">
@@ -497,7 +497,7 @@
                 </div>
                 <div class="card">
                     <div class="card-body relative">
-                        <img alt="" src="/images/product/img-03.png"/>
+                        <img alt="" src="{{ asset('images/product/img-03.png') }}"/>
                         <i class="size-5 text-default-500 fill-default-100 absolute top-6 end-6"
                            data-lucide="heart"></i>
                     </div>
@@ -552,7 +552,7 @@
                 </div>
                 <div class="card">
                     <div class="card-body relative">
-                        <img alt="" src="/images/product/img-04.png"/>
+                        <img alt="" src="{{ asset('images/product/img-04.png') }}"/>
                         <i class="size-5 text-default-500 fill-default-100 absolute top-6 end-6"
                            data-lucide="heart"></i>
                     </div>
@@ -607,7 +607,7 @@
                 </div>
                 <div class="card">
                     <div class="card-body relative">
-                        <img alt="" src="/images/product/img-05.png"/>
+                        <img alt="" src="{{ asset('images/product/img-05.png') }}"/>
                         <i class="size-5 text-danger fill-danger/15 absolute top-6 end-6" data-lucide="heart"></i>
                     </div>
                     <div class="pb-5 px-5">
@@ -661,7 +661,7 @@
                 </div>
                 <div class="card">
                     <div class="card-body relative">
-                        <img alt="" src="/images/product/img-06.png"/>
+                        <img alt="" src="{{ asset('images/product/img-06.png') }}"/>
                         <i class="size-5 text-default-500 fill-default-100 absolute top-6 end-6"
                            data-lucide="heart"></i>
                     </div>
@@ -715,7 +715,7 @@
                 </div>
                 <div class="card">
                     <div class="card-body relative">
-                        <img alt="" src="/images/product/img-08.png"/>
+                        <img alt="" src="{{ asset('images/product/img-08.png') }}"/>
                         <i class="size-5 text-danger fill-danger/15 absolute top-6 end-6" data-lucide="heart"></i>
                     </div>
                     <div class="pb-5 px-5">
@@ -769,7 +769,7 @@
                 </div>
                 <div class="card">
                     <div class="card-body relative">
-                        <img alt="" src="/images/product/img-01.png"/>
+                        <img alt="" src="{{ asset('images/product/img-01.png') }}"/>
                         <i class="size-5 text-default-500 fill-default-100 absolute top-6 end-6"
                            data-lucide="heart"></i>
                     </div>
@@ -823,7 +823,7 @@
                 </div>
                 <div class="card">
                     <div class="card-body relative">
-                        <img alt="" src="/images/product/img-10.png"/>
+                        <img alt="" src="{{ asset('images/product/img-10.png') }}"/>
                         <i class="size-5 text-danger fill-danger/15 absolute top-6 end-6" data-lucide="heart"></i>
                     </div>
                     <div class="pb-5 px-5">

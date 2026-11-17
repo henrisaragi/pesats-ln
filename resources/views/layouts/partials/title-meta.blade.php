@@ -1,6 +1,7 @@
 <meta charset="utf-8" />
 <title>{{ $title }} | Ditjen KSDAE - Kementerian Kehutanan</title>
 <meta content="{{ csrf_token() }}" name="csrf-token" />
+<meta content="{{ url('/') }}" name="app-url" />
 <meta content="width=device-width, initial-scale=1.0" name="viewport" />
 <script>
     window.dataTableLanguage = {
@@ -29,4 +30,4 @@
 <meta content="Portal Elektronik Surat Angkut Tumbuhan dan Satwa Liar" name="description" />
 <meta content="PeSATS" name="kemenhut" />
 <!-- App favicon -->
-<link href="/images/favicon.ico" rel="shortcut icon" />
+<link href="{{ asset('images/favicon.ico') }}" rel="shortcut icon" />

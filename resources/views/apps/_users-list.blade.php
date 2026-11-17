@@ -73,7 +73,7 @@
                                 <td class="px-3.5 py-3 text-sm text-primary"> #TW1500001</td>
                                 <td class="flex py-3 px-3.5 items-center gap-3">
                                     <div class="size-10 rounded-full bg-default-200">
-                                        <img alt="" class="h-10 rounded-full" src="/images/user/avatar-2.png"/>
+                                        <img alt="" class="h-10 rounded-full" src="{{ asset('images/user/avatar-2.png') }}"/>
                                     </div>
                                     <div>
                                         <h6 class="mb-1.5 font-semibold">
@@ -126,7 +126,7 @@
                                 <td class="px-3.5 py-3 whitespace-nowrap text-sm text-primary">#TW1500002</td>
                                 <td class="flex py-3 px-3.5 items-center gap-3">
                                     <div class="size-10 rounded-full bg-default-200">
-                                        <img alt="" class="h-10 rounded-full" src="/images/user/avatar-1.png"/>
+                                        <img alt="" class="h-10 rounded-full" src="{{ asset('images/user/avatar-1.png') }}"/>
                                     </div>
                                     <div>
                                         <h6 class="mb-1.5 font-semibold"><a class="text-default-800" href="#">Jaqueline
@@ -179,7 +179,7 @@
                                 <td class="flex py-3 px-3.5 items-center gap-3">
                                     <div class="size-10 rounded-full bg-default-200"><img alt=""
                                                                                           class="h-10 rounded-full"
-                                                                                          src="/images/user/avatar-2.png"/>
+                                                                                          src="{{ asset('images/user/avatar-2.png') }}"/>
                                     </div>
                                     <div>
                                         <h6 class="mb-1.5 font-semibold"><a class="text-default-800" href="#">Marlene
@@ -232,7 +232,7 @@
                                 <td class="flex py-3 px-3.5 items-center gap-3">
                                     <div class="size-10 rounded-full bg-default-200"><img alt=""
                                                                                           class="h-10 rounded-full"
-                                                                                          src="/images/user/avatar-3.png"/>
+                                                                                          src="{{ asset('images/user/avatar-3.png') }}"/>
                                     </div>
                                     <div>
                                         <h6 class="mb-1.5 font-semibold"><a class="text-default-800" href="#">Akeem
@@ -280,7 +280,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-primary">#TW1500005</td>
                                 <td class="px-4 py-3 flex items-center gap-3">
-                                    <img alt="" class="w-9 h-9 rounded-full" src="/images/user/avatar-1.png"/>
+                                    <img alt="" class="w-9 h-9 rounded-full" src="{{ asset('images/user/avatar-1.png') }}"/>
                                     <div class="text-sm">
                                         <div class="font-semibold mb-1">Stephon Trantow</div>
                                         <div class="text-default-500">Full Stack Developer</div>
@@ -380,7 +380,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-primary">#TW1500007</td>
                                 <td class="px-4 py-3 flex items-center gap-3">
-                                    <img alt="" class="w-9 h-9 rounded-full" src="/images/user/avatar-2.png"/>
+                                    <img alt="" class="w-9 h-9 rounded-full" src="{{ asset('images/user/avatar-2.png') }}"/>
                                     <div class="text-sm">
                                         <div class="font-semibold mb-1">Ethel Corwin</div>
                                         <div class="text-default-500">Web Designer</div>
@@ -429,7 +429,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-primary">#TW1500008</td>
                                 <td class="px-4 py-3 flex items-center gap-3">
-                                    <img alt="" class="w-9 h-9 rounded-full" src="/images/user/avatar-3.png"/>
+                                    <img alt="" class="w-9 h-9 rounded-full" src="{{ asset('images/user/avatar-3.png') }}"/>
                                     <div class="text-sm">
                                         <div class="font-semibold mb-1">Rickie Cremin</div>
                                         <div class="text-default-500">Web Designer</div>
@@ -530,7 +530,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-primary">#TW1500010</td>
                                 <td class="px-4 py-3 flex items-center gap-3">
-                                    <img alt="" class="w-9 h-9 rounded-full" src="/images/user/avatar-4.png"/>
+                                    <img alt="" class="w-9 h-9 rounded-full" src="{{ asset('images/user/avatar-4.png') }}"/>
                                     <div class="text-sm">
                                         <div class="font-semibold mb-1">Glennie Langosh</div>
                                         <div class="text-default-500">Project Manager</div>

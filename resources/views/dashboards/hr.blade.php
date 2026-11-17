@@ -198,7 +198,7 @@
                                             <td class="px-3.5 py-2.5">
                                                 <div class="flex items-center gap-2">
                                                     <img alt="" class="bg-green-100 size-10 rounded-full"
-                                                        src="/images/user/avatar-10.png" />
+                                                        src="{{ asset('images/user/avatar-10.png') }}" />
                                                     <div class="text-sm">
                                                         <h6 class="font-semibold mb-0.5">Kristen Redden</h6>
                                                         <p class="text-default-500">kredden@tailwick.com</p>
@@ -232,7 +232,7 @@
                                             <td class="px-3.5 py-2.5">
                                                 <div class="flex items-center gap-2">
                                                     <img alt="" class="size-10 rounded-full"
-                                                        src="/images/user/avatar-2.png" />
+                                                        src="{{ asset('images/user/avatar-2.png') }}" />
                                                     <div>
                                                         <h6 class="font-semibold mb-0.5">Howard George
                                                         </h6>
@@ -268,7 +268,7 @@
                                             <td class="px-3.5 py-2.5">
                                                 <div class="flex items-center gap-2">
                                                     <img alt="" class="size-10 rounded-full"
-                                                        src="/images/user/avatar-3.png" />
+                                                        src="{{ asset('images/user/avatar-3.png') }}" />
                                                     <div>
                                                         <h6 class="font-semibold mb-0.5">Laura Dawson
                                                         </h6>
@@ -304,7 +304,7 @@
                                             <td class="px-3.5 py-2.5">
                                                 <div class="flex items-center gap-2">
                                                     <img alt="" class="size-10 rounded-full"
-                                                        src="/images/user/avatar-4.png" />
+                                                        src="{{ asset('images/user/avatar-4.png') }}" />
                                                     <div>
                                                         <h6 class="font-semibold mb-0.5">Joseph Morgan
                                                         </h6>
@@ -340,7 +340,7 @@
                                             <td class="px-3.5 py-2.5">
                                                 <div class="flex items-center gap-2">
                                                     <img alt="" class="size-10 rounded-full"
-                                                        src="/images/user/avatar-4.png" />
+                                                        src="{{ asset('images/user/avatar-4.png') }}" />
                                                     <div>
                                                         <h6 class="font-semibold mb-0.5">Jeremy Rose</h6>
                                                         <p class="text-default-500">rose@tailwick.com</p>
@@ -454,7 +454,7 @@
                                             <div class="flex flex-wrap items-center gap-3">
                                                 <div class="rounded-full size-10">
                                                     <img alt="" class="rounded-full"
-                                                        src="/images/user/user-1.jpg" />
+                                                        src="{{ asset('images/user/user-1.jpg') }}" />
                                                 </div>
                                                 <div class="text-sm">
                                                     <h6 class="mb-1 text-default-800 font-semibold"><a
@@ -512,7 +512,7 @@
                                             <div class="flex flex-wrap items-center gap-3">
                                                 <div class="rounded-full size-10">
                                                     <img alt="" class="rounded-full"
-                                                        src="/images/user/user-2.jpg" />
+                                                        src="{{ asset('images/user/user-2.jpg') }}" />
                                                 </div>
                                                 <div class="text-sm">
                                                     <h6 class="mb-1 text-default-800 font-semibold"><a
@@ -570,7 +570,7 @@
                                             <div class="flex flex-wrap items-center gap-3">
                                                 <div class="rounded-full size-10">
                                                     <img alt="" class="rounded-full"
-                                                        src="/images/user/user-3.jpg" />
+                                                        src="{{ asset('images/user/user-3.jpg') }}" />
                                                 </div>
                                                 <div class="text-sm">
                                                     <h6 class="mb-1 text-default-800 font-semibold"><a
@@ -628,7 +628,7 @@
                                             <div class="flex flex-wrap items-center gap-3">
                                                 <div class="rounded-full size-10">
                                                     <img alt="" class="rounded-full"
-                                                        src="/images/user/avatar-5.png" />
+                                                        src="{{ asset('images/user/avatar-5.png') }}" />
                                                 </div>
                                                 <div>
                                                     <h6 class="mb-1 text-default-800 font-semibold"><a
@@ -692,7 +692,7 @@
                         <div class="relative card-body">
                             <div class="flex gap-3 mb-4">
                                 <div class="bg-purple-500/10 rounded-full size-10">
-                                    <img alt="" class="h-10 rounded-full" src="/images/user/avatar-6.png" />
+                                    <img alt="" class="h-10 rounded-full" src="{{ asset('images/user/avatar-6.png') }}" />
                                 </div>
                                 <div>
                                     <h6 class="mb-1 text-sm text-default-800">Nakisha Short</h6>
@@ -701,7 +701,7 @@
                             </div>
                             <button class="btn btn-sm bg-primary text-white" type="button">Wish Her</button>
                         </div>
-                        <img alt="" class="absolute bottom-0 right-0" src="/images/birthday.png" />
+                        <img alt="" class="absolute bottom-0 right-0" src="{{ asset('images/birthday.png') }}" />
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -999,7 +999,7 @@
                         </div>
                     </div>
                     <div class="flex gap-3 p-2 mt-4 rounded-md bg-primary">
-                        <img alt="" class="h-24" src="/images/support.png" />
+                        <img alt="" class="h-24" src="{{ asset('images/support.png') }}" />
                         <div>
                             <h6 class="mb-1 text-base text-white">Need Help ?</h6>
                             <p class="text-white">If you would like to learn more about transferring the license to a

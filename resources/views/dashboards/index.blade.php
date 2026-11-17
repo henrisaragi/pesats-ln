@@ -17,7 +17,7 @@
                         <button class="btn bg-primary text-white" type="button">Take a Product</button>
                     </div>
                     <div class="col-span-4 ms-auto lg:block hidden">
-                        <img alt="" class="h-40" src="/images/dashboard.png" />
+                        <img alt="" class="h-40" src="{{ asset('images/dashboard.png') }}" />
                     </div>
                 </div>
                 <div class="absolute inset-0">
@@ -776,7 +776,7 @@
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex items-center gap-3 py-2.25">
                                 <div class="size-8 rounded-full bg-default-100">
-                                    <img alt="" class="size-8 rounded-full" src="/images/user/avatar-2.png" />
+                                    <img alt="" class="size-8 rounded-full" src="{{ asset('images/user/avatar-2.png') }}" />
                                 </div>
                                 <div>
                                     <h6 class="font-medium text-default-800 mb-1">Urrie Arthur</h6>
@@ -790,7 +790,7 @@
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex items-center gap-3 py-2.25">
                                 <div class="size-8 rounded-full bg-default-100">
-                                    <img alt="" class="size-8 rounded-full" src="/images/user/avatar-3.png" />
+                                    <img alt="" class="size-8 rounded-full" src="{{ asset('images/user/avatar-3.png') }}" />
                                 </div>
                                 <div>
                                     <h6 class="font-medium text-default-800 mb-1">Natalie Christy</h6>
@@ -802,7 +802,7 @@
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex items-center gap-3 py-2.25">
                                 <div class="size-8 rounded-full bg-default-100">
-                                    <img alt="" class="size-8 rounded-full" src="/images/user/avatar-4.png" />
+                                    <img alt="" class="size-8 rounded-full" src="{{ asset('images/user/avatar-4.png') }}" />
                                 </div>
                                 <div>
                                     <h6 class="font-medium text-default-800 mb-1">Laurie Jackson</h6>
@@ -814,7 +814,7 @@
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex items-center gap-3 pt-2">
                                 <div class="size-8 rounded-full bg-default-100">
-                                    <img alt="" class="size-8 rounded-full" src="/images/user/avatar-5.png" />
+                                    <img alt="" class="size-8 rounded-full" src="{{ asset('images/user/avatar-5.png') }}" />
                                 </div>
                                 <div>
                                     <h6 class="font-medium text-default-800 mb-1">Michael Torres</h6>
@@ -911,7 +911,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3 whitespace-nowrap">
                             <div class="flex items-center justify-center rounded-md size-10 bg-default-100">
-                                <img alt="" class="h-6" src="/images/product/img-02.png" />
+                                <img alt="" class="h-6" src="{{ asset('images/product/img-02.png') }}" />
                             </div>
                             <div>
                                 <h6 class="font-semibold text-default-800 md:w-full truncate w-43 mb-1 text-sm">Mesh
@@ -934,7 +934,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="flex items-center justify-center rounded-md size-10 bg-default-100">
-                                <img alt="" class="h-6" src="/images/product/img-03.png" />
+                                <img alt="" class="h-6" src="{{ asset('images/product/img-03.png') }}" />
                             </div>
                             <div>
                                 <h6 class="font-semibold text-default-800 md:w-full truncate w-43 text-sm mb-1">
@@ -957,7 +957,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="flex items-center justify-center rounded-md size-10 bg-default-100">
-                                <img alt="" class="h-6" src="/images/product/img-04.png" />
+                                <img alt="" class="h-6" src="{{ asset('images/product/img-04.png') }}" />
                             </div>
                             <div>
                                 <h6 class="font-semibold text-default-800 md:w-full truncate w-43 text-sm mb-1">Mesh
@@ -980,7 +980,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="flex items-center justify-center rounded-md size-10 bg-default-100">
-                                <img alt="" class="h-6" src="/images/product/img-05.png" />
+                                <img alt="" class="h-6" src="{{ asset('images/product/img-05.png') }}" />
                             </div>
                             <div>
                                 <h6 class="font-semibold text-default-800 md:w-full truncate w-43 text-sm mb-1">Techel
@@ -1003,7 +1003,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="flex items-center justify-center rounded-md size-10 bg-default-100">
-                                <img alt="" class="h-6" src="/images/product/img-06.png" />
+                                <img alt="" class="h-6" src="{{ asset('images/product/img-06.png') }}" />
                             </div>
                             <div>
                                 <h6 class="font-semibold text-default-800 md:w-full truncate w-43 text-sm mb-1">Bovet
@@ -1026,7 +1026,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="flex items-center justify-center rounded-md size-10 bg-default-100">
-                                <img alt="" class="h-6" src="/images/product/img-03.png" />
+                                <img alt="" class="h-6" src="{{ asset('images/product/img-03.png') }}" />
                             </div>
                             <div>
                                 <h6 class="font-semibold text-default-800 md:w-full truncate w-43 text-sm mb-1">

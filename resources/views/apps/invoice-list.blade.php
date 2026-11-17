@@ -221,7 +221,7 @@
                         <div class="grid lg:grid-cols-12 items-center gap-4">
                             <div class="lg:col-span-3 text-start">
                                 <div class="size-16 bg-default-100 flex items-center justify-center rounded-md">
-                                    <img alt="" class="h-8" src="/images/logo-sm.png"/>
+                                    <img alt="" class="h-8" src="{{ asset('images/logo-sm.png') }}"/>
                                 </div>
                                 <h5 class="mt-4 mb-1 text-lg font-semibold text-default-800">Themesdesign</h5>
                                 <p class="text-default-500">IT Software Company</p>

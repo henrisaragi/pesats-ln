@@ -10,6 +10,12 @@ function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 }
 
+function appUrl(path) {
+    const base = document.querySelector('meta[name="app-url"]')?.getAttribute('content') ?? '';
+
+    return base.replace(/\/+$/, '') + path;
+}
+
 function jsonHeaders() {
     return { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
 }
@@ -102,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fetchList() {
-        return fetch('/chat/list', { headers: jsonHeaders() })
+        return fetch(appUrl('/chat/list'), { headers: jsonHeaders() })
             .then((response) => (response.ok ? response.json() : null))
             .then((payload) => {
                 if (payload) {
@@ -286,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
         highlightActiveItem(id);
         subscribeToConversation(id);
 
-        fetch(`/chat/${id}/messages`, { headers: jsonHeaders() })
+        fetch(appUrl(`/chat/${id}/messages`), { headers: jsonHeaders() })
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`Conversation ${id} is not accessible (${response.status}).`);
@@ -316,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch(`/chat/${currentConversationId}/messages`, { headers: jsonHeaders() })
+        fetch(appUrl(`/chat/${currentConversationId}/messages`), { headers: jsonHeaders() })
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`Conversation ${currentConversationId} is not accessible (${response.status}).`);
@@ -340,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch(`/chat/${currentConversationId}/messages`, {
+        fetch(appUrl(`/chat/${currentConversationId}/messages`), {
             method: 'POST',
             headers: { ...jsonHeaders(), 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
             body: JSON.stringify({ body }),
@@ -353,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function startConversation(body) {
-        fetch('/chat', {
+        fetch(appUrl('/chat'), {
             method: 'POST',
             headers: { ...jsonHeaders(), 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
             body: JSON.stringify({ body }),
@@ -387,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch(`/chat/${currentConversationId}/end`, {
+        fetch(appUrl(`/chat/${currentConversationId}/end`), {
             method: 'POST',
             headers: { ...jsonHeaders(), 'X-CSRF-TOKEN': csrfToken() },
         }).finally(() => {

@@ -10,8 +10,8 @@
                 <div class="grid lg:grid-cols-12 md:grid-cols-10 grid-cols-2 items-center">
                     <div class="lg:col-span-2 md:col-span-2">
                         <a href="{{ route('second', ['dashboards', 'index']) }}">
-                            <img alt="logo dark" class="h-6 block dark:hidden" src="/images/logo-dark.png" />
-                            <img alt="" class="h-6 hidden dark:block" src="/images/logo-light.png" />
+                            <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}" />
+                            <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}" />
                         </a>
                     </div>
                     <div class="lg:col-span-8 md:col-span-6 md:block hidden">
@@ -104,18 +104,18 @@
                 <div class="lg:col-span-5 relative z-20 lg:order-1 order-2">
                     <div class="relative z-10 grid lg:grid-cols-2 grid-cols-3 gap-5">
                         <div class="lg:col-span-2">
-                            <img alt="" class="rounded-xl ms-auto" src="/images/landing/widgets.jpg" />
+                            <img alt="" class="rounded-xl ms-auto" src="{{ asset('images/landing/widgets.jpg') }}" />
                         </div>
                         <div class="lg:col-span-1 lg:mt-5">
-                            <img alt="" class="rounded-xl" src="/images/landing/widgets-3.jpg" />
+                            <img alt="" class="rounded-xl" src="{{ asset('images/landing/widgets-3.jpg') }}" />
                         </div>
                         <div class="lg:col-span-1 lg:mt-5">
-                            <img alt="" class="rounded-xl" src="/images/landing/widgets-2.jpg" />
+                            <img alt="" class="rounded-xl" src="{{ asset('images/landing/widgets-2.jpg') }}" />
                         </div>
                     </div>
                 </div>
                 <div class="lg:col-span-7 relative z-20 lg:-mt-72 lg:order-2 order-1">
-                    <img alt="" class="rounded-xl shadow-2xl" src="/images/landing/home.jpg" />
+                    <img alt="" class="rounded-xl shadow-2xl" src="{{ asset('images/landing/home.jpg') }}" />
                 </div>
             </div>
             <div class="mt-24">
@@ -136,7 +136,7 @@
                 <div class="card rounded-md shadow-md transition-all duration-300 hover:-translate-y-2 -mt-36">
                     <div class="card-body">
                         <div class="flex flex-col gap-y-6">
-                            <img alt="" class="rounded-md shadow" src="/images/landing/chat.jpg" />
+                            <img alt="" class="rounded-md shadow" src="{{ asset('images/landing/chat.jpg') }}" />
                             <div>
                                 <span
                                     class="inline-flex items-center py-0.5 px-2.5 rounded text-xs font-medium border border-primary/30 bg-primary/15 text-primary">Popular
@@ -158,7 +158,7 @@
                 <div class="card rounded-md shadow-md transition-all duration-300 hover:-translate-y-2 lg:-mt-36">
                     <div class="card-body">
                         <div class="flex flex-col gap-y-6">
-                            <img alt="" class="rounded-md shadow" src="/images/landing/email.jpg" />
+                            <img alt="" class="rounded-md shadow" src="{{ asset('images/landing/email.jpg') }}" />
                             <div>
                                 <span
                                     class="inline-flex items-center py-0.5 px-2.5 rounded text-xs font-medium border border-secondary/30 bg-secondary/15 text-secondary">Email
@@ -180,7 +180,7 @@
                 <div class="card rounded-md shadow-md transition-all duration-300 hover:-translate-y-2 lg:-mt-36">
                     <div class="card-body">
                         <div class="flex flex-col gap-y-6">
-                            <img alt="" class="rounded-md shadow" src="/images/landing/order-overview.jpg" />
+                            <img alt="" class="rounded-md shadow" src="{{ asset('images/landing/order-overview.jpg') }}" />
                             <div>
                                 <span
                                     class="inline-flex items-center py-0.5 px-2.5 rounded text-xs font-medium border border-danger/20 bg-danger/15 text-danger">HR
@@ -265,16 +265,16 @@
                     </div>
                     <div class="lg:col-span-6">
                         <img alt="" class="shadow-lg lg:ms-auto rounded-xl"
-                            src="/images/landing/widgets-4.jpg" />
+                            src="{{ asset('images/landing/widgets-4.jpg') }}" />
                         <img alt="" class="shadow-lg -mt-24 rounded-xl ms-auto mr-24"
-                            src="/images/landing/widgets-5.jpg" />
+                            src="{{ asset('images/landing/widgets-5.jpg') }}" />
                     </div>
                 </div>
                 <div class="grid lg:grid-cols-12 gap-6 items-center lg:mt-12 mt-8">
                     <div class="lg:col-span-6 lg:order-1 order-2">
-                        <img alt="" class="shadow-lg rounded-xl" src="/images/landing/widgets-6.jpg" />
+                        <img alt="" class="shadow-lg rounded-xl" src="{{ asset('images/landing/widgets-6.jpg') }}" />
                         <img alt="" class="shadow-lg -mt-24 ms-auto lg:me-24 md:me-40 rounded-xl"
-                            src="/images/landing/widgets-7.jpg" />
+                            src="{{ asset('images/landing/widgets-7.jpg') }}" />
                     </div>
                     <div class="lg:col-span-5 lg:order-2 order-1">
                         <h1 class="mb-3 leading-normal capitalize text-4xl font-semibold text-default-800">Boost Your
@@ -314,9 +314,9 @@
                     </div>
                     <div class="lg:col-span-6">
                         <img alt="" class="shadow-lg lg:ms-auto me-auto rounded-xl"
-                            src="/images/landing/widgets-8.jpg" />
+                            src="{{ asset('images/landing/widgets-8.jpg') }}" />
                         <img alt="" class="shadow-lg -mt-24 rounded-xl ms-auto lg:me-24 mr-40"
-                            src="/images/landing/widgets-9.jpg" />
+                            src="{{ asset('images/landing/widgets-9.jpg') }}" />
                     </div>
                 </div>
             </div>
@@ -733,7 +733,7 @@
                         <button aria-expanded="false" aria-haspopup="menu" aria-label="Dropdown"
                             class="hs-dropdown-toggle py-2 px-4 bg-transparent border border-default-400/40 text-white hover:border-primary rounded hover:text-primary font-semibold gap-2 flex items-center"
                             id="hs-dropdown-with-icons" type="button">
-                            <img alt="" class="size-5 rounded-full" src="/images/flags/us.jpg" />
+                            <img alt="" class="size-5 rounded-full" src="{{ asset('images/flags/us.jpg') }}" />
                             English
                         </button>
                         <div aria-labelledby="hs-dropdown-with-icons" aria-orientation="vertical"
@@ -742,44 +742,44 @@
                             <div class="p-1 space-y-3 text-sm font-normal">
                                 <a class="flex items-center gap-x-3.5 px-3 text-default-600 hover:text-primary"
                                     href="#">
-                                    <img alt="" class="size-4 rounded-full" src="/images/flags/us.jpg" />
+                                    <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/us.jpg') }}" />
                                     English
                                 </a>
                                 <a class="flex items-center gap-x-3.5 px-3 text-default-600 hover:text-primary"
                                     href="#">
-                                    <img alt="" class="size-4 rounded-full" src="/images/flags/spain.jpg" />
+                                    <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/spain.jpg') }}" />
                                     Spanish
                                 </a>
                                 <a class="flex items-center gap-x-3.5 px-3 text-default-600 hover:text-primary"
                                     href="#">
-                                    <img alt="" class="size-4 rounded-full" src="/images/flags/germany.jpg" />
+                                    <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/germany.jpg') }}" />
                                     German
 
                                 </a>
                                 <a class="flex items-center gap-x-3.5 px-3 text-default-600 hover:text-primary"
                                     href="#">
-                                    <img alt="" class="size-4 rounded-full" src="/images/flags/french.jpg" />
+                                    <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/french.jpg') }}" />
                                     French
                                 </a>
                                 <a class="flex items-center gap-x-3.5 px-3 text-default-600 hover:text-primary"
                                     href="#">
-                                    <img alt="" class="size-4 rounded-full" src="/images/flags/japanese.svg" />
+                                    <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/japanese.svg') }}" />
                                     Japanese
                                 </a>
                                 <a class="flex items-center gap-x-3.5 px-3 text-default-600 hover:text-primary"
                                     href="#">
-                                    <img alt="" class="size-4 rounded-full" src="/images/flags/italy.jpg" />
+                                    <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/italy.jpg') }}" />
                                     Italian
                                 </a>
                                 <a class="flex items-center gap-x-3.5 px-3 text-default-600 hover:text-primary"
                                     href="#">
-                                    <img alt="" class="size-4 rounded-full" src="/images/flags/russia.jpg" />
+                                    <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/russia.jpg') }}" />
                                     Russian
 
                                 </a>
                                 <a class="flex items-center gap-x-3.5 px-3 text-default-600 hover:text-primary"
                                     href="#">
-                                    <img alt="" class="size-4 rounded-full" src="/images/flags/arebian.svg" />
+                                    <img alt="" class="size-4 rounded-full" src="{{ asset('images/flags/arebian.svg') }}" />
                                     Arabic
                                 </a>
                             </div>
@@ -826,8 +826,8 @@
         id="navbarMenu" role="dialog" tabindex="-1">
         <div class="flex items-center justify-between">
             <a href="#">
-                <img alt="logo dark" class="h-6 block dark:hidden" src="/images/logo-dark.png" />
-                <img alt="" class="h-6 hidden dark:block" src="/images/logo-light.png" />
+                <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}" />
+                <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}" />
             </a>
             <button aria-label="Close" class="inline-flex justify-end items-center gap-x-2 rounded-full"
                 data-hs-overlay="#navbarMenu">

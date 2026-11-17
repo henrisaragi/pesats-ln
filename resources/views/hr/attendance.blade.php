@@ -27,7 +27,7 @@
                 <div class="card-body">
                     <div class="text-center">
                         <div class="mx-auto rounded-full size-20 bg-default-100">
-                            <img alt="" class="h-20 rounded-full" src="/images/user/user-3.jpg"/>
+                            <img alt="" class="h-20 rounded-full" src="{{ asset('images/user/user-3.jpg') }}"/>
                         </div>
                         <h6 class="mt-3 mb-1 text-base text-heading font-semibold"><a href="#">Willie Torres</a></h6>
                         <p class="text-default-500">Product Designer</p>

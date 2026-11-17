@@ -571,7 +571,7 @@
                                         <div
                                             class="relative flex items-center justify-center font-semibold rounded-full text-default-500 size-9 bg-default-100 shrink-0 dark:text-zink-200 dark:bg-zink-600">
                                             <img alt="" class="rounded-full h-9"
-                                                src="/images/user/avatar-5.png" />
+                                                src="{{ asset('images/user/avatar-5.png') }}" />
                                         </div>
                                         <div class="grow">
                                             <div class="flex items-center">
@@ -608,7 +608,7 @@
                                         <div
                                             class="relative flex items-center justify-center font-semibold bg-pink-100 rounded-full text-default-500 size-9 shrink-0 dark:bg-pink-500/20 dark:text-zink-200">
                                             <img alt="" class="rounded-full h-9"
-                                                src="/images/user/avatar-1.png" />
+                                                src="{{ asset('images/user/avatar-1.png') }}" />
                                         </div>
                                         <div class="grow">
                                             <div class="flex items-center">
@@ -642,7 +642,7 @@
                                         <div
                                             class="relative flex items-center justify-center font-semibold rounded-full text-default-500 size-9 bg-default-100 shrink-0 dark:text-zink-200 dark:bg-zink-600">
                                             <img alt="" class="rounded-full h-9"
-                                                src="/images/user/avatar-5.png" />
+                                                src="{{ asset('images/user/avatar-5.png') }}" />
                                         </div>
                                         <div class="grow">
                                             <div class="flex items-center">

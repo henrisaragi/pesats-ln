@@ -67,7 +67,7 @@
 <div
     class="relative flex items-center justify-center w-full min-h-screen overflow-hidden bg-gradient-to-r from-blue-900 to-blue-800 dark:to-blue-900 dark:from-blue-950 px-4 py-10">
     <div class="absolute inset-0 opacity-20">
-        <img alt="" src="/images/modern.svg"/>
+        <img alt="" src="{{ asset('images/modern.svg') }}"/>
     </div>
     <div class="w-full max-w-2xl mx-auto py-10 px-8 bg-card rounded-md relative z-10">
         <button aria-label="{{ __('Tur Panduan') }}"
@@ -76,8 +76,8 @@
             <i class="size-4 me-1" data-lucide="help-circle"></i>{{ __('Tur Panduan') }}
         </button>
         <div class="text-center mb-6">
-            <img alt="" class="h-7 mx-auto mb-6 dark:hidden" src="/images/logo-dark.png"/>
-            <img alt="" class="h-7 mx-auto mb-6 hidden dark:block" src="/images/logo-light.png"/>
+            <img alt="" class="h-7 mx-auto mb-6 dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
+            <img alt="" class="h-7 mx-auto mb-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
             <h3 class="text-xl font-semibold text-default-900">{{ $title }}</h3>
             @if ($subtitle)
                 <p class="text-default-500 text-sm mt-1">{{ $subtitle }}</p>
