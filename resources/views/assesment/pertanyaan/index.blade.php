@@ -18,195 +18,12 @@
             <div class="card-header">
                 <h6 class="card-title">{{ __('Tambah Pertanyaan') }}</h6>
             </div>
-            <form action="{{ route('assesment.pertanyaan.store', $assesment) }}" method="POST">
-                @csrf
-                <div class="p-4 flex flex-col gap-y-5">
-                    <div class="relative">
-                        <label class="inline-block mb-2 text-sm font-medium" for="pertanyaan-aspek-nama">
-                            {{ __('Indikator / Aspek Penilaian') }}
-                        </label>
-                        <input autocomplete="off" class="form-input" data-aspek-input
-                               data-aspek-search-url="{{ route('assesment.aspek.search') }}" id="pertanyaan-aspek-nama"
-                               name="aspek_nama" type="text" value="{{ old('aspek_nama') }}"/>
-                        <div class="hidden absolute z-10 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-default-200 bg-white shadow-lg"
-                             data-aspek-suggestions></div>
-                        <p class="mt-1 text-xs text-default-500">
-                            {{ __('Ketik minimal 3 huruf untuk mencari indikator yang sudah ada, atau ketik nama baru.') }}
-                        </p>
-                        @error('aspek_nama')
-                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="inline-block mb-2 text-sm font-medium" for="pertanyaan-pertanyaan">
-                            {{ __('Pertanyaan') }}
-                        </label>
-                        <textarea class="form-input" id="pertanyaan-pertanyaan" name="pertanyaan"
-                                  rows="2">{{ old('pertanyaan') }}</textarea>
-                        @error('pertanyaan')
-                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="inline-block mb-2 text-sm font-medium" for="pertanyaan-informasi">
-                            {{ __('Informasi untuk Pertanyaan') }}
-                        </label>
-                        <textarea class="form-input" id="pertanyaan-informasi" name="informasi"
-                                  rows="2">{{ old('informasi') }}</textarea>
-                        @error('informasi')
-                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="inline-block mb-2 text-sm font-medium" for="pertanyaan-metode-verifikasi">
-                            {{ __('Metode Verifikasi Penilaian') }}
-                        </label>
-                        <textarea class="form-input" id="pertanyaan-metode-verifikasi" name="metode_verifikasi"
-                                  rows="2">{{ old('metode_verifikasi') }}</textarea>
-                        <p class="mt-1 text-xs text-default-500">{{ __('Panduan bagi verifikator saat memberi nilai.') }}</p>
-                        @error('metode_verifikasi')
-                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="inline-block mb-2 text-sm font-medium">{{ __('Komoditas & Bobot Pertanyaan (%)') }}</label>
-                        <div class="grid sm:grid-cols-2 gap-3">
-                            @foreach ($komoditasOptions as $komoditas)
-                                <div class="flex items-center gap-2 border border-default-200 rounded-lg px-3 py-2">
-                                    <input class="form-checkbox" data-komoditas-checkbox id="pertanyaan-komoditas-{{ $komoditas->id }}"
-                                           name="komoditas_id[]" type="checkbox" value="{{ $komoditas->id }}"
-                                           @checked(is_array(old('komoditas_id')) && in_array($komoditas->id, old('komoditas_id')))>
-                                    <label class="text-sm grow" for="pertanyaan-komoditas-{{ $komoditas->id }}">{{ $komoditas->name }}</label>
-                                    <input class="form-input form-input-sm w-24 hidden" data-bobot-input
-                                           data-komoditas-id="{{ $komoditas->id }}" min="0" max="100"
-                                           name="bobot[{{ $komoditas->id }}]" placeholder="{{ __('Bobot %') }}" step="0.01"
-                                           type="number" value="{{ old('bobot.'.$komoditas->id) }}">
-                                </div>
-                            @endforeach
-                        </div>
-                        @error('bobot')
-                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                        @enderror
-                        @error('komoditas_id')
-                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div data-repeatable id="pertanyaan-jawaban-repeatable">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-sm font-medium">{{ __('Jawaban & Skor per Komoditas') }}</label>
-                            <button class="btn btn-sm bg-default-150" data-repeatable-add type="button">
-                                <i class="size-3.5 me-1" data-lucide="plus"></i>{{ __('Tambah Jawaban') }}
-                            </button>
-                        </div>
-
-                        <template data-repeatable-template>
-                            <div class="border border-default-200 rounded-lg p-3 mb-3" data-repeatable-row data-jawaban-row>
-                                <div class="flex items-center gap-2 mb-2">
-                                    <input class="form-input grow" name="jawaban[__INDEX__][teks]"
-                                           placeholder="{{ __('Teks Jawaban') }}" type="text">
-                                    <button aria-label="{{ __('Hapus') }}" class="btn btn-icon size-8 bg-default-150 text-danger"
-                                            data-repeatable-remove type="button">
-                                        <i class="size-4" data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                                <label class="inline-flex items-center gap-1.5 text-xs text-default-600 mb-2">
-                                    <input class="form-checkbox" data-skor-sama-toggle type="checkbox">
-                                    {{ __('Skor sama untuk semua komoditas tercentang') }}
-                                </label>
-                                <div class="grid sm:grid-cols-2 gap-2" data-skor-fields>
-                                    @foreach ($komoditasOptions as $komoditas)
-                                        <div class="flex items-center gap-2 hidden" data-komoditas-id="{{ $komoditas->id }}" data-skor-field>
-                                            <span class="text-xs text-default-500 w-28 truncate">{{ $komoditas->name }}</span>
-                                            <input class="form-input form-input-sm" data-komoditas-id="{{ $komoditas->id }}"
-                                                   data-skor-input name="jawaban[__INDEX__][skor][{{ $komoditas->id }}]"
-                                                   placeholder="{{ __('Skor') }}" step="0.01" type="number">
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </template>
-
-                        <div data-repeatable-rows>
-                            @for ($i = 0; $i < 2; $i++)
-                                <div class="border border-default-200 rounded-lg p-3 mb-3" data-repeatable-row data-jawaban-row>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <input class="form-input grow" name="jawaban[{{ $i }}][teks]"
-                                               placeholder="{{ __('Teks Jawaban') }}" type="text"
-                                               value="{{ old('jawaban.'.$i.'.teks') }}">
-                                        <button aria-label="{{ __('Hapus') }}"
-                                                class="btn btn-icon size-8 bg-default-150 text-danger" data-repeatable-remove
-                                                type="button">
-                                            <i class="size-4" data-lucide="trash-2"></i>
-                                        </button>
-                                    </div>
-                                    <label class="inline-flex items-center gap-1.5 text-xs text-default-600 mb-2">
-                                        <input class="form-checkbox" data-skor-sama-toggle type="checkbox">
-                                        {{ __('Skor sama untuk semua komoditas tercentang') }}
-                                    </label>
-                                    <div class="grid sm:grid-cols-2 gap-2" data-skor-fields>
-                                        @foreach ($komoditasOptions as $komoditas)
-                                            <div class="flex items-center gap-2 hidden" data-komoditas-id="{{ $komoditas->id }}"
-                                                 data-skor-field>
-                                                <span class="text-xs text-default-500 w-28 truncate">{{ $komoditas->name }}</span>
-                                                <input class="form-input form-input-sm" data-komoditas-id="{{ $komoditas->id }}"
-                                                       data-skor-input name="jawaban[{{ $i }}][skor][{{ $komoditas->id }}]"
-                                                       placeholder="{{ __('Skor') }}" step="0.01" type="number"
-                                                       value="{{ old('jawaban.'.$i.'.skor.'.$komoditas->id) }}">
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endfor
-                        </div>
-                        @error('jawaban')
-                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div data-repeatable id="pertanyaan-bukti-repeatable">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-sm font-medium">{{ __('Informasi Bukti Pendukung') }}</label>
-                            <button class="btn btn-sm bg-default-150" data-repeatable-add type="button">
-                                <i class="size-3.5 me-1" data-lucide="plus"></i>{{ __('Tambah Bukti Dukung') }}
-                            </button>
-                        </div>
-
-                        <template data-repeatable-template>
-                            <div class="flex items-center gap-2 mb-2" data-repeatable-row>
-                                <input class="form-input grow" name="bukti_dukung[__INDEX__]"
-                                       placeholder="{{ __('Label Bukti Dukung') }}" type="text">
-                                <button aria-label="{{ __('Hapus') }}" class="btn btn-icon size-8 bg-default-150 text-danger"
-                                        data-repeatable-remove type="button">
-                                    <i class="size-4" data-lucide="trash-2"></i>
-                                </button>
-                            </div>
-                        </template>
-
-                        <div data-repeatable-rows>
-                            <div class="flex items-center gap-2 mb-2" data-repeatable-row>
-                                <input class="form-input grow" name="bukti_dukung[0]"
-                                       placeholder="{{ __('Label Bukti Dukung') }}" type="text"
-                                       value="{{ old('bukti_dukung.0') }}">
-                                <button aria-label="{{ __('Hapus') }}" class="btn btn-icon size-8 bg-default-150 text-danger"
-                                        data-repeatable-remove type="button">
-                                    <i class="size-4" data-lucide="trash-2"></i>
-                                </button>
-                            </div>
-                        </div>
-                        @error('bukti_dukung')
-                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-                <div class="p-4 flex justify-end border-t border-dashed border-default-900/10">
-                    <button class="btn bg-primary text-white" type="submit">{{ __('Simpan Pertanyaan') }}</button>
-                </div>
-            </form>
+            @include('assesment.pertanyaan._form', [
+                'action' => route('assesment.pertanyaan.store', $assesment),
+                'method' => 'POST',
+                'submitLabel' => __('Simpan Pertanyaan'),
+                'pertanyaan' => null,
+            ])
         </div>
     @endcan
 
@@ -227,13 +44,22 @@
                                 <p class="text-sm text-default-500 mt-1">{{ $item->informasi }}</p>
                             @endif
                         </div>
-                        @can('assesment.delete')
-                            <button aria-label="{{ __('Hapus') }}"
-                                    class="btn size-7.5 bg-default-200 hover:bg-danger/10 hover:text-danger text-default-500 shrink-0"
-                                    data-hs-overlay="#pertanyaan-delete-modal-{{ $item->id }}" type="button">
-                                <i class="size-4" data-lucide="trash-2"></i>
-                            </button>
-                        @endcan
+                        <div class="flex items-center gap-2 shrink-0">
+                            @can('assesment.update')
+                                <a aria-label="{{ __('Edit') }}"
+                                   class="btn size-7.5 bg-default-200 hover:bg-primary/10 hover:text-primary text-default-500"
+                                   href="{{ route('assesment.pertanyaan.edit', [$assesment, $item]) }}">
+                                    <i class="size-4" data-lucide="pencil"></i>
+                                </a>
+                            @endcan
+                            @can('assesment.delete')
+                                <button aria-label="{{ __('Hapus') }}"
+                                        class="btn size-7.5 bg-default-200 hover:bg-danger/10 hover:text-danger text-default-500"
+                                        data-hs-overlay="#pertanyaan-delete-modal-{{ $item->id }}" type="button">
+                                    <i class="size-4" data-lucide="trash-2"></i>
+                                </button>
+                            @endcan
+                        </div>
                     </div>
 
                     <div class="mt-3 flex flex-wrap gap-2">

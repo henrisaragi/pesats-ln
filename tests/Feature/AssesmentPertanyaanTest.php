@@ -40,7 +40,7 @@ class AssesmentPertanyaanTest extends TestCase
             'onboarding_completed' => true,
         ]);
 
-        $user->givePermissionTo(['assesment.view', 'assesment.create', 'assesment.delete']);
+        $user->givePermissionTo(['assesment.view', 'assesment.create', 'assesment.update', 'assesment.delete']);
 
         return $user;
     }
@@ -168,6 +168,65 @@ class AssesmentPertanyaanTest extends TestCase
         $this->assertSame(2, AssesmentPertanyaan::where('assesment_id', $assesment->id)->count());
     }
 
+    public function test_edit_page_renders_with_existing_values(): void
+    {
+        $admin = $this->makeAdmin();
+        $assesment = Assesment::create(['judul' => 'Assesment Standar Peredaran']);
+        $reptil = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        $mamalia = Komoditas::create(['name' => 'Mamalia', 'code' => 'MML']);
+
+        $this->actingAs($admin)->post(route('assesment.pertanyaan.store', $assesment), $this->payload($reptil->id, $mamalia->id));
+        $pertanyaan = AssesmentPertanyaan::where('assesment_id', $assesment->id)->firstOrFail();
+
+        $this->actingAs($admin)->get(route('assesment.pertanyaan.index', $assesment))
+            ->assertSee(route('assesment.pertanyaan.edit', [$assesment, $pertanyaan]));
+
+        $this->actingAs($admin)->get(route('assesment.pertanyaan.edit', [$assesment, $pertanyaan]))
+            ->assertOk()
+            ->assertSee('Apakah entitas memiliki dokumen izin yang berlaku?')
+            ->assertSee('name="jawaban[1][teks]"', false)
+            ->assertSee('value="Tidak"', false)
+            ->assertSee('Surat Izin');
+    }
+
+    public function test_admin_can_update_pertanyaan_jawaban_and_bobot(): void
+    {
+        $admin = $this->makeAdmin();
+        $assesment = Assesment::create(['judul' => 'Assesment Standar Peredaran']);
+        $reptil = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        $mamalia = Komoditas::create(['name' => 'Mamalia', 'code' => 'MML']);
+
+        $this->actingAs($admin)->post(route('assesment.pertanyaan.store', $assesment), $this->payload($reptil->id, $mamalia->id));
+        $pertanyaan = AssesmentPertanyaan::where('assesment_id', $assesment->id)->firstOrFail();
+
+        $payload = [
+            'aspek_nama' => 'Kepatuhan Regulasi',
+            'pertanyaan' => 'Pertanyaan yang sudah direvisi',
+            'informasi' => null,
+            'metode_verifikasi' => null,
+            'komoditas_id' => [$reptil->id],
+            'bobot' => [$reptil->id => 75, $mamalia->id => ''],
+            'jawaban' => [
+                ['teks' => 'Lengkap', 'skor' => [$reptil->id => 5, $mamalia->id => '']],
+                ['teks' => 'Sebagian', 'skor' => [$reptil->id => 3, $mamalia->id => '']],
+                ['teks' => 'Tidak Ada', 'skor' => [$reptil->id => 0, $mamalia->id => '']],
+            ],
+            'bukti_dukung' => ['Dokumen Baru'],
+        ];
+
+        $this->actingAs($admin)->put(route('assesment.pertanyaan.update', [$assesment, $pertanyaan]), $payload)
+            ->assertRedirect(route('assesment.pertanyaan.index', $assesment));
+
+        $pertanyaan->refresh();
+        $this->assertSame('Pertanyaan yang sudah direvisi', $pertanyaan->pertanyaan);
+        $this->assertSame([$reptil->id], $pertanyaan->komoditas()->pluck('komoditas.id')->all());
+        $this->assertEquals(75, $pertanyaan->komoditas()->first()->pivot->bobot);
+        $this->assertSame(['Lengkap', 'Sebagian', 'Tidak Ada'], $pertanyaan->jawaban()->pluck('teks_jawaban')->all());
+        $this->assertSame(3.0, $pertanyaan->jawaban()->where('teks_jawaban', 'Sebagian')->firstOrFail()->skorUntukKomoditas($reptil->id));
+        $this->assertSame(['Dokumen Baru'], $pertanyaan->buktiDukung()->pluck('label')->all());
+        $this->assertSame(1, AssesmentAspek::count());
+    }
+
     public function test_pertanyaan_structure_is_locked_once_an_entitas_has_a_submission(): void
     {
         $admin = $this->makeAdmin();
@@ -188,6 +247,34 @@ class AssesmentPertanyaanTest extends TestCase
 
         $this->actingAs($admin)->post(
             route('assesment.pertanyaan.store', $assesment),
+            $this->payload($reptil->id, $mamalia->id)
+        )->assertForbidden();
+    }
+
+    public function test_pertanyaan_cannot_be_edited_once_an_entitas_has_a_submission(): void
+    {
+        $admin = $this->makeAdmin();
+        $assesment = Assesment::create(['judul' => 'Assesment Standar Peredaran']);
+        $reptil = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        $mamalia = Komoditas::create(['name' => 'Mamalia', 'code' => 'MML']);
+
+        $this->actingAs($admin)->post(route('assesment.pertanyaan.store', $assesment), $this->payload($reptil->id, $mamalia->id));
+        $pertanyaan = AssesmentPertanyaan::where('assesment_id', $assesment->id)->firstOrFail();
+
+        AssesmentIsi::create([
+            'assesment_id' => $assesment->id,
+            'entitas_id' => Entitas::create([
+                'entity_type' => 'perusahaan',
+                'name' => 'Entitas Test',
+                'address' => 'Jl. Test',
+            ])->id,
+            'komoditas_id' => $reptil->id,
+            'status' => AssesmentIsiStatus::Draft,
+        ]);
+
+        $this->actingAs($admin)->get(route('assesment.pertanyaan.edit', [$assesment, $pertanyaan]))->assertForbidden();
+        $this->actingAs($admin)->put(
+            route('assesment.pertanyaan.update', [$assesment, $pertanyaan]),
             $this->payload($reptil->id, $mamalia->id)
         )->assertForbidden();
     }

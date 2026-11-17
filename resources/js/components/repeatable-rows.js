@@ -15,10 +15,19 @@
 // baris baru ditambah, supaya JS halaman bisa wiring perilaku tambahan pada baris itu (mis. toggle
 // kolom skor per komoditas di assesment-pertanyaan-form.js).
 
+// Counter naik terus (tidak dihitung ulang dari jumlah baris) - kalau baris tengah dihapus lalu
+// ditambah baris baru, index jumlah-baris akan bentrok dengan baris yang masih ada dan menimpanya.
 function nextIndex(container) {
-    const rows = container.querySelectorAll('[data-repeatable-rows] > [data-repeatable-row]');
+    if (container.dataset.repeatableNextIndex === undefined) {
+        container.dataset.repeatableNextIndex = String(
+            container.querySelectorAll('[data-repeatable-rows] > [data-repeatable-row]').length
+        );
+    }
 
-    return rows.length;
+    const index = Number(container.dataset.repeatableNextIndex);
+    container.dataset.repeatableNextIndex = String(index + 1);
+
+    return index;
 }
 
 function wireRemove(row, container) {

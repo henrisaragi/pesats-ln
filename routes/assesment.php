@@ -18,6 +18,8 @@ Route::middleware('auth')->prefix('assesment')->name('assesment.')->group(functi
     Route::prefix('{assesment}/pertanyaan')->name('pertanyaan.')->group(function (): void {
         Route::get('', [AssesmentPertanyaanController::class, 'index'])->middleware('permission:assesment.view')->name('index');
         Route::post('', [AssesmentPertanyaanController::class, 'store'])->middleware('permission:assesment.create')->name('store');
+        Route::get('{pertanyaan}/edit', [AssesmentPertanyaanController::class, 'edit'])->middleware('permission:assesment.update')->name('edit');
+        Route::put('{pertanyaan}', [AssesmentPertanyaanController::class, 'update'])->middleware('permission:assesment.update')->name('update');
         Route::delete('{pertanyaan}', [AssesmentPertanyaanController::class, 'destroy'])->middleware('permission:assesment.delete')->name('destroy');
     });
 });

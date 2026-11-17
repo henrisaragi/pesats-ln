@@ -39,18 +39,9 @@ class AssesmentPertanyaanController extends Controller
         $this->abortIfHasSubmissions($assesment);
 
         DB::transaction(function () use ($request, $assesment): void {
-            $aspek = AssesmentAspek::query()
-                ->whereRaw('lower(nama) = ?', [Str::lower(trim($request->validated('aspek_nama')))])
-                ->first();
-
-            $aspek ??= AssesmentAspek::create([
-                'nama' => trim($request->validated('aspek_nama')),
-                'created_by' => Auth::id(),
-            ]);
-
             $pertanyaan = AssesmentPertanyaan::create([
                 'assesment_id' => $assesment->id,
-                'aspek_id' => $aspek->id,
+                'aspek_id' => $this->resolveAspekId($request),
                 'pertanyaan' => $request->validated('pertanyaan'),
                 'informasi' => $request->validated('informasi'),
                 'metode_verifikasi' => $request->validated('metode_verifikasi'),
@@ -67,13 +58,49 @@ class AssesmentPertanyaanController extends Controller
             ->with('success', __('Pertanyaan berhasil ditambahkan.'));
     }
 
+    public function edit(Assesment $assesment, AssesmentPertanyaan $pertanyaan): View
+    {
+        $this->abortIfHasSubmissions($assesment);
+        abort_unless($pertanyaan->assesment_id === $assesment->id, 404);
+
+        $pertanyaan->load(['aspek', 'komoditas', 'jawaban.komoditas', 'buktiDukung']);
+
+        return view('assesment.pertanyaan.edit', [
+            'assesment' => $assesment,
+            'pertanyaan' => $pertanyaan,
+            'komoditasOptions' => Komoditas::query()->orderBy('name')->get(),
+        ]);
+    }
+
     /**
-     * Tidak ada update() - spec (claude/fitur-assesment.md) cuma mendeskripsikan alur membuat
-     * pertanyaan, bukan mengubah struktur nested-nya (komoditas/bobot/jawaban/skor/bukti dukung).
-     * Koreksi pertanyaan dilakukan dengan hapus lalu buat ulang, sama seperti guard
-     * abortIfHasSubmissions() di bawah yang sudah mencegah perubahan struktur setelah ada entitas
-     * yang mulai mengisi.
+     * Jawaban & bukti dukung diganti total (hapus lalu buat ulang) - aman karena
+     * abortIfHasSubmissions() menjamin belum ada assesment_isi yang mereferensikannya.
      */
+    public function update(AssesmentPertanyaanRequest $request, Assesment $assesment, AssesmentPertanyaan $pertanyaan): RedirectResponse
+    {
+        $this->abortIfHasSubmissions($assesment);
+        abort_unless($pertanyaan->assesment_id === $assesment->id, 404);
+
+        DB::transaction(function () use ($request, $pertanyaan): void {
+            $pertanyaan->update([
+                'aspek_id' => $this->resolveAspekId($request),
+                'pertanyaan' => $request->validated('pertanyaan'),
+                'informasi' => $request->validated('informasi'),
+                'metode_verifikasi' => $request->validated('metode_verifikasi'),
+            ]);
+
+            $pertanyaan->jawaban()->delete();
+            $pertanyaan->buktiDukung()->delete();
+
+            $this->syncKomoditasBobot($pertanyaan, $request);
+            $this->syncJawaban($pertanyaan, $request);
+            $this->syncBuktiDukung($pertanyaan, $request);
+        });
+
+        return redirect()->route('assesment.pertanyaan.index', $assesment)
+            ->with('success', __('Pertanyaan berhasil diperbarui.'));
+    }
+
     public function destroy(Assesment $assesment, AssesmentPertanyaan $pertanyaan): RedirectResponse
     {
         $this->abortIfHasSubmissions($assesment);
@@ -93,6 +120,25 @@ class AssesmentPertanyaanController extends Controller
     private function abortIfHasSubmissions(Assesment $assesment): void
     {
         abort_if($assesment->isi()->exists(), 403, __('Assesment ini sudah memiliki pengajuan entitas, struktur pertanyaan tidak dapat diubah.'));
+    }
+
+    /**
+     * Aspek dicari case-insensitive, dibuat baru bila belum ada.
+     */
+    private function resolveAspekId(AssesmentPertanyaanRequest $request): int
+    {
+        $nama = trim($request->validated('aspek_nama'));
+
+        $aspek = AssesmentAspek::query()
+            ->whereRaw('lower(nama) = ?', [Str::lower($nama)])
+            ->first();
+
+        $aspek ??= AssesmentAspek::create([
+            'nama' => $nama,
+            'created_by' => Auth::id(),
+        ]);
+
+        return $aspek->id;
     }
 
     private function syncKomoditasBobot(AssesmentPertanyaan $pertanyaan, AssesmentPertanyaanRequest $request): void
