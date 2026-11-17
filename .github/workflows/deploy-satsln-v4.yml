@@ -51,10 +51,64 @@ jobs:
           php artisan config:cache
           php artisan event:cache
           php artisan view:cache
-          php artisan queue:restart
-
           sudo chown -R henri:www storage bootstrap/cache
           sudo chmod -R ug+rwX,o-rwx storage bootstrap/cache
+
+      - name: Install & restart background services
+        run: |
+          set -Eeuo pipefail
+          PHP_BIN="$(command -v php)"
+
+          # name|artisan args. Default worker also drains "whatsapp" (SendWhatsAppNotificationJob).
+          services=(
+            "pesats-v4-queue|queue:work --queue=default,whatsapp --tries=3 --sleep=3"
+            "pesats-v4-queue-notifications|queue:work --queue=notifications --tries=3 --sleep=1"
+            "pesats-v4-reverb|reverb:start"
+          )
+
+          changed=0
+          for entry in "${services[@]}"; do
+            name="${entry%%|*}"
+            args="${entry#*|}"
+            unit="$(mktemp)"
+            {
+              echo "[Unit]"
+              echo "Description=pesats-v4 ${args}"
+              echo "After=network.target"
+              echo
+              echo "[Service]"
+              echo "User=henri"
+              echo "Group=www"
+              echo "UMask=0007"
+              echo "WorkingDirectory=${APP_DIR}"
+              echo "ExecStart=${PHP_BIN} ${APP_DIR}/artisan ${args}"
+              echo "Restart=always"
+              echo "RestartSec=5"
+              echo
+              echo "[Install]"
+              echo "WantedBy=multi-user.target"
+            } > "$unit"
+            if ! sudo cmp -s "$unit" "/etc/systemd/system/${name}.service"; then
+              sudo install -m 0644 "$unit" "/etc/systemd/system/${name}.service"
+              changed=1
+            fi
+            rm -f "$unit"
+          done
+
+          if [ "$changed" = 1 ]; then sudo systemctl daemon-reload; fi
+          for entry in "${services[@]}"; do
+            name="${entry%%|*}"
+            sudo systemctl enable "${name}.service"
+            # Restart picks up the new code/config (replaces `queue:restart` / `reverb:restart`).
+            sudo systemctl restart "${name}.service"
+          done
+
+          sleep 3
+          for entry in "${services[@]}"; do
+            name="${entry%%|*}"
+            sudo systemctl is-active --quiet "${name}.service" \
+              || { sudo journalctl -u "${name}.service" -n 50 --no-pager; exit 1; }
+          done
 
       - name: Smoke test
         run: |
