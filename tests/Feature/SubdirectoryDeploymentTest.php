@@ -17,6 +17,7 @@ class SubdirectoryDeploymentTest extends TestCase
         'REMOTE_ADDR' => '172.16.3.40',
         'HTTP_X_FORWARDED_HOST' => 'pesats.example.test',
         'HTTP_X_FORWARDED_PROTO' => 'https',
+        'HTTP_X_FORWARDED_PREFIX' => '/satsdn-v2',
     ];
 
     public function test_login_page_links_use_public_host_and_subdirectory_from_trusted_proxy(): void
@@ -28,6 +29,7 @@ class SubdirectoryDeploymentTest extends TestCase
         $response->assertOk();
         $response->assertSee('<meta content="https://pesats.example.test/satsln-v4" name="app-url" />', false);
         $response->assertSee('src="https://pesats.example.test/satsln-v4/images/logo-light.png"', false);
+        $response->assertSee('action="https://pesats.example.test/satsln-v4/login"', false);
         $response->assertDontSee('src="/images/', false);
     }
 
