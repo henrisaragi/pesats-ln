@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             PermissionSeeder::class,
             MasterDataPermissionSeeder::class,
+            KuotaTangkapPermissionSeeder::class,
             PenandatanganSeeder::class,
             CountrySeeder::class,
             PortSeeder::class,

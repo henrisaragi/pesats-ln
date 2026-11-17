@@ -43,6 +43,12 @@
                     'permission' => 'kuota-saya.view',
                 ],
                 [
+                    'label' => __('Kuota Ekspor Saya'),
+                    'icon' => 'fish',
+                    'route' => 'kuota-tangkap-saya.index',
+                    'permission' => 'kuota.view-own',
+                ],
+                [
                     'label' => __('Customer'),
                     'icon' => 'contact',
                     'route' => 'customer.index',
@@ -184,6 +190,16 @@
                             'label' => __('Kuota Perusahaan'),
                             'route' => 'kuota-perusahaan.index',
                             'permission' => 'kuota-perusahaan.view',
+                        ],
+                        [
+                            'label' => __('Pembagian Kuota Ekspor'),
+                            'route' => 'kuota-tangkap.index',
+                            'permission' => 'kuota.view',
+                        ],
+                        [
+                            'label' => __('Pengaturan Kuota Ekspor'),
+                            'route' => 'kuota-tangkap.settings.edit',
+                            'permission' => 'kuota.settings',
                         ],
                     ],
                 ],
