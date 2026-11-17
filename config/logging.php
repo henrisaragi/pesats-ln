@@ -80,6 +80,8 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
+            // php-fpm (www) and the queue/reverb workers (henri, group www) share these files.
+            'permission' => 0664,
             'replace_placeholders' => true,
         ],
 
