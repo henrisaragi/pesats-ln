@@ -18,10 +18,11 @@
     @php
         $buktiTersimpan = $isi->bukti->keyBy('bukti_dukung_id');
         // Hanya status Submitted yang bisa diverifikasi; selain itu wizard tampil baca-saja.
-        $bisaVerifikasi = $isi->status === \App\Enums\AssesmentIsiStatus::Submitted;
+        $bisaVerifikasi = $isi->bisaDiverifikasi();
+        $isRevisi = $isi->status === \App\Enums\AssesmentIsiStatus::Verified;
         // Mulai dari pertanyaan pertama yang belum disimpan verifikator (lanjutkan progres sebelumnya).
         $langkahAwal = $pertanyaan->search(fn ($item) => $isiJawaban->get($item->id)?->jawaban_verifikator_id === null);
-        $langkahAwal = ! $bisaVerifikasi ? 0 : ($langkahAwal === false ? max($pertanyaan->count() - 1, 0) : $langkahAwal);
+        $langkahAwal = ! $bisaVerifikasi || $isRevisi ? 0 : ($langkahAwal === false ? max($pertanyaan->count() - 1, 0) : $langkahAwal);
     @endphp
 
     <form action="{{ route('assesment-isi.verifikasi.complete', $isi) }}" data-verifikasi-wizard data-langkah-awal="{{ $langkahAwal }}" data-readonly="{{ $bisaVerifikasi ? '0' : '1' }}"
@@ -35,6 +36,12 @@
                 {{ __('Assesment ini berstatus :status, jawaban hanya dapat dilihat.', ['status' => $isi->status->label()]) }}
             </div>
         @endunless
+
+        @if ($isRevisi)
+            <div class="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+                {{ __('Assesment ini sudah terverifikasi. Setiap perubahan jawaban dicatat di Riwayat Aktivitas, dan setelah diselesaikan skor dihitung ulang serta sertifikat diterbitkan ulang.') }}
+            </div>
+        @endif
 
         @error('jawaban')
             <div class="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">{{ $message }}</div>
@@ -169,7 +176,7 @@
                                 <button class="btn {{ $loop->last ? 'bg-success' : 'bg-primary' }} text-white disabled:opacity-60" data-langkah-next type="button">
                                     <span class="hidden size-4 animate-spin rounded-full border-2 border-white border-t-transparent" data-simpan-loading></span>
                                     @if ($loop->last)
-                                        {{ __('Simpan & Selesaikan Verifikasi') }}
+                                        {{ $isRevisi ? __('Simpan & Terbitkan Ulang Sertifikat') : __('Simpan & Selesaikan Verifikasi') }}
                                     @else
                                         {{ __('Simpan & Lanjut') }}<i class="size-4" data-lucide="arrow-right"></i>
                                     @endif
@@ -185,6 +192,41 @@
             </div>
         </div>
     </form>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h6 class="card-title">{{ __('Riwayat Aktivitas') }}</h6>
+        </div>
+        <div class="p-4">
+            @forelse ($activities as $activity)
+                <div class="flex gap-3 py-2 border-b border-default-200 last:border-0 text-sm">
+                    <span class="text-xs text-default-500 w-36 shrink-0">{{ $activity->created_at?->format('d/m/Y H:i') }}</span>
+                    <div class="min-w-0">
+                        <p class="text-default-800">
+                            <span class="font-medium">{{ $activity->actionLabel() }}</span>
+                            &middot; {{ $activity->user?->name ?? '-' }}
+                        </p>
+                        @if ($activity->action === 'jawaban_diubah')
+                            <p class="text-default-600">{{ $activity->pertanyaan?->pertanyaan }}</p>
+                            <p class="text-xs text-default-500">
+                                {{ $activity->old_values['jawaban'] ?? __('(belum diverifikasi)') }} &rarr; {{ $activity->new_values['jawaban'] ?? '-' }}
+                            </p>
+                        @else
+                            <p class="text-xs text-default-500">
+                                {{ __('Skor') }}:
+                                @if ($activity->old_values)
+                                    {{ $activity->old_values['skor_total'] ?? '-' }} &rarr;
+                                @endif
+                                {{ $activity->new_values['skor_total'] ?? '-' }}
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <p class="text-sm text-default-500">{{ __('Belum ada aktivitas.') }}</p>
+            @endforelse
+        </div>
+    </div>
 @endsection
 
 @section('scripts')

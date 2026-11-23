@@ -314,7 +314,7 @@ class AssesmentIsiVerifikasiTest extends TestCase
             ->assertSee('data-bukti-view="'.route('assesment-isi.bukti.preview', $bukti).'"', false);
     }
 
-    public function test_wizard_step_rejects_jawaban_from_another_pertanyaan_and_non_submitted_isi(): void
+    public function test_wizard_step_rejects_jawaban_from_another_pertanyaan_and_draft_isi(): void
     {
         $submitter = $this->makeUser('perusahaan');
         $verifier = $this->makeUser('penangkaran');
@@ -329,7 +329,7 @@ class AssesmentIsiVerifikasiTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonValidationErrors('jawaban_id');
 
-        $isi->update(['status' => AssesmentIsiStatus::Verified]);
+        $isi->update(['status' => AssesmentIsiStatus::Draft]);
 
         $this->actingAs($verifier)
             ->postJson(route('assesment-isi.verifikasi.jawaban', [$isi, $pertanyaan1]), ['jawaban_id' => $p1Ya->id])
@@ -338,11 +338,65 @@ class AssesmentIsiVerifikasiTest extends TestCase
 
         $this->assertNull($isi->jawaban()->where('pertanyaan_id', $pertanyaan1->id)->value('jawaban_verifikator_id'));
 
-        // Halaman wizard untuk assesment yang sudah diverifikasi tampil baca-saja (tanpa tombol simpan).
+        // Halaman wizard untuk assesment yang belum disubmit tampil baca-saja (tanpa tombol simpan).
         $this->actingAs($verifier)->get(route('assesment-isi.verifikasi.show', $isi))
             ->assertOk()
             ->assertSee('data-readonly="1"', false)
             ->assertDontSee('Simpan &amp; Lanjut', false);
+    }
+
+    public function test_verified_isi_can_be_revised_with_activity_log_and_reissued_sertifikat(): void
+    {
+        $submitter = $this->makeUser('perusahaan');
+        $verifier = $this->makeUser('penangkaran');
+        $verifier->givePermissionTo('assesment-isi.verify');
+
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        ['isi' => $isi, 'pertanyaan1' => $pertanyaan1, 'pertanyaan2' => $pertanyaan2, 'p1Ya' => $p1Ya, 'p2Tidak' => $p2Tidak, 'p2Ya' => $p2Ya] =
+            $this->makeSubmittedIsi($submitter->entity_id, $komoditas);
+
+        // Verifikasi awal tanpa koreksi: skor = 0.4 * 10 + 0.6 * 0 = 4.0
+        $this->actingAs($verifier)->post(route('assesment-isi.verifikasi.complete', $isi), [
+            'jawaban' => [$pertanyaan1->id => $p1Ya->id, $pertanyaan2->id => $p2Tidak->id],
+        ]);
+        $isi->refresh();
+        $sertifikatLama = $isi->sertifikat_path;
+        $this->assertEqualsWithDelta(4.0, (float) $isi->skor_total, 0.001);
+
+        $this->actingAs($verifier)->get(route('assesment-isi.verifikasi.show', $isi))
+            ->assertOk()
+            ->assertSee('data-readonly="0"', false)
+            ->assertSee('Simpan &amp; Terbitkan Ulang Sertifikat', false);
+
+        // Revisi pertanyaan 2 dari "Tidak" ke "Ya" lewat langkah wizard.
+        $this->travel(1)->seconds();
+        $this->actingAs($verifier)
+            ->postJson(route('assesment-isi.verifikasi.jawaban', [$isi, $pertanyaan2]), ['jawaban_id' => $p2Ya->id])
+            ->assertOk();
+
+        $log = $isi->activities()->where('action', 'jawaban_diubah')->where('pertanyaan_id', $pertanyaan2->id)->latest('id')->first();
+        $this->assertNotNull($log);
+        $this->assertSame($verifier->id, $log->user_id);
+        $this->assertSame('Tidak', $log->old_values['jawaban']);
+        $this->assertSame('Ya', $log->new_values['jawaban']);
+
+        // Selesaikan revisi: skor = 0.4 * 10 + 0.6 * 10 = 10.0, sertifikat baru, activity "direvisi".
+        $this->actingAs($verifier)->post(route('assesment-isi.verifikasi.complete', $isi), [
+            'jawaban' => [$pertanyaan1->id => $p1Ya->id, $pertanyaan2->id => $p2Ya->id],
+        ])->assertRedirect(route('assesment-isi.verifikasi.index', ['status' => 'verified']));
+
+        $isi->refresh();
+        $this->assertSame(AssesmentIsiStatus::Verified, $isi->status);
+        $this->assertEqualsWithDelta(10.0, (float) $isi->skor_total, 0.001);
+        $this->assertNotSame($sertifikatLama, $isi->sertifikat_path);
+        Storage::disk('s3')->assertExists($isi->sertifikat_path);
+
+        $revisi = $isi->activities()->where('action', 'direvisi')->sole();
+        $this->assertEqualsWithDelta(4.0, (float) $revisi->old_values['skor_total'], 0.001);
+        $this->assertEqualsWithDelta(10.0, (float) $revisi->new_values['skor_total'], 0.001);
+        // Pertanyaan 2: dicatat saat verifikasi awal (null -> Tidak) dan saat revisi (Tidak -> Ya); complete
+        // revisi mengirim nilai yang sama sehingga tidak menambah catatan duplikat.
+        $this->assertSame(2, $isi->activities()->where('action', 'jawaban_diubah')->where('pertanyaan_id', $pertanyaan2->id)->count());
     }
 
     public function test_non_verifier_cannot_access_verifikasi_routes(): void

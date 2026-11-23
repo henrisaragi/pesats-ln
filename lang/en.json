@@ -985,5 +985,15 @@
     "Pilih \"Jawaban sesuai\" atau \"Jawaban tidak sesuai\" terlebih dahulu.": "Choose \"Answer is correct\" or \"Answer is incorrect\" first.",
     "Pilih jawaban koreksi yang berbeda dari jawaban entitas.": "Choose a corrected answer different from the entity's answer.",
     "Gagal menyimpan jawaban.": "Failed to save the answer.",
-    "Jawaban terpilih": "Selected answer"
+    "Jawaban terpilih": "Selected answer",
+    "Jawaban diubah": "Answer changed",
+    "Diverifikasi": "Verified",
+    "Verifikasi direvisi": "Verification revised",
+    "Revisi verifikasi tersimpan dan sertifikat diterbitkan ulang.": "Verification revision saved and certificate reissued.",
+    "Verifikasi Assesment Direvisi": "Assessment Verification Revised",
+    "Verifikasi assesment :assesment telah direvisi, sertifikat terbaru sudah dapat diunduh.": "Verification of assessment :assesment has been revised, the latest certificate can be downloaded.",
+    "Assesment ini sudah terverifikasi. Setiap perubahan jawaban dicatat di Riwayat Aktivitas, dan setelah diselesaikan skor dihitung ulang serta sertifikat diterbitkan ulang.": "This assessment is already verified. Every answer change is recorded in the Activity History; once completed, the score is recalculated and the certificate reissued.",
+    "Simpan & Terbitkan Ulang Sertifikat": "Save & Reissue Certificate",
+    "Riwayat Aktivitas": "Activity History",
+    "(belum diverifikasi)": "(not yet verified)"
 }

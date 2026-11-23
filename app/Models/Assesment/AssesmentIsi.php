@@ -90,4 +90,18 @@ class AssesmentIsi extends Model
     {
         return $this->hasMany(AssesmentIsiBukti::class, 'isi_id');
     }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(AssesmentIsiActivity::class, 'isi_id');
+    }
+
+    /**
+     * Verifikator boleh memverifikasi assesment Submitted dan merevisi yang sudah Verified
+     * (perubahan dicatat di activities, sertifikat diterbitkan ulang).
+     */
+    public function bisaDiverifikasi(): bool
+    {
+        return in_array($this->status, [AssesmentIsiStatus::Submitted, AssesmentIsiStatus::Verified], true);
+    }
 }
