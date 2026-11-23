@@ -17,6 +17,7 @@ Route::middleware('auth')->prefix('assesment-isi')->name('assesment-isi.')->grou
     Route::prefix('verifikasi')->name('verifikasi.')->group(function (): void {
         Route::get('', [AssesmentIsiVerifikasiController::class, 'index'])->middleware('permission:assesment-isi.verify')->name('index');
         Route::get('{isi}', [AssesmentIsiVerifikasiController::class, 'show'])->middleware('permission:assesment-isi.verify')->name('show');
+        Route::post('{isi}/jawaban/{pertanyaan}', [AssesmentIsiVerifikasiController::class, 'saveJawaban'])->middleware('permission:assesment-isi.verify')->name('jawaban');
         Route::post('{isi}/complete', [AssesmentIsiVerifikasiController::class, 'complete'])->middleware('permission:assesment-isi.verify')->name('complete');
     });
 

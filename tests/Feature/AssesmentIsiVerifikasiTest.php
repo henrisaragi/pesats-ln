@@ -274,15 +274,79 @@ class AssesmentIsiVerifikasiTest extends TestCase
             ->assertSee('Pertanyaan 2');
     }
 
+    public function test_wizard_step_saves_single_koreksi_and_show_resumes_with_bukti_view_button(): void
+    {
+        $submitter = $this->makeUser('perusahaan');
+        $verifier = $this->makeUser('penangkaran');
+        $verifier->givePermissionTo('assesment-isi.verify');
+
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        ['isi' => $isi, 'pertanyaan1' => $pertanyaan1, 'pertanyaan2' => $pertanyaan2, 'p1Tidak' => $p1Tidak] =
+            $this->makeSubmittedIsi($submitter->entity_id, $komoditas);
+
+        $buktiDukung = $pertanyaan2->buktiDukung()->create(['label' => 'Surat Izin', 'urutan' => 0]);
+        $bukti = $isi->bukti()->create([
+            'bukti_dukung_id' => $buktiDukung->id,
+            'file_path' => 'assesment-isi/dummy.pdf',
+            'original_filename' => 'dummy.pdf',
+        ]);
+
+        $this->actingAs($verifier)
+            ->postJson(route('assesment-isi.verifikasi.jawaban', [$isi, $pertanyaan1]), ['jawaban_id' => $p1Tidak->id])
+            ->assertOk();
+
+        $this->assertSame($p1Tidak->id, $isi->jawaban()->where('pertanyaan_id', $pertanyaan1->id)->value('jawaban_verifikator_id'));
+        $this->assertNull($isi->jawaban()->where('pertanyaan_id', $pertanyaan2->id)->value('jawaban_verifikator_id'));
+        $this->assertSame(AssesmentIsiStatus::Submitted, $isi->fresh()->status);
+
+        // Langkah 1 sudah tersimpan -> wizard dilanjutkan dari langkah ke-2 (index 1), yang punya tombol Lihat bukti.
+        $this->actingAs($verifier)->get(route('assesment-isi.verifikasi.show', $isi))
+            ->assertOk()
+            ->assertSee('data-langkah-awal="1"', false)
+            ->assertSee('data-bukti-view="'.route('assesment-isi.bukti.preview', $bukti).'"', false);
+    }
+
+    public function test_wizard_step_rejects_jawaban_from_another_pertanyaan_and_non_submitted_isi(): void
+    {
+        $submitter = $this->makeUser('perusahaan');
+        $verifier = $this->makeUser('penangkaran');
+        $verifier->givePermissionTo('assesment-isi.verify');
+
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        ['isi' => $isi, 'pertanyaan1' => $pertanyaan1, 'p1Ya' => $p1Ya, 'p2Ya' => $p2Ya] =
+            $this->makeSubmittedIsi($submitter->entity_id, $komoditas);
+
+        $this->actingAs($verifier)
+            ->postJson(route('assesment-isi.verifikasi.jawaban', [$isi, $pertanyaan1]), ['jawaban_id' => $p2Ya->id])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('jawaban_id');
+
+        $isi->update(['status' => AssesmentIsiStatus::Verified]);
+
+        $this->actingAs($verifier)
+            ->postJson(route('assesment-isi.verifikasi.jawaban', [$isi, $pertanyaan1]), ['jawaban_id' => $p1Ya->id])
+            ->assertForbidden()
+            ->assertJson(['message' => 'Assesment ini sudah tidak dapat diubah.']);
+
+        $this->assertNull($isi->jawaban()->where('pertanyaan_id', $pertanyaan1->id)->value('jawaban_verifikator_id'));
+
+        // Halaman wizard untuk assesment yang sudah diverifikasi tampil baca-saja (tanpa tombol simpan).
+        $this->actingAs($verifier)->get(route('assesment-isi.verifikasi.show', $isi))
+            ->assertOk()
+            ->assertSee('data-readonly="1"', false)
+            ->assertDontSee('Simpan &amp; Lanjut', false);
+    }
+
     public function test_non_verifier_cannot_access_verifikasi_routes(): void
     {
         $submitter = $this->makeUser('perusahaan');
         $stranger = $this->makeUser('perusahaan');
 
         $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
-        ['isi' => $isi] = $this->makeSubmittedIsi($submitter->entity_id, $komoditas);
+        ['isi' => $isi, 'pertanyaan1' => $pertanyaan1, 'p1Ya' => $p1Ya] = $this->makeSubmittedIsi($submitter->entity_id, $komoditas);
 
         $this->actingAs($stranger)->get(route('assesment-isi.verifikasi.index'))->assertForbidden();
         $this->actingAs($stranger)->get(route('assesment-isi.verifikasi.show', $isi))->assertForbidden();
+        $this->actingAs($stranger)->postJson(route('assesment-isi.verifikasi.jawaban', [$isi, $pertanyaan1]), ['jawaban_id' => $p1Ya->id])->assertForbidden();
     }
 }

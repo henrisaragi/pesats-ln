@@ -7,11 +7,14 @@ namespace App\Http\Controllers\AssesmentIsi;
 use App\Enums\AssesmentIsiStatus;
 use App\Enums\NotificationCategory;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AssesmentIsi\AssesmentIsiVerifikasiJawabanRequest;
 use App\Http\Requests\AssesmentIsi\AssesmentIsiVerifikasiRequest;
 use App\Models\Assesment\AssesmentIsi;
+use App\Models\Assesment\AssesmentPertanyaan;
 use App\Notifications\AppNotification;
 use App\Services\Assesment\AssesmentSertifikatService;
 use App\Services\Assesment\AssesmentSkorService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -52,7 +55,7 @@ class AssesmentIsiVerifikasiController extends Controller
 
         $pertanyaan = $isi->assesment->pertanyaan()
             ->whereHas('komoditas', fn ($query) => $query->where('komoditas.id', $isi->komoditas_id))
-            ->with(['aspek', 'jawaban.komoditas'])
+            ->with(['aspek', 'jawaban.komoditas', 'buktiDukung'])
             ->orderBy('urutan')
             ->get();
 
@@ -63,6 +66,21 @@ class AssesmentIsiVerifikasiController extends Controller
             'pertanyaan' => $pertanyaan,
             'isiJawaban' => $isiJawaban,
         ]);
+    }
+
+    /**
+     * Simpan koreksi verifikator untuk satu pertanyaan - dipanggil setiap tombol "Simpan & Lanjut"
+     * pada wizard verifikasi, jadi progres tidak hilang kalau halaman ditinggal di tengah jalan.
+     */
+    public function saveJawaban(AssesmentIsiVerifikasiJawabanRequest $request, AssesmentIsi $isi, AssesmentPertanyaan $pertanyaan): JsonResponse
+    {
+        abort_unless($isi->status === AssesmentIsiStatus::Submitted, 403, __('Assesment ini sudah tidak dapat diubah.'));
+
+        $isiJawaban = $isi->jawaban()->where('pertanyaan_id', $pertanyaan->id)->firstOrFail();
+
+        $isiJawaban->update(['jawaban_verifikator_id' => (int) $request->validated('jawaban_id')]);
+
+        return response()->json(['message' => __('Jawaban tersimpan.')]);
     }
 
     public function complete(AssesmentIsiVerifikasiRequest $request, AssesmentIsi $isi): RedirectResponse

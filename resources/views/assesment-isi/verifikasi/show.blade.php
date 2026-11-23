@@ -15,37 +15,64 @@
         </div>
     </div>
 
-    <form action="{{ route('assesment-isi.verifikasi.complete', $isi) }}" method="POST">
+    @php
+        $buktiTersimpan = $isi->bukti->keyBy('bukti_dukung_id');
+        // Hanya status Submitted yang bisa diverifikasi; selain itu wizard tampil baca-saja.
+        $bisaVerifikasi = $isi->status === \App\Enums\AssesmentIsiStatus::Submitted;
+        // Mulai dari pertanyaan pertama yang belum disimpan verifikator (lanjutkan progres sebelumnya).
+        $langkahAwal = $pertanyaan->search(fn ($item) => $isiJawaban->get($item->id)?->jawaban_verifikator_id === null);
+        $langkahAwal = ! $bisaVerifikasi ? 0 : ($langkahAwal === false ? max($pertanyaan->count() - 1, 0) : $langkahAwal);
+    @endphp
+
+    <form action="{{ route('assesment-isi.verifikasi.complete', $isi) }}" data-verifikasi-wizard data-langkah-awal="{{ $langkahAwal }}" data-readonly="{{ $bisaVerifikasi ? '0' : '1' }}" method="POST">
         @csrf
+
+        @unless ($bisaVerifikasi)
+            <div class="mb-4 rounded-lg border border-info/30 bg-info/10 px-4 py-3 text-sm text-info">
+                {{ __('Assesment ini berstatus :status, jawaban hanya dapat dilihat.', ['status' => $isi->status->label()]) }}
+            </div>
+        @endunless
+
+        @error('jawaban')
+            <div class="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">{{ $message }}</div>
+        @enderror
+
+        <div class="card mb-4">
+            <div class="p-3 overflow-x-auto">
+                <ol class="flex min-w-max">
+                    @foreach ($pertanyaan as $index => $item)
+                        <li class="-ms-2 first:ms-0">
+                            <button class="flex items-center gap-2 h-10 {{ $loop->first ? 'ps-4' : 'ps-6' }} pe-7 text-sm font-medium bg-default-200 text-default-600 disabled:cursor-not-allowed"
+                                    data-langkah-nav="{{ $index }}"
+                                    data-tersimpan="{{ $isiJawaban->get($item->id)?->jawaban_verifikator_id !== null ? '1' : '0' }}"
+                                    style="clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, {{ $loop->first ? '0' : '12px' }} 50%);"
+                                    title="{{ \Illuminate\Support\Str::limit($item->pertanyaan, 80) }}"
+                                    type="button">
+                                <span class="inline-flex items-center justify-center size-6 rounded-full bg-white/70 text-xs" data-langkah-nomor>{{ $index + 1 }}</span>
+                                <i class="size-4 hidden" data-langkah-check data-lucide="check"></i>
+                            </button>
+                        </li>
+                    @endforeach
+                </ol>
+            </div>
+        </div>
+
         <div class="grid lg:grid-cols-2 gap-4">
             <div class="card lg:sticky lg:top-20 lg:self-start">
                 <div class="card-header">
-                    <h6 class="card-title">{{ __('Bukti Dukung') }}</h6>
-                    @if ($isi->bukti->count() > 1)
-                        <select class="form-input form-input-sm w-56" data-bukti-switcher>
-                            @foreach ($isi->bukti as $bukti)
-                                <option data-preview-url="{{ route('assesment-isi.bukti.preview', $bukti) }}" value="{{ $bukti->id }}">
-                                    {{ $bukti->buktiDukung?->label }}
-                                </option>
-                            @endforeach
-                        </select>
-                    @endif
+                    <h6 class="card-title">{{ __('Pratinjau Bukti Dukung') }}</h6>
+                    <span class="text-xs text-default-500" data-bukti-judul></span>
                 </div>
                 <div class="bg-default-200" style="height: 70vh;">
-                    @if ($isi->bukti->isNotEmpty())
-                        <iframe class="size-full border-0" data-bukti-frame
-                                src="{{ route('assesment-isi.bukti.preview', $isi->bukti->first()) }}"
-                                title="{{ __('Pratinjau Bukti Dukung') }}"></iframe>
-                    @else
-                        <div class="flex items-center justify-center size-full text-default-500 text-sm">
-                            {{ __('Tidak ada bukti dukung diunggah.') }}
-                        </div>
-                    @endif
+                    <iframe class="size-full border-0 hidden" data-bukti-frame title="{{ __('Pratinjau Bukti Dukung') }}"></iframe>
+                    <div class="flex items-center justify-center size-full text-default-500 text-sm" data-bukti-kosong>
+                        {{ __('Pilih tombol Lihat pada bukti dukung untuk menampilkan pratinjau.') }}
+                    </div>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-y-4">
-                @foreach ($pertanyaan as $item)
+            <div>
+                @foreach ($pertanyaan as $index => $item)
                     @php
                         $isiJawabanItem = $isiJawaban->get($item->id);
                         $jawabanEntitas = $item->jawaban->firstWhere('id', $isiJawabanItem?->jawaban_entitas_id);
@@ -53,13 +80,17 @@
                         $bobot = $item->komoditas->firstWhere('id', $isi->komoditas_id)?->pivot->bobot;
                         $sesuai = $isiJawabanItem === null || $isiJawabanItem->jawaban_verifikator_id === null || $isiJawabanItem->jawaban_verifikator_id === $isiJawabanItem->jawaban_entitas_id;
                     @endphp
-                    <div class="card" data-pertanyaan-koreksi>
+                    <div class="card hidden" data-langkah="{{ $index }}" data-pertanyaan-koreksi
+                         data-simpan-url="{{ route('assesment-isi.verifikasi.jawaban', [$isi, $item]) }}">
                         <div class="p-4">
                             <div class="flex items-center justify-between gap-2 mb-2">
                                 <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.75 border text-xs border-primary/30 bg-primary/10 text-primary">
                                     {{ $item->aspek?->nama }}
                                 </span>
-                                <span class="text-xs text-default-500">{{ __('Bobot') }}: {{ number_format((float) $bobot, 2) }}%</span>
+                                <span class="text-xs text-default-500">
+                                    {{ __('Pertanyaan :nomor dari :total', ['nomor' => $index + 1, 'total' => $pertanyaan->count()]) }}
+                                    &middot; {{ __('Bobot') }}: {{ number_format((float) $bobot, 2) }}%
+                                </span>
                             </div>
                             <p class="font-medium text-default-800 mb-3">{{ $item->pertanyaan }}</p>
 
@@ -71,12 +102,33 @@
                                 </p>
                             </div>
 
+                            <div class="mb-3">
+                                <p class="text-xs text-default-500 mb-1">{{ __('Bukti Dukung') }}</p>
+                                @forelse ($item->buktiDukung as $buktiDukung)
+                                    @php $bukti = $buktiTersimpan->get($buktiDukung->id); @endphp
+                                    <div class="flex items-center justify-between gap-2 border border-default-200 rounded-lg px-3 py-2 mb-2">
+                                        <span class="text-sm text-default-700">{{ $buktiDukung->label }}</span>
+                                        @if ($bukti?->file_path)
+                                            <button class="btn btn-sm bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                                                    data-bukti-label="{{ $buktiDukung->label }}"
+                                                    data-bukti-view="{{ route('assesment-isi.bukti.preview', $bukti) }}" type="button">
+                                                <i class="size-4" data-lucide="eye"></i>{{ __('Lihat') }}
+                                            </button>
+                                        @else
+                                            <span class="text-xs text-default-400">{{ __('Belum diunggah') }}</span>
+                                        @endif
+                                    </div>
+                                @empty
+                                    <p class="text-sm text-default-500">{{ __('Tidak ada bukti dukung untuk pertanyaan ini.') }}</p>
+                                @endforelse
+                            </div>
+
                             <label class="inline-flex items-center gap-1.5 text-sm text-default-700 mb-2">
-                                <input @checked($sesuai) class="form-checkbox" data-sesuai-toggle type="checkbox">
+                                <input @checked($sesuai) @disabled(! $bisaVerifikasi) class="form-checkbox" data-sesuai-toggle type="checkbox">
                                 {{ __('Jawaban sesuai') }}
                             </label>
 
-                            <select class="form-input" data-jawaban-entitas-id="{{ $jawabanEntitas?->id }}"
+                            <select @disabled(! $bisaVerifikasi) class="form-input" data-jawaban-entitas-id="{{ $jawabanEntitas?->id }}"
                                     data-jawaban-verifikator-select name="jawaban[{{ $item->id }}]">
                                 @foreach ($item->jawaban as $jawabanOption)
                                     <option @selected($jawabanVerifikatorId === $jawabanOption->id)
@@ -89,13 +141,29 @@
                             <p class="text-xs text-default-500 mt-1">
                                 {{ __('Skor (koreksi verifikator)') }}: <span data-skor-verifikator></span>
                             </p>
+                            <p class="hidden text-sm text-danger mt-2" data-simpan-error></p>
+                        </div>
+                        <div class="card-footer flex items-center justify-between gap-2">
+                            <button @disabled($loop->first) class="btn border-default-300 text-default-700 disabled:opacity-50" data-langkah-back type="button">
+                                <i class="size-4" data-lucide="arrow-left"></i>{{ __('Sebelumnya') }}
+                            </button>
+                            @if ($bisaVerifikasi)
+                                <button class="btn {{ $loop->last ? 'bg-success' : 'bg-primary' }} text-white disabled:opacity-60" data-langkah-next type="button">
+                                    <span class="hidden size-4 animate-spin rounded-full border-2 border-white border-t-transparent" data-simpan-loading></span>
+                                    @if ($loop->last)
+                                        {{ __('Simpan & Selesaikan Verifikasi') }}
+                                    @else
+                                        {{ __('Simpan & Lanjut') }}<i class="size-4" data-lucide="arrow-right"></i>
+                                    @endif
+                                </button>
+                            @elseif (! $loop->last)
+                                <button class="btn bg-primary text-white" data-langkah-next type="button">
+                                    {{ __('Selanjutnya') }}<i class="size-4" data-lucide="arrow-right"></i>
+                                </button>
+                            @endif
                         </div>
                     </div>
                 @endforeach
-
-                <div class="flex justify-end">
-                    <button class="btn bg-success text-white" type="submit">{{ __('Selesaikan Verifikasi') }}</button>
-                </div>
             </div>
         </div>
     </form>

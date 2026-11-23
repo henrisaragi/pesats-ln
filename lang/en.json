@@ -968,5 +968,15 @@
     "Kuota Dibagi": "Distributed Quota",
     "Total Realisasi Ekspor": "Total Export Realization",
     "Total Nilai Evaluasi": "Total Evaluation Score",
-    "Jumlah Peringatan": "Warnings"
+    "Jumlah Peringatan": "Warnings",
+    "Pratinjau Bukti Dukung": "Supporting Document Preview",
+    "Pilih tombol Lihat pada bukti dukung untuk menampilkan pratinjau.": "Click View on a supporting document to show its preview.",
+    "Pertanyaan :nomor dari :total": "Question :nomor of :total",
+    "Tidak ada bukti dukung untuk pertanyaan ini.": "No supporting documents for this question.",
+    "Belum diunggah": "Not uploaded yet",
+    "Simpan & Lanjut": "Save & Next",
+    "Simpan & Selesaikan Verifikasi": "Save & Complete Verification",
+    "Jawaban tersimpan.": "Answer saved.",
+    "Assesment ini berstatus :status, jawaban hanya dapat dilihat.": "This assessment is :status, answers are view-only.",
+    "Assesment ini sudah tidak dapat diubah.": "This assessment can no longer be changed."
 }
