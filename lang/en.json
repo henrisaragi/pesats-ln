@@ -978,5 +978,11 @@
     "Simpan & Selesaikan Verifikasi": "Save & Complete Verification",
     "Jawaban tersimpan.": "Answer saved.",
     "Assesment ini berstatus :status, jawaban hanya dapat dilihat.": "This assessment is :status, answers are view-only.",
-    "Assesment ini sudah tidak dapat diubah.": "This assessment can no longer be changed."
+    "Assesment ini sudah tidak dapat diubah.": "This assessment can no longer be changed.",
+    "Jawaban sesuai": "Answer is correct",
+    "Jawaban tidak sesuai": "Answer is incorrect",
+    "Jawaban koreksi verifikator": "Verifier's corrected answer",
+    "Pilih \"Jawaban sesuai\" atau \"Jawaban tidak sesuai\" terlebih dahulu.": "Choose \"Answer is correct\" or \"Answer is incorrect\" first.",
+    "Pilih jawaban koreksi yang berbeda dari jawaban entitas.": "Choose a corrected answer different from the entity's answer.",
+    "Gagal menyimpan jawaban.": "Failed to save the answer."
 }

@@ -300,7 +300,12 @@ class AssesmentIsiVerifikasiTest extends TestCase
         $this->assertSame(AssesmentIsiStatus::Submitted, $isi->fresh()->status);
 
         // Langkah 1 sudah tersimpan -> wizard dilanjutkan dari langkah ke-2 (index 1), yang punya tombol Lihat bukti.
-        $this->actingAs($verifier)->get(route('assesment-isi.verifikasi.show', $isi))
+        // Langkah 1 dikoreksi ke jawaban lain -> radio "tidak sesuai" langkah 1 tercentang; langkah 2 belum dipilih.
+        $page = $this->actingAs($verifier)->get(route('assesment-isi.verifikasi.show', $isi));
+        $this->assertMatchesRegularExpression('/<input checked[^>]*data-kesesuaian="'.$pertanyaan1->id.'"[^>]*value="tidak_sesuai"/', $page->getContent());
+        $this->assertDoesNotMatchRegularExpression('/<input checked[^>]*data-kesesuaian="'.$pertanyaan2->id.'"/', $page->getContent());
+
+        $page
             ->assertOk()
             ->assertSee('data-langkah-awal="1"', false)
             ->assertSee('data-bukti-view="'.route('assesment-isi.bukti.preview', $bukti).'"', false);

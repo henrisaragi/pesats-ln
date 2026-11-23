@@ -4,8 +4,8 @@
 //   (AssesmentIsiVerifikasiController::saveJawaban) lalu otomatis pindah ke langkah berikutnya;
 //   "Sebelumnya" kembali tanpa menyimpan. Langkah terakhir menyimpan lalu submit form complete.
 // - tombol "Lihat" bukti dukung di tiap langkah menampilkan pratinjau di iframe samping
-// - checkbox "jawaban sesuai" mengembalikan pilihan ke jawaban entitas; memilih jawaban lain
-//   otomatis meng-uncheck. Skor pembanding diambil dari data-skor pada <option>.
+// - verifikator wajib mencentang salah satu "Jawaban sesuai" / "Jawaban tidak sesuai" sebelum menyimpan;
+//   "tidak sesuai" menampilkan <select> koreksi. Skor diambil dari data-skor pada <option>.
 
 const form = document.querySelector('[data-verifikasi-wizard]');
 
@@ -91,13 +91,14 @@ if (form) {
             const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
-                throw new Error(data.message || 'Gagal menyimpan jawaban.');
+                throw new Error(data.message || form.dataset.pesanGagal);
             }
         });
     }
 
     steps.forEach(function (step, index) {
-        const toggle = step.querySelector('[data-sesuai-toggle]');
+        const kesesuaianInputs = Array.from(step.querySelectorAll('[data-kesesuaian]'));
+        const koreksiWrapper = step.querySelector('[data-koreksi-wrapper]');
         const select = step.querySelector('[data-jawaban-verifikator-select]');
         const skorLabel = step.querySelector('[data-skor-verifikator]');
         const nextButton = step.querySelector('[data-langkah-next]');
@@ -110,20 +111,37 @@ if (form) {
 
         updateSkorLabel();
 
-        toggle?.addEventListener('change', function () {
-            if (toggle.checked) {
-                select.value = select.dataset.jawabanEntitasId || select.value;
+        function kesesuaian() {
+            return kesesuaianInputs.find((input) => input.checked)?.value ?? null;
+        }
+
+        // "Sesuai" -> koreksi = jawaban entitas; "Tidak sesuai" -> tampilkan pilihan koreksi dan
+        // pindahkan otomatis ke jawaban lain bila masih sama dengan jawaban entitas.
+        kesesuaianInputs.forEach(function (input) {
+            input.addEventListener('change', function () {
+                // Dua checkbox ini saling eksklusif: mencentang satu melepas yang lain.
+                if (input.checked) {
+                    kesesuaianInputs.forEach((other) => other !== input && (other.checked = false));
+                }
+
+                const entitasId = select.dataset.jawabanEntitasId;
+                const tidakSesuai = kesesuaian() === 'tidak_sesuai';
+
+                koreksiWrapper?.classList.toggle('hidden', !tidakSesuai);
+
+                if (!tidakSesuai) {
+                    select.value = entitasId || select.value;
+                } else if (select.value === entitasId) {
+                    const lain = Array.from(select.options).find((option) => option.value !== entitasId);
+                    select.value = lain?.value ?? select.value;
+                }
+
+                error?.classList.add('hidden');
                 updateSkorLabel();
-            }
+            });
         });
 
-        select.addEventListener('change', function () {
-            if (toggle) {
-                toggle.checked = select.value === select.dataset.jawabanEntitasId;
-            }
-
-            updateSkorLabel();
-        });
+        select.addEventListener('change', updateSkorLabel);
 
         step.querySelectorAll('[data-bukti-view]').forEach(function (button) {
             button.addEventListener('click', () => showBukti(button.dataset.buktiView, button.dataset.buktiLabel));
@@ -135,6 +153,21 @@ if (form) {
             // Assesment yang sudah tidak Submitted hanya bisa dilihat: Next sekadar pindah langkah.
             if (readonly) {
                 goTo(index + 1);
+
+                return;
+            }
+
+            const pesanValidasi = kesesuaian() === null
+                ? form.dataset.pesanPilih
+                : (kesesuaian() === 'tidak_sesuai' && select.value === select.dataset.jawabanEntitasId
+                    ? form.dataset.pesanBeda
+                    : null);
+
+            if (pesanValidasi) {
+                if (error) {
+                    error.textContent = pesanValidasi;
+                    error.classList.remove('hidden');
+                }
 
                 return;
             }

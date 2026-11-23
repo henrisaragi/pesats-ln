@@ -24,7 +24,10 @@
         $langkahAwal = ! $bisaVerifikasi ? 0 : ($langkahAwal === false ? max($pertanyaan->count() - 1, 0) : $langkahAwal);
     @endphp
 
-    <form action="{{ route('assesment-isi.verifikasi.complete', $isi) }}" data-verifikasi-wizard data-langkah-awal="{{ $langkahAwal }}" data-readonly="{{ $bisaVerifikasi ? '0' : '1' }}" method="POST">
+    <form action="{{ route('assesment-isi.verifikasi.complete', $isi) }}" data-verifikasi-wizard data-langkah-awal="{{ $langkahAwal }}" data-readonly="{{ $bisaVerifikasi ? '0' : '1' }}"
+          data-pesan-pilih="{{ __('Pilih "Jawaban sesuai" atau "Jawaban tidak sesuai" terlebih dahulu.') }}"
+          data-pesan-beda="{{ __('Pilih jawaban koreksi yang berbeda dari jawaban entitas.') }}"
+          data-pesan-gagal="{{ __('Gagal menyimpan jawaban.') }}" method="POST">
         @csrf
 
         @unless ($bisaVerifikasi)
@@ -78,7 +81,8 @@
                         $jawabanEntitas = $item->jawaban->firstWhere('id', $isiJawabanItem?->jawaban_entitas_id);
                         $jawabanVerifikatorId = $isiJawabanItem?->jawaban_verifikator_id ?? $isiJawabanItem?->jawaban_entitas_id;
                         $bobot = $item->komoditas->firstWhere('id', $isi->komoditas_id)?->pivot->bobot;
-                        $sesuai = $isiJawabanItem === null || $isiJawabanItem->jawaban_verifikator_id === null || $isiJawabanItem->jawaban_verifikator_id === $isiJawabanItem->jawaban_entitas_id;
+                        // null = belum dipilih (langkah belum pernah disimpan verifikator).
+                        $kesesuaian = $isiJawabanItem?->jawaban_verifikator_id === null ? null : ($isiJawabanItem->isSesuai() ? 'sesuai' : 'tidak_sesuai');
                     @endphp
                     <div class="card hidden" data-langkah="{{ $index }}" data-pertanyaan-koreksi
                          data-simpan-url="{{ route('assesment-isi.verifikasi.jawaban', [$isi, $item]) }}">
@@ -102,11 +106,13 @@
                                 </p>
                             </div>
 
-                            <div class="mb-3">
-                                <p class="text-xs text-default-500 mb-1">{{ __('Bukti Dukung') }}</p>
+                            <div class="rounded-lg border border-warning/30 bg-warning/10 p-3 mb-3">
+                                <p class="flex items-center gap-1 text-xs font-medium text-warning mb-2">
+                                    <i class="size-3.5" data-lucide="paperclip"></i>{{ __('Bukti Dukung') }}
+                                </p>
                                 @forelse ($item->buktiDukung as $buktiDukung)
                                     @php $bukti = $buktiTersimpan->get($buktiDukung->id); @endphp
-                                    <div class="flex items-center justify-between gap-2 border border-default-200 rounded-lg px-3 py-2 mb-2">
+                                    <div class="flex items-center justify-between gap-2 bg-card border border-warning/20 rounded-lg px-3 py-2 mb-2 last:mb-0">
                                         <span class="text-sm text-default-700">{{ $buktiDukung->label }}</span>
                                         @if ($bukti?->file_path)
                                             <button class="btn btn-sm bg-primary/10 text-primary hover:bg-primary hover:text-white"
@@ -123,24 +129,36 @@
                                 @endforelse
                             </div>
 
-                            <label class="inline-flex items-center gap-1.5 text-sm text-default-700 mb-2">
-                                <input @checked($sesuai) @disabled(! $bisaVerifikasi) class="form-checkbox" data-sesuai-toggle type="checkbox">
-                                {{ __('Jawaban sesuai') }}
-                            </label>
+                            <div class="flex flex-wrap items-center gap-x-6 gap-y-2 mb-2">
+                                <label class="inline-flex items-center gap-1.5 text-sm text-default-700">
+                                    <input @checked($kesesuaian === 'sesuai') @disabled(! $bisaVerifikasi) class="form-checkbox" data-kesesuaian="{{ $item->id }}"
+                                           type="checkbox" value="sesuai">
+                                    {{ __('Jawaban sesuai') }}
+                                </label>
+                                <label class="inline-flex items-center gap-1.5 text-sm text-default-700">
+                                    <input @checked($kesesuaian === 'tidak_sesuai') @disabled(! $bisaVerifikasi) class="form-checkbox" data-kesesuaian="{{ $item->id }}"
+                                           type="checkbox" value="tidak_sesuai">
+                                    {{ __('Jawaban tidak sesuai') }}
+                                </label>
+                            </div>
 
-                            <select @disabled(! $bisaVerifikasi) class="form-input" data-jawaban-entitas-id="{{ $jawabanEntitas?->id }}"
-                                    data-jawaban-verifikator-select name="jawaban[{{ $item->id }}]">
-                                @foreach ($item->jawaban as $jawabanOption)
-                                    <option @selected($jawabanVerifikatorId === $jawabanOption->id)
-                                        data-skor="{{ $jawabanOption->skorUntukKomoditas($isi->komoditas_id) }}"
-                                        value="{{ $jawabanOption->id }}">
-                                        {{ $jawabanOption->teks_jawaban }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-default-500 mt-1">
-                                {{ __('Skor (koreksi verifikator)') }}: <span data-skor-verifikator></span>
-                            </p>
+                            {{-- <select> tetap ada di DOM (hanya disembunyikan) karena ikut dikirim saat form complete di-submit. --}}
+                            <div class="{{ $kesesuaian === 'tidak_sesuai' ? '' : 'hidden' }}" data-koreksi-wrapper>
+                                <label class="text-xs text-default-500 mb-1 block">{{ __('Jawaban koreksi verifikator') }}</label>
+                                <select @disabled(! $bisaVerifikasi) class="form-input" data-jawaban-entitas-id="{{ $jawabanEntitas?->id }}"
+                                        data-jawaban-verifikator-select name="jawaban[{{ $item->id }}]">
+                                    @foreach ($item->jawaban as $jawabanOption)
+                                        <option @selected($jawabanVerifikatorId === $jawabanOption->id)
+                                            data-skor="{{ $jawabanOption->skorUntukKomoditas($isi->komoditas_id) }}"
+                                            value="{{ $jawabanOption->id }}">
+                                            {{ $jawabanOption->teks_jawaban }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-default-500 mt-1">
+                                    {{ __('Skor (koreksi verifikator)') }}: <span data-skor-verifikator></span>
+                                </p>
+                            </div>
                             <p class="hidden text-sm text-danger mt-2" data-simpan-error></p>
                         </div>
                         <div class="card-footer flex items-center justify-between gap-2">
