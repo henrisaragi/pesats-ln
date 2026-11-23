@@ -984,5 +984,6 @@
     "Jawaban koreksi verifikator": "Verifier's corrected answer",
     "Pilih \"Jawaban sesuai\" atau \"Jawaban tidak sesuai\" terlebih dahulu.": "Choose \"Answer is correct\" or \"Answer is incorrect\" first.",
     "Pilih jawaban koreksi yang berbeda dari jawaban entitas.": "Choose a corrected answer different from the entity's answer.",
-    "Gagal menyimpan jawaban.": "Failed to save the answer."
+    "Gagal menyimpan jawaban.": "Failed to save the answer.",
+    "Jawaban terpilih": "Selected answer"
 }

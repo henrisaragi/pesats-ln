@@ -5,7 +5,7 @@
 //   "Sebelumnya" kembali tanpa menyimpan. Langkah terakhir menyimpan lalu submit form complete.
 // - tombol "Lihat" bukti dukung di tiap langkah menampilkan pratinjau di iframe samping
 // - verifikator wajib mencentang salah satu "Jawaban sesuai" / "Jawaban tidak sesuai" sebelum menyimpan;
-//   "tidak sesuai" menampilkan <select> koreksi. Skor diambil dari data-skor pada <option>.
+//   dropdown jawaban selalu tampil, hanya aktif (bisa diubah) saat "tidak sesuai" dicentang. Skor diambil dari data-skor pada <option>.
 
 const form = document.querySelector('[data-verifikasi-wizard]');
 
@@ -98,7 +98,6 @@ if (form) {
 
     steps.forEach(function (step, index) {
         const kesesuaianInputs = Array.from(step.querySelectorAll('[data-kesesuaian]'));
-        const koreksiWrapper = step.querySelector('[data-koreksi-wrapper]');
         const select = step.querySelector('[data-jawaban-verifikator-select]');
         const skorLabel = step.querySelector('[data-skor-verifikator]');
         const nextButton = step.querySelector('[data-langkah-next]');
@@ -127,7 +126,7 @@ if (form) {
                 const entitasId = select.dataset.jawabanEntitasId;
                 const tidakSesuai = kesesuaian() === 'tidak_sesuai';
 
-                koreksiWrapper?.classList.toggle('hidden', !tidakSesuai);
+                select.disabled = !tidakSesuai;
 
                 if (!tidakSesuai) {
                     select.value = entitasId || select.value;
@@ -181,6 +180,8 @@ if (form) {
                     saved[index] = true;
 
                     if (index === steps.length - 1) {
+                        // <select> yang disabled tidak ikut terkirim - aktifkan semua sebelum submit complete.
+                        form.querySelectorAll('[data-jawaban-verifikator-select]').forEach((el) => (el.disabled = false));
                         form.submit();
 
                         return;

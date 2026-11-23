@@ -142,10 +142,10 @@
                                 </label>
                             </div>
 
-                            {{-- <select> tetap ada di DOM (hanya disembunyikan) karena ikut dikirim saat form complete di-submit. --}}
-                            <div class="{{ $kesesuaian === 'tidak_sesuai' ? '' : 'hidden' }}" data-koreksi-wrapper>
-                                <label class="text-xs text-default-500 mb-1 block">{{ __('Jawaban koreksi verifikator') }}</label>
-                                <select @disabled(! $bisaVerifikasi) class="form-input" data-jawaban-entitas-id="{{ $jawabanEntitas?->id }}"
+                            {{-- Dropdown selalu menampilkan jawaban terpilih; hanya aktif saat "Jawaban tidak sesuai" dicentang. --}}
+                            <div>
+                                <label class="text-xs text-default-500 mb-1 block">{{ __('Jawaban terpilih') }}</label>
+                                <select @disabled(! $bisaVerifikasi || $kesesuaian !== 'tidak_sesuai') class="form-input" data-jawaban-entitas-id="{{ $jawabanEntitas?->id }}"
                                         data-jawaban-verifikator-select name="jawaban[{{ $item->id }}]">
                                     @foreach ($item->jawaban as $jawabanOption)
                                         <option @selected($jawabanVerifikatorId === $jawabanOption->id)

@@ -304,6 +304,9 @@ class AssesmentIsiVerifikasiTest extends TestCase
         $page = $this->actingAs($verifier)->get(route('assesment-isi.verifikasi.show', $isi));
         $this->assertMatchesRegularExpression('/<input checked[^>]*data-kesesuaian="'.$pertanyaan1->id.'"[^>]*value="tidak_sesuai"/', $page->getContent());
         $this->assertDoesNotMatchRegularExpression('/<input checked[^>]*data-kesesuaian="'.$pertanyaan2->id.'"/', $page->getContent());
+        // Dropdown jawaban hanya aktif pada langkah "tidak sesuai" (langkah 1), langkah 2 tampil disabled.
+        $this->assertDoesNotMatchRegularExpression('/<select disabled[^>]*name="jawaban\['.$pertanyaan1->id.'\]"/', $page->getContent());
+        $this->assertMatchesRegularExpression('/<select disabled[^>]*name="jawaban\['.$pertanyaan2->id.'\]"/', $page->getContent());
 
         $page
             ->assertOk()
