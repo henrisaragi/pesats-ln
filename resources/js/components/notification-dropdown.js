@@ -86,15 +86,36 @@ function renderDropdown(dropdown, payload) {
     window.lucideCreateIcons?.();
 }
 
-function fetchNotifications(dropdown) {
-    return fetch(appUrl('/notifications'), {
-        headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-    })
-        .then((response) => response.json())
-        .then((payload) => renderDropdown(dropdown, payload));
+// isBackgroundPoll: request otomatis (load awal + interval) dikirim dengan header X-Background-Poll
+// supaya tidak dihitung aktivitas user oleh App\Http\Middleware\EnsureAuthSessionIsFresh.
+function fetchNotifications(dropdown, isBackgroundPoll = false) {
+    const headers = {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+    };
+
+    if (isBackgroundPoll) {
+        headers['X-Background-Poll'] = '1';
+    }
+
+    return fetch(appUrl('/notifications'), { headers })
+        .then((response) => {
+            // Sesi habis/idle: reload supaya middleware auth mengarahkan ke halaman input ulang
+            // password (bukan menampilkan "undefined" di badge).
+            if (response.status === 401 || response.status === 419) {
+                window.location.reload();
+
+                return null;
+            }
+
+            return response.ok ? response.json() : null;
+        })
+        .then((payload) => {
+            if (payload) {
+                renderDropdown(dropdown, payload);
+            }
+        })
+        .catch(() => {});
 }
 
 // Auto-popup (resources/views/components/notification-alert-modal.blade.php) for notifications
@@ -255,13 +276,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // Called by resources/js/echo.js when a notification is pushed live over Reverb, so the
     // badge/list stay in sync even if the dropdown is already open.
     window.refreshNotifications = function () {
-        fetchNotifications(dropdown);
+        fetchNotifications(dropdown, true);
     };
 
-    fetchNotifications(dropdown);
+    fetchNotifications(dropdown, true);
 
     // General notifications have no real-time push (see resources/js/echo.js) - this poll is
     // the only delivery mechanism, so it's kept close to real-time (3s, the fastest interval
     // used anywhere in the app) without the user having to open the dropdown first.
-    setInterval(() => fetchNotifications(dropdown), 3000);
+    setInterval(() => fetchNotifications(dropdown, true), 3000);
 });

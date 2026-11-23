@@ -66,6 +66,7 @@ class IdleSessionReauthenticationTest extends TestCase
         $response->assertRedirect();
         $this->assertAuthenticatedAs($user);
         $this->assertNotNull($user->fresh()->current_session_id);
+        $response->assertCookie('reauth_user', (string) $user->id);
         Mail::assertNothingSent();
     }
 
@@ -90,5 +91,90 @@ class IdleSessionReauthenticationTest extends TestCase
     public function test_reauthenticate_page_redirects_to_login_without_a_pending_timeout(): void
     {
         $this->get(route('reauthenticate.show'))->assertRedirect(route('login'));
+    }
+
+    public function test_stale_session_on_ajax_poll_returns_401_instead_of_redirect(): void
+    {
+        $user = $this->makeUser();
+        $user->forceFill(['last_activity_at' => now()->subMinutes(61)])->save();
+
+        $response = $this->actingAs($user)->getJson(route('notifications.index'));
+
+        $response->assertUnauthorized();
+        $response->assertSessionMissing('reauth_intended_url');
+        $this->assertGuest();
+    }
+
+    public function test_expired_session_with_reauth_cookie_redirects_to_password_only_page(): void
+    {
+        $user = $this->makeUser();
+
+        $this->withCookie('reauth_user', (string) $user->id)
+            ->get(route('root'))
+            ->assertRedirect(route('reauthenticate.show'));
+
+        $this->withCookie('reauth_user', (string) $user->id)
+            ->get(route('reauthenticate.show'))
+            ->assertOk()
+            ->assertSee($user->name);
+    }
+
+    public function test_reauth_cookie_allows_password_only_login_after_session_is_gone(): void
+    {
+        $user = $this->makeUser();
+
+        $response = $this->withCookie('reauth_user', (string) $user->id)
+            ->post(route('reauthenticate.store'), ['password' => 'password']);
+
+        $response->assertRedirect();
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_guest_without_reauth_cookie_still_goes_to_login(): void
+    {
+        $this->get(route('root'))->assertRedirect(route('login'));
+    }
+
+    public function test_logout_clears_the_reauth_cookie(): void
+    {
+        $user = $this->makeUser();
+
+        $this->actingAs($user)->post(route('logout'))
+            ->assertCookieExpired('reauth_user');
+    }
+
+    public function test_background_poll_does_not_count_as_activity(): void
+    {
+        $user = $this->makeUser();
+        $lastActivity = now()->subMinutes(30)->startOfSecond();
+        $user->forceFill(['last_activity_at' => $lastActivity])->save();
+
+        $this->actingAs($user)
+            ->getJson(route('notifications.index'), ['X-Background-Poll' => '1'])
+            ->assertOk();
+
+        $this->assertTrue($user->fresh()->last_activity_at->equalTo($lastActivity));
+    }
+
+    public function test_background_poll_on_stale_session_still_returns_401(): void
+    {
+        $user = $this->makeUser();
+        $user->forceFill(['last_activity_at' => now()->subMinutes(61)])->save();
+
+        $this->actingAs($user)
+            ->getJson(route('notifications.index'), ['X-Background-Poll' => '1'])
+            ->assertUnauthorized();
+
+        $this->assertGuest();
+    }
+
+    public function test_user_initiated_request_refreshes_activity(): void
+    {
+        $user = $this->makeUser();
+        $user->forceFill(['last_activity_at' => now()->subMinutes(30)])->save();
+
+        $this->actingAs($user)->getJson(route('notifications.index'))->assertOk();
+
+        $this->assertTrue($user->fresh()->last_activity_at->gt(now()->subMinute()));
     }
 }

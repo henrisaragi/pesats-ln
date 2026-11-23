@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAuthSessionIsFresh;
 use App\Http\Middleware\SetLocale;
+use App\Services\Auth\AuthenticationService;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -42,7 +43,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
         ]);
 
-        Authenticate::redirectUsing(fn () => route('login'));
+        // Pernah login di browser ini (sesi habis/idle) -> cukup input ulang password, tanpa email.
+        Authenticate::redirectUsing(fn (Request $request): string => $request->session()->has('reauth_user_id')
+            || $request->hasCookie(AuthenticationService::REAUTH_COOKIE)
+                ? route('reauthenticate.show')
+                : route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

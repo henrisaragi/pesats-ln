@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Mail\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -25,6 +26,15 @@ class AuthenticationService
      * tempat tidak punya angka ajaib yang bisa saling tidak sinkron.
      */
     public const IDLE_TIMEOUT_MINUTES = 60;
+
+    /**
+     * Cookie terenkripsi berisi id user yang terakhir login di browser ini - dipakai halaman input
+     * ulang password (ReauthenticateController) saat sesi server sudah benar-benar hilang (bukan
+     * sekadar idle), supaya user cukup memasukkan password tanpa email. Dihapus saat logout eksplisit.
+     */
+    public const REAUTH_COOKIE = 'reauth_user';
+
+    public const REAUTH_COOKIE_MINUTES = 1440;
 
     public function __construct(
         private readonly EmailService $emailService,
@@ -107,6 +117,8 @@ class AuthenticationService
             'current_session_id' => $request->session()->getId(),
             'last_activity_at' => now(),
         ])->save();
+
+        Cookie::queue(self::REAUTH_COOKIE, (string) $user->id, self::REAUTH_COOKIE_MINUTES);
     }
 
     /**
@@ -116,6 +128,8 @@ class AuthenticationService
     public function releaseSessionLock(User $user): void
     {
         $user->forceFill(['current_session_id' => null, 'last_activity_at' => null])->save();
+
+        Cookie::expire(self::REAUTH_COOKIE);
     }
 
     /**

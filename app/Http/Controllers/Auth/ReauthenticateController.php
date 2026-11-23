@@ -63,12 +63,17 @@ class ReauthenticateController extends Controller
 
         $this->authenticationService->completeLogin($user, $request);
 
-        return redirect()->to($intendedUrl ?? route('second', ['dashboards', 'index']));
+        return $intendedUrl !== null
+            ? redirect()->to($intendedUrl)
+            : redirect()->intended(route('second', ['dashboards', 'index']));
     }
 
     private function pendingReauthUser(Request $request): ?User
     {
-        $userId = $request->session()->get(self::SESSION_USER_ID);
+        // Fallback ke cookie saat sesi server sudah hilang total (kedaluwarsa/dibersihkan), bukan
+        // hanya idle - lihat AuthenticationService::REAUTH_COOKIE.
+        $userId = $request->session()->get(self::SESSION_USER_ID)
+            ?? $request->cookie(AuthenticationService::REAUTH_COOKIE);
 
         if ($userId === null) {
             return null;

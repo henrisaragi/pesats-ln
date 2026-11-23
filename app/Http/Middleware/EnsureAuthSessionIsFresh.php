@@ -30,6 +30,13 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class EnsureAuthSessionIsFresh
 {
+    /**
+     * Header penanda request latar belakang otomatis (mis. poll lonceng notifikasi tiap 3 detik)
+     * - tetap dicek idle-nya, tapi TIDAK dihitung sebagai aktivitas user, supaya tab yang dibiarkan
+     * terbuka tetap kena idle timeout.
+     */
+    public const BACKGROUND_POLL_HEADER = 'X-Background-Poll';
+
     public function handle(Request $request, Closure $next): Response
     {
         if (! Auth::check()) {
@@ -43,6 +50,10 @@ class EnsureAuthSessionIsFresh
             && $user->last_activity_at->lt(now()->subMinutes(AuthenticationService::IDLE_TIMEOUT_MINUTES))
         ) {
             return $this->forceReauthenticate($request, $user);
+        }
+
+        if ($request->hasHeader(self::BACKGROUND_POLL_HEADER)) {
+            return $next($request);
         }
 
         User::withoutTimestamps(function () use ($user): void {
@@ -62,6 +73,13 @@ class EnsureAuthSessionIsFresh
         $request->session()->regenerateToken();
 
         $request->session()->put('reauth_user_id', $userId);
+
+        // Request AJAX (mis. poll lonceng notifikasi) tidak boleh jadi tujuan setelah login ulang -
+        // cukup balas 401, frontend akan reload halaman yang lalu diarahkan ke sini lagi.
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
         $request->session()->put('reauth_intended_url', $intendedUrl);
 
         return redirect()->route('reauthenticate.show');

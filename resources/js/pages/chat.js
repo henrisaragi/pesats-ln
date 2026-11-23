@@ -20,6 +20,13 @@ function jsonHeaders() {
     return { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
 }
 
+// Poll otomatis (daftar percakapan + pesan yang sedang dibuka) tidak dihitung aktivitas user oleh
+// App\Http\Middleware\EnsureAuthSessionIsFresh - sama seperti poll lonceng notifikasi. Sesi
+// yang basi dibalas 401, dan reload ke halaman input ulang password ditangani poll lonceng.
+function backgroundPollHeaders() {
+    return { ...jsonHeaders(), 'X-Background-Poll': '1' };
+}
+
 function escapeHtml(value) {
     const div = document.createElement('div');
     div.textContent = value ?? '';
@@ -108,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fetchList() {
-        return fetch(appUrl('/chat/list'), { headers: jsonHeaders() })
+        return fetch(appUrl('/chat/list'), { headers: backgroundPollHeaders() })
             .then((response) => (response.ok ? response.json() : null))
             .then((payload) => {
                 if (payload) {
@@ -322,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch(appUrl(`/chat/${currentConversationId}/messages`), { headers: jsonHeaders() })
+        fetch(appUrl(`/chat/${currentConversationId}/messages`), { headers: backgroundPollHeaders() })
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`Conversation ${currentConversationId} is not accessible (${response.status}).`);
