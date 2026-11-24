@@ -37,6 +37,7 @@
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Tanggal Submit') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Skor Jawaban Entitas') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Skor Hasil Verifikasi') }}</th>
+                                <th class="px-3.5 py-3 text-start" scope="col">{{ __('Status Kelayakan') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Status') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Aksi') }}</th>
                             </tr>
@@ -48,8 +49,9 @@
                                     <td class="px-3.5 py-3">{{ $item->assesment?->judul }}</td>
                                     <td class="px-3.5 py-3">{{ $item->komoditas?->name }}</td>
                                     <td class="px-3.5 py-3">{{ $item->submitted_at?->format('d/m/Y H:i') }}</td>
-                                    <td class="px-3.5 py-3">{{ $item->skor_entitas !== null ? number_format((float) $item->skor_entitas, 2) : '-' }}</td>
-                                    <td class="px-3.5 py-3">{{ $item->skor_total !== null ? number_format((float) $item->skor_total, 2) : '-' }}</td>
+                                    <td class="px-3.5 py-3">{{ $hasil[$item->id]['entitas'] !== null ? number_format($hasil[$item->id]['entitas'], 2).'%' : '-' }}</td>
+                                    <td class="px-3.5 py-3">{{ $hasil[$item->id]['verifikasi'] !== null ? number_format($hasil[$item->id]['verifikasi'], 2).'%' : '-' }}</td>
+                                    <td class="px-3.5 py-3">@include('assesment-isi.partials.kelayakan', ['isi' => $item, 'hasil' => $hasil[$item->id]])</td>
                                     <td class="px-3.5 py-3">
                                         <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.75 border text-xs {{ $item->status->badgeClass() }}">
                                             {{ $item->status->label() }}
@@ -63,7 +65,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="8">
+                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="9">
                                         {{ __('Tidak ada pengajuan assesment.') }}
                                     </td>
                                 </tr>

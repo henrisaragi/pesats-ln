@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\AssesmentIsiStatus;
+use App\Enums\AssesmentKelayakan;
 use App\Enums\NotificationCategory;
 use App\Models\Assesment\Assesment;
 use App\Models\Assesment\AssesmentAspek;
@@ -156,6 +157,11 @@ class AssesmentIsiVerifikasiTest extends TestCase
         $isi->refresh();
         $this->assertEqualsWithDelta(10.0, (float) $isi->skor_total, 0.001);
 
+        // Semua jawaban final berskor tertinggi -> 100% -> Sangat Layak.
+        $this->get(route('assesment-isi.verifikasi.index', ['status' => 'verified']))
+            ->assertSee('100.00%')
+            ->assertSee('Sangat Layak');
+
         $koreksi = $isi->jawaban()->where('pertanyaan_id', $pertanyaan2->id)->firstOrFail();
         $this->assertSame($p2Ya->id, $koreksi->jawaban_verifikator_id);
         $this->assertFalse($koreksi->isSesuai());
@@ -253,6 +259,63 @@ class AssesmentIsiVerifikasiTest extends TestCase
             AppNotification::class,
             fn (AppNotification $notification) => $notification->category === NotificationCategory::Permohonan
         );
+    }
+
+    /**
+     * Skor tampil sebagai persen terhadap skor maksimal (semua jawaban berskor tertinggi = 100%),
+     * dan Status Kelayakan baru tampil setelah Verified. Maksimal di sini 0.4*10 + 0.6*10 = 10.
+     */
+    public function test_skor_shown_as_percentage_with_kelayakan_only_after_verification(): void
+    {
+        $submitter = $this->makeUser('perusahaan');
+        $verifier = $this->makeUser('penangkaran');
+        $verifier->givePermissionTo('assesment-isi.verify');
+
+        $komoditas = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        ['isi' => $isi, 'pertanyaan1' => $pertanyaan1, 'pertanyaan2' => $pertanyaan2, 'p1Ya' => $p1Ya, 'p2Tidak' => $p2Tidak] =
+            $this->makeSubmittedIsi($submitter->entity_id, $komoditas);
+        $isi->update(['skor_entitas' => 4]);
+
+        // Submitted: 4 / 10 = 40%, kelayakan belum ada.
+        $this->actingAs($submitter)->get(route('assesment-isi.show', $isi))
+            ->assertOk()
+            ->assertSee('40.00%')
+            ->assertSee('Dalam proses verifikasi')
+            ->assertDontSee('Tidak Layak');
+
+        $this->actingAs($verifier)->get(route('assesment-isi.verifikasi.index'))
+            ->assertOk()
+            ->assertSee('40.00%')
+            ->assertSee('Dalam proses verifikasi');
+
+        $this->actingAs($verifier)->post(route('assesment-isi.verifikasi.complete', $isi), [
+            'jawaban' => [
+                $pertanyaan1->id => $p1Ya->id,
+                $pertanyaan2->id => $p2Tidak->id,
+            ],
+        ]);
+
+        // Verified dengan skor 40% -> di bawah 60 -> Tidak Layak.
+        $this->actingAs($submitter)->get(route('assesment-isi.show', $isi))
+            ->assertOk()
+            ->assertSee('Tidak Layak')
+            ->assertDontSee('Dalam proses verifikasi');
+
+        $this->actingAs($verifier)->get(route('assesment-isi.verifikasi.index', ['status' => 'verified']))
+            ->assertOk()
+            ->assertSee('40.00%')
+            ->assertSee('Tidak Layak');
+    }
+
+    public function test_kelayakan_follows_excel_thresholds(): void
+    {
+        $this->assertSame(AssesmentKelayakan::SangatLayak, AssesmentKelayakan::fromPersentase(100));
+        $this->assertSame(AssesmentKelayakan::SangatLayak, AssesmentKelayakan::fromPersentase(85));
+        $this->assertSame(AssesmentKelayakan::Layak, AssesmentKelayakan::fromPersentase(84.99));
+        $this->assertSame(AssesmentKelayakan::Layak, AssesmentKelayakan::fromPersentase(70));
+        $this->assertSame(AssesmentKelayakan::LayakBersyarat, AssesmentKelayakan::fromPersentase(69.99));
+        $this->assertSame(AssesmentKelayakan::LayakBersyarat, AssesmentKelayakan::fromPersentase(60));
+        $this->assertSame(AssesmentKelayakan::TidakLayak, AssesmentKelayakan::fromPersentase(59.99));
     }
 
     public function test_verifikasi_index_and_show_pages_render(): void

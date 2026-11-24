@@ -1071,5 +1071,11 @@
     "bukti dukung ke-:nomor": "supporting evidence #:nomor",
     "Import gagal, ditemukan :jumlah kesalahan pada file:": "Import failed, :jumlah error(s) found in the file:",
     "Perbaiki file JSON atau data master terkait, lalu pilih file dan impor ulang.": "Fix the JSON file or the related master data, then select the file and import again.",
-    "Kode komoditas :codes tercantum lebih dari sekali.": "Commodity code :codes is listed more than once."
+    "Kode komoditas :codes tercantum lebih dari sekali.": "Commodity code :codes is listed more than once.",
+    "Status Kelayakan": "Eligibility Status",
+    "Sangat Layak": "Highly Eligible",
+    "Layak": "Eligible",
+    "Layak Bersyarat": "Conditionally Eligible",
+    "Tidak Layak": "Not Eligible",
+    "Dalam proses verifikasi": "Under verification"
 }

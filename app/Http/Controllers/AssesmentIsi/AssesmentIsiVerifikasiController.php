@@ -39,7 +39,7 @@ class AssesmentIsiVerifikasiController extends Controller
             : AssesmentIsiStatus::Submitted;
 
         $items = AssesmentIsi::query()
-            ->with(['assesment', 'entitas', 'komoditas'])
+            ->with(['assesment.pertanyaan.komoditas', 'assesment.pertanyaan.jawaban.komoditas', 'entitas', 'komoditas'])
             ->when($status !== null, fn ($query) => $query->where('status', $status))
             ->latest()
             ->paginate(10)
@@ -47,6 +47,7 @@ class AssesmentIsiVerifikasiController extends Controller
 
         return view('assesment-isi.verifikasi.index', [
             'items' => $items,
+            'hasil' => $items->getCollection()->mapWithKeys(fn (AssesmentIsi $isi): array => [$isi->id => $this->skorService->hasil($isi)]),
             'activeStatus' => $status,
         ]);
     }

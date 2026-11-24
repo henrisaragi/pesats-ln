@@ -19,15 +19,18 @@
                     <i class="size-4" data-lucide="file-pen"></i>{{ __('Surat Pernyataan') }}
                 </button>
             @endif
-            @if ($isi->skor_entitas !== null)
+            @if ($hasil['entitas'] !== null)
                 <span class="text-xs text-default-600">
-                    {{ __('Skor Jawaban Anda') }}: <strong>{{ number_format((float) $isi->skor_entitas, 2) }}</strong>
+                    {{ __('Skor Jawaban Anda') }}: <strong>{{ number_format($hasil['entitas'], 2) }}%</strong>
                 </span>
             @endif
-            @if ($isi->skor_total !== null)
+            @if ($hasil['verifikasi'] !== null)
                 <span class="text-xs text-default-600">
-                    {{ __('Skor Hasil Verifikasi') }}: <strong>{{ number_format((float) $isi->skor_total, 2) }}</strong>
+                    {{ __('Skor Hasil Verifikasi') }}: <strong>{{ number_format($hasil['verifikasi'], 2) }}%</strong>
                 </span>
+            @endif
+            @if ($isi->status->value !== 'draft')
+                @include('assesment-isi.partials.kelayakan', ['isi' => $isi, 'hasil' => $hasil])
             @endif
             <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.75 border text-xs {{ $isi->status->badgeClass() }}">
                 {{ $isi->status->label() }} - {{ $isi->komoditas->name }}

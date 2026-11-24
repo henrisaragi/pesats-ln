@@ -23,6 +23,7 @@
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Status') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Skor Jawaban Anda') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Skor Hasil Verifikasi') }}</th>
+                                <th class="px-3.5 py-3 text-start" scope="col">{{ __('Status Kelayakan') }}</th>
                                 <th class="px-3.5 py-3 text-start" scope="col">{{ __('Aksi') }}</th>
                             </tr>
                             </thead>
@@ -41,10 +42,13 @@
                                         @endif
                                     </td>
                                     <td class="px-3.5 py-3">
-                                        {{ $row['isi']?->skor_entitas !== null ? number_format((float) $row['isi']->skor_entitas, 2) : '-' }}
+                                        {{ ($row['hasil']['entitas'] ?? null) !== null ? number_format($row['hasil']['entitas'], 2).'%' : '-' }}
                                     </td>
                                     <td class="px-3.5 py-3">
-                                        {{ $row['isi']?->skor_total !== null ? number_format((float) $row['isi']->skor_total, 2) : '-' }}
+                                        {{ ($row['hasil']['verifikasi'] ?? null) !== null ? number_format($row['hasil']['verifikasi'], 2).'%' : '-' }}
+                                    </td>
+                                    <td class="px-3.5 py-3">
+                                        @include('assesment-isi.partials.kelayakan', ['isi' => $row['isi'], 'hasil' => $row['hasil']])
                                     </td>
                                     <td class="px-3.5 py-3">
                                         @if ($row['isi'])
@@ -67,7 +71,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="6">
+                                    <td class="px-3.5 py-6 text-center text-default-500" colspan="7">
                                         {{ __('Belum ada assesment yang tersedia untuk komoditas terverifikasi entitas Anda.') }}
                                     </td>
                                 </tr>

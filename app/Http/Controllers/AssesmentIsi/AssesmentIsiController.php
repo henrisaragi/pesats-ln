@@ -59,14 +59,20 @@ class AssesmentIsiController extends Controller
 
         $existing = AssesmentIsi::query()
             ->where('entitas_id', $entity->id)
+            ->with(['assesment.pertanyaan.komoditas', 'assesment.pertanyaan.jawaban.komoditas'])
             ->get()
             ->keyBy(fn (AssesmentIsi $isi) => $isi->assesment_id.'-'.$isi->komoditas_id);
 
-        $rows = $pairs->map(fn (array $row) => [
-            'assesment' => $row['assesment'],
-            'komoditas' => $row['komoditas'],
-            'isi' => $existing->get($row['assesment']->id.'-'.$row['komoditas']->id),
-        ]);
+        $rows = $pairs->map(function (array $row) use ($existing): array {
+            $isi = $existing->get($row['assesment']->id.'-'.$row['komoditas']->id);
+
+            return [
+                'assesment' => $row['assesment'],
+                'komoditas' => $row['komoditas'],
+                'isi' => $isi,
+                'hasil' => $isi ? $this->skorService->hasil($isi) : null,
+            ];
+        });
 
         return view('assesment-isi.index', [
             'rows' => $rows,
@@ -150,6 +156,7 @@ class AssesmentIsiController extends Controller
             'pertanyaan' => $pertanyaan,
             'isiJawaban' => $isiJawaban,
             'buktiTersimpan' => $buktiTersimpan,
+            'hasil' => $this->skorService->hasil($isi),
         ]);
     }
 

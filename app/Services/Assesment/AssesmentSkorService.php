@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Assesment;
 
+use App\Enums\AssesmentIsiStatus;
+use App\Enums\AssesmentKelayakan;
 use App\Models\Assesment\AssesmentIsi;
+use App\Models\Assesment\AssesmentJawaban;
 
 /**
  * Menghitung skor satu AssesmentIsi. Spec (claude/fitur-assesment.md) tidak memberi rumus
@@ -48,5 +51,59 @@ class AssesmentSkorService
         }
 
         return round($total, 2);
+    }
+
+    /**
+     * Skor tertinggi yang mungkin dicapai: setiap pertanyaan untuk komoditas ini dijawab dengan
+     * jawaban berskor tertinggi. Rumusnya sama dengan hitung(), jadi skor / skorMaksimal = 100%
+     * kalau semua jawaban berskor tertinggi.
+     */
+    public function skorMaksimal(AssesmentIsi $isi): float
+    {
+        $isi->loadMissing(['assesment.pertanyaan.komoditas', 'assesment.pertanyaan.jawaban.komoditas']);
+
+        $total = 0.0;
+
+        foreach ($isi->assesment->pertanyaan as $pertanyaan) {
+            $bobot = $pertanyaan->komoditas->firstWhere('id', $isi->komoditas_id)?->pivot->bobot;
+
+            $skorTertinggi = $pertanyaan->jawaban
+                ->map(fn (AssesmentJawaban $jawaban): ?float => $jawaban->skorUntukKomoditas($isi->komoditas_id))
+                ->filter(fn (?float $skor): bool => $skor !== null)
+                ->max();
+
+            if ($bobot === null || $skorTertinggi === null) {
+                continue;
+            }
+
+            $total += ((float) $bobot / 100) * $skorTertinggi;
+        }
+
+        return $total;
+    }
+
+    /**
+     * Persentase skor entitas & hasil verifikasi terhadap skorMaksimal(), plus kategori kelayakan
+     * yang hanya diisi setelah assesment Verified.
+     *
+     * @return array{entitas: ?float, verifikasi: ?float, kelayakan: ?AssesmentKelayakan}
+     */
+    public function hasil(AssesmentIsi $isi): array
+    {
+        $maksimal = $isi->skor_entitas !== null || $isi->skor_total !== null ? $this->skorMaksimal($isi) : 0.0;
+
+        $persentase = fn (?string $skor): ?float => $skor !== null && $maksimal > 0
+            ? round(min(100.0, (float) $skor / $maksimal * 100), 2)
+            : null;
+
+        $verifikasi = $persentase($isi->skor_total);
+
+        return [
+            'entitas' => $persentase($isi->skor_entitas),
+            'verifikasi' => $verifikasi,
+            'kelayakan' => $isi->status === AssesmentIsiStatus::Verified && $verifikasi !== null
+                ? AssesmentKelayakan::fromPersentase($verifikasi)
+                : null,
+        ];
     }
 }
