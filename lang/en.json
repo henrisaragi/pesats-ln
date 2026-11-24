@@ -1041,5 +1041,14 @@
     "Upload Surat Pernyataan": "Upload Statement Letter",
     "Unggah Surat Pernyataan yang sudah ditandatangani (PDF/JPG/PNG, maks. 5 MB).": "Upload the signed Statement Letter (PDF/JPG/PNG, max. 5 MB).",
     "Surat Pernyataan": "Statement Letter",
-    "Pratinjau tidak tersedia untuk jenis file ini. Silakan unduh file melalui tombol Unduh.": "Preview is not available for this file type. Please download it using the Download button."
+    "Pratinjau tidak tersedia untuk jenis file ini. Silakan unduh file melalui tombol Unduh.": "Preview is not available for this file type. Please download it using the Download button.",
+    "Export Pertanyaan": "Export Questions",
+    "Import Pertanyaan": "Import Questions",
+    "File JSON": "JSON File",
+    "Import": "Import",
+    "Pertanyaan dari file JSON hasil export akan ditambahkan ke assesment \":judul\" setelah pertanyaan yang sudah ada.": "Questions from the exported JSON file will be appended to assessment \":judul\" after the existing questions.",
+    ":jumlah pertanyaan berhasil diimpor ke assesment \":judul\".": ":jumlah questions were successfully imported into assessment \":judul\".",
+    "File bukan hasil export pertanyaan assesment yang valid.": "The file is not a valid assessment question export.",
+    "Kode komoditas \":input\" tidak ditemukan di sistem.": "Commodity code \":input\" was not found in the system.",
+    "Pertanyaan ke-:nomor: skor setiap jawaban harus diisi tepat untuk komoditas pertanyaan tersebut.": "Question #:nomor: every answer must have a score for exactly the commodities of that question."
 }

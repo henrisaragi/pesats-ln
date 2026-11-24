@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Assesment;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Assesment\AssesmentPertanyaanImportRequest;
 use App\Http\Requests\Assesment\AssesmentPertanyaanRequest;
 use App\Models\Assesment\Assesment;
 use App\Models\Assesment\AssesmentAspek;
 use App\Models\Assesment\AssesmentPertanyaan;
 use App\Models\Komoditas;
+use App\Services\Assesment\AssesmentPertanyaanTransferService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -110,6 +113,31 @@ class AssesmentPertanyaanController extends Controller
 
         return redirect()->route('assesment.pertanyaan.index', $assesment)
             ->with('success', __('Pertanyaan berhasil dihapus.'));
+    }
+
+    public function export(Assesment $assesment, AssesmentPertanyaanTransferService $transfer): JsonResponse
+    {
+        $filename = 'pertanyaan-'.Str::slug($assesment->judul).'-'.now()->format('YmdHis').'.json';
+
+        return response()->json($transfer->export($assesment), 200, [
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Pertanyaan hasil impor ditambahkan setelah pertanyaan yang sudah ada.
+     */
+    public function import(AssesmentPertanyaanImportRequest $request, Assesment $assesment, AssesmentPertanyaanTransferService $transfer): RedirectResponse
+    {
+        if ($assesment->isi()->exists()) {
+            return redirect()->route('assesment.index')
+                ->with('error', __('Assesment ini sudah memiliki pengajuan entitas, struktur pertanyaan tidak dapat diubah.'));
+        }
+
+        $jumlah = $transfer->import($assesment, $request->pertanyaanItems());
+
+        return redirect()->route('assesment.index')
+            ->with('success', __(':jumlah pertanyaan berhasil diimpor ke assesment ":judul".', ['jumlah' => $jumlah, 'judul' => $assesment->judul]));
     }
 
     /**

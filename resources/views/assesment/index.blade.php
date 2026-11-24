@@ -41,6 +41,19 @@
                                                    href="{{ route('assesment.pertanyaan.index', $item) }}">
                                                     <i class="size-4" data-lucide="list-checks"></i>
                                                 </a>
+                                                <a aria-label="{{ __('Export Pertanyaan') }}" title="{{ __('Export Pertanyaan') }}"
+                                                   class="btn size-7.5 bg-default-200 hover:bg-primary/10 hover:text-primary text-default-500"
+                                                   href="{{ route('assesment.pertanyaan.export', $item) }}">
+                                                    <i class="size-4" data-lucide="download"></i>
+                                                </a>
+                                            @endcan
+                                            @can('assesment.create')
+                                                <button aria-label="{{ __('Import Pertanyaan') }}" title="{{ __('Import Pertanyaan') }}"
+                                                        class="btn size-7.5 bg-default-200 hover:bg-primary/10 hover:text-primary text-default-500"
+                                                        data-hs-overlay="#assesment-import-modal-{{ $item->id }}"
+                                                        type="button">
+                                                    <i class="size-4" data-lucide="upload"></i>
+                                                </button>
                                             @endcan
                                             @can('assesment.update')
                                                 <button aria-label="{{ __('Ubah') }}"
@@ -130,6 +143,57 @@
     @endcan
 
     @foreach ($items as $item)
+        @can('assesment.create')
+            <div aria-labelledby="assesment-import-modal-{{ $item->id }}-label" id="assesment-import-modal-{{ $item->id }}"
+                 class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none whitespace-normal"
+                 role="dialog" tabindex="-1">
+                <div
+                    class="hs-overlay-animation-target hs-overlay-open:scale-100 hs-overlay-open:opacity-100 scale-95 opacity-0 ease-in-out transition-all duration-200 sm:max-w-lg sm:w-full m-3 sm:mx-auto min-h-[calc(100%-56px)] flex items-center">
+                    <div class="w-full flex flex-col card border border-default-200 shadow-2xs rounded-xl pointer-events-auto">
+                        <div class="card-header">
+                            <h3 class="font-bold text-default-800 text-base" id="assesment-import-modal-{{ $item->id }}-label">
+                                {{ __('Import Pertanyaan') }}
+                            </h3>
+                            <button aria-label="{{ __('Tutup') }}" class="size-5 text-default-800"
+                                    data-hs-overlay="#assesment-import-modal-{{ $item->id }}" type="button">
+                                <span class="sr-only">{{ __('Tutup') }}</span>
+                                <i class="size-5" data-lucide="x"></i>
+                            </button>
+                        </div>
+                        <form action="{{ route('assesment.pertanyaan.import', $item) }}" enctype="multipart/form-data" method="POST">
+                            @csrf
+                            <input name="_modal" type="hidden" value="assesment-import-modal-{{ $item->id }}">
+                            <div class="p-4">
+                                <div class="flex flex-col gap-y-4">
+                                    <p class="text-sm text-default-500">
+                                        {{ __('Pertanyaan dari file JSON hasil export akan ditambahkan ke assesment ":judul" setelah pertanyaan yang sudah ada.', ['judul' => $item->judul]) }}
+                                    </p>
+                                    <div>
+                                        <label class="inline-block mb-2 text-sm font-medium"
+                                               for="assesment-import-file-{{ $item->id }}">
+                                            {{ __('File JSON') }}
+                                        </label>
+                                        <input accept=".json,application/json" class="form-input" id="assesment-import-file-{{ $item->id }}"
+                                               name="file" required type="file"/>
+                                        @if (old('_modal') === 'assesment-import-modal-'.$item->id && $errors->has('file'))
+                                            <p class="mt-1 text-xs text-danger">{{ $errors->first('file') }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
+                                <button class="btn bg-default-150" data-hs-overlay="#assesment-import-modal-{{ $item->id }}"
+                                        type="button">
+                                    {{ __('Batal') }}
+                                </button>
+                                <button class="btn bg-primary text-white" type="submit">{{ __('Import') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endcan
+
         @can('assesment.update')
             <div aria-labelledby="assesment-edit-modal-{{ $item->id }}-label" id="assesment-edit-modal-{{ $item->id }}"
                  class="hs-overlay hidden size-full fixed top-0 start-0 z-80 overflow-x-hidden overflow-y-auto pointer-events-none"
