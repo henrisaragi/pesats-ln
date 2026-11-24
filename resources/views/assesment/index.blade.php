@@ -175,10 +175,24 @@
                                         </label>
                                         <input accept=".json,application/json" class="form-input" id="assesment-import-file-{{ $item->id }}"
                                                name="file" required type="file"/>
-                                        @if (old('_modal') === 'assesment-import-modal-'.$item->id && $errors->has('file'))
-                                            <p class="mt-1 text-xs text-danger">{{ $errors->first('file') }}</p>
-                                        @endif
                                     </div>
+                                    @if (old('_modal') === 'assesment-import-modal-'.$item->id && $errors->has('file'))
+                                        @php($importErrors = $errors->get('file'))
+                                        <div class="rounded-lg border border-danger/30 bg-danger/5 p-3" role="alert">
+                                            <p class="flex items-center gap-1.5 text-sm font-semibold text-danger">
+                                                <i class="size-4 shrink-0" data-lucide="alert-triangle"></i>
+                                                {{ __('Import gagal, ditemukan :jumlah kesalahan pada file:', ['jumlah' => count($importErrors)]) }}
+                                            </p>
+                                            <ol class="mt-2 max-h-60 overflow-y-auto list-decimal ps-5 space-y-1 text-xs text-danger break-words">
+                                                @foreach ($importErrors as $importError)
+                                                    <li>{{ $importError }}</li>
+                                                @endforeach
+                                            </ol>
+                                            <p class="mt-2 text-xs text-default-500">
+                                                {{ __('Perbaiki file JSON atau data master terkait, lalu pilih file dan impor ulang.') }}
+                                            </p>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                             <div class="p-4 flex justify-end gap-2 border-t border-dashed border-default-900/10">
