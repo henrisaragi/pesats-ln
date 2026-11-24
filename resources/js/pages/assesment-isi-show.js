@@ -53,7 +53,7 @@ document.querySelectorAll('[data-bukti-upload]').forEach(function (widget) {
                 }
 
                 if (link) {
-                    link.href = data.preview_url;
+                    link.setAttribute('data-document-viewer-url', data.preview_url);
                     link.classList.remove('hidden');
                 }
             })

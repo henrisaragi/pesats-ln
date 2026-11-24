@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Controllers\AssesmentIsi;
 
 use App\Enums\AssesmentIsiStatus;
+use App\Enums\FiturPanduan;
 use App\Enums\KomoditasEntitasStatus;
 use App\Enums\NotificationCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssesmentIsi\AssesmentIsiJawabanRequest;
+use App\Http\Requests\AssesmentIsi\AssesmentIsiStoreRequest;
 use App\Models\Assesment\Assesment;
 use App\Models\Assesment\AssesmentIsi;
 use App\Models\Assesment\AssesmentIsiBukti;
 use App\Models\Entitas\Entitas;
 use App\Models\KomoditasEntitas;
+use App\Models\Panduan\TemplateSuratPernyataan;
+use App\Models\Panduan\VideoPanduan;
 use App\Models\User;
 use App\Notifications\AppNotification;
 use App\Services\Assesment\AssesmentSkorService;
@@ -66,17 +70,19 @@ class AssesmentIsiController extends Controller
 
         return view('assesment-isi.index', [
             'rows' => $rows,
+            'videoPanduan' => VideoPanduan::query()->untukFitur(FiturPanduan::AssesmentIsi)->oldest()->get(),
+            'templateSuratPernyataan' => TemplateSuratPernyataan::query()->untukFitur(FiturPanduan::AssesmentIsi)->oldest()->get(),
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    /**
+     * Dipanggil dari modal "Ikuti Assesment" (assesment-isi/partials/ikuti-modal.blade.php) yang
+     * mewajibkan upload Surat Pernyataan sebelum draft dibuat.
+     */
+    public function store(AssesmentIsiStoreRequest $request): RedirectResponse
     {
         $entity = $this->ownEntityOrAbort();
-
-        $data = $request->validate([
-            'assesment_id' => ['required', 'integer', 'exists:assesments,id'],
-            'komoditas_id' => ['required', 'integer', 'exists:komoditas,id'],
-        ]);
+        $data = $request->validated();
 
         $isKomoditasVerified = KomoditasEntitas::query()
             ->where('entitas_id', $entity->id)
@@ -93,16 +99,32 @@ class AssesmentIsiController extends Controller
             ->first();
 
         if ($isi === null) {
+            $file = $request->file('surat_pernyataan');
+            $path = $this->buildObjectKey($entity, 'surat-pernyataan', $file->extension() ?: 'pdf');
+
+            Storage::disk('s3')->put($path, file_get_contents($file->getRealPath()));
+
             $isi = AssesmentIsi::create([
                 'assesment_id' => $data['assesment_id'],
                 'entitas_id' => $entity->id,
                 'komoditas_id' => $data['komoditas_id'],
                 'status' => AssesmentIsiStatus::Draft,
+                'surat_pernyataan_path' => $path,
+                'surat_pernyataan_filename' => $file->getClientOriginalName(),
                 'created_by' => Auth::id(),
             ]);
         }
 
         return redirect()->route('assesment-isi.show', $isi);
+    }
+
+    public function previewSuratPernyataan(AssesmentIsi $isi): RedirectResponse
+    {
+        $this->authorizeAccess($isi);
+
+        abort_if($isi->surat_pernyataan_path === null, 404);
+
+        return redirect(Storage::disk('s3')->temporaryUrl($isi->surat_pernyataan_path, now()->addMinutes(10)));
     }
 
     public function show(AssesmentIsi $isi): View

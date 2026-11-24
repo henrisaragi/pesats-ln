@@ -9,9 +9,18 @@
         <a class="text-primary hover:underline inline-flex items-center gap-1" href="{{ route('assesment-isi.verifikasi.index') }}">
             <i class="size-4" data-lucide="arrow-left"></i>{{ __('Kembali') }}
         </a>
-        <div class="text-end">
-            <p class="font-semibold text-default-800">{{ $isi->entitas->name }}</p>
-            <p class="text-sm text-default-500">{{ $isi->assesment->judul }} - {{ $isi->komoditas->name }}</p>
+        <div class="flex items-center gap-3">
+            @if ($isi->surat_pernyataan_path)
+                <button class="btn btn-sm bg-default-150 inline-flex items-center gap-1" data-hs-overlay="#surat-pernyataan-viewer-modal"
+                        data-document-viewer-title="{{ __('Surat Pernyataan') }}"
+                        data-document-viewer-url="{{ route('assesment-isi.surat-pernyataan.preview', $isi) }}" type="button">
+                    <i class="size-4" data-lucide="file-pen"></i>{{ __('Surat Pernyataan') }}
+                </button>
+            @endif
+            <div class="text-end">
+                <p class="font-semibold text-default-800">{{ $isi->entitas->name }}</p>
+                <p class="text-sm text-default-500">{{ $isi->assesment->judul }} - {{ $isi->komoditas->name }}</p>
+            </div>
         </div>
     </div>
 
@@ -227,6 +236,8 @@
             @endforelse
         </div>
     </div>
+
+    <x-document-viewer-modal id="surat-pernyataan-viewer-modal"/>
 @endsection
 
 @section('scripts')

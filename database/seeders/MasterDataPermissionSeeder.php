@@ -29,6 +29,8 @@ class MasterDataPermissionSeeder extends Seeder
         'entity-profiles',
         'documents',
         'assesment',
+        'template-surat-pernyataan',
+        'video-panduan',
     ];
 
     private const ACTIONS = ['view', 'create', 'update', 'delete'];

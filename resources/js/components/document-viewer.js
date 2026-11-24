@@ -36,6 +36,8 @@ document.addEventListener('click', function (event) {
     modal.dataset.documentViewerPendingUrl = trigger.getAttribute('data-document-viewer-url') || '';
     modal.dataset.documentViewerPendingTitle = trigger.getAttribute('data-document-viewer-title') || '';
     modal.dataset.documentViewerPendingDownloadUrl = trigger.getAttribute('data-document-viewer-download-url') || '';
+    // Atribut ada tapi kosong = file tidak bisa dipratinjau (mis. DOC/DOCX).
+    modal.dataset.documentViewerPendingUnsupported = trigger.getAttribute('data-document-viewer-url') === '' ? '1' : '';
 });
 
 document.querySelectorAll('[data-document-viewer-modal]').forEach(function (modal) {
@@ -44,8 +46,17 @@ document.querySelectorAll('[data-document-viewer-modal]').forEach(function (moda
         const title = modal.querySelector('[data-document-viewer-title]');
         const downloadLink = modal.querySelector('[data-document-viewer-download]');
 
+        const unsupported = modal.querySelector('[data-document-viewer-unsupported]');
+        const isUnsupported = modal.dataset.documentViewerPendingUnsupported === '1';
+        modal.dataset.documentViewerPendingUnsupported = '';
+
         if (frame) {
             frame.src = withToolbarHidden(modal.dataset.documentViewerPendingUrl) || 'about:blank';
+        }
+
+        if (unsupported) {
+            unsupported.classList.toggle('hidden', !isUnsupported);
+            unsupported.classList.toggle('flex', isUnsupported);
         }
 
         if (title) {

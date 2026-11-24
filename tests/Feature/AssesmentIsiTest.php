@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\AssesmentIsiStatus;
+use App\Enums\FiturPanduan;
 use App\Enums\KomoditasEntitasStatus;
 use App\Models\Assesment\Assesment;
 use App\Models\Assesment\AssesmentAspek;
@@ -13,6 +14,8 @@ use App\Models\Assesment\AssesmentPertanyaan;
 use App\Models\Entitas\Entitas;
 use App\Models\Komoditas;
 use App\Models\KomoditasEntitas;
+use App\Models\Panduan\TemplateSuratPernyataan;
+use App\Models\Panduan\VideoPanduan;
 use App\Models\User;
 use Database\Seeders\MasterDataPermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -86,6 +89,11 @@ class AssesmentIsiTest extends TestCase
         return compact('assesment', 'pertanyaan', 'jawabanYa', 'jawabanTidak', 'bukti');
     }
 
+    private function suratPernyataan(): UploadedFile
+    {
+        return UploadedFile::fake()->create('surat-pernyataan.pdf', 100, 'application/pdf');
+    }
+
     private function verifyKomoditasFor(User $user, Komoditas $komoditas): void
     {
         KomoditasEntitas::create([
@@ -116,6 +124,29 @@ class AssesmentIsiTest extends TestCase
         $response->assertDontSee('Mamalia');
     }
 
+    public function test_ikuti_modal_lists_only_active_video_panduan_and_templates(): void
+    {
+        $user = $this->makeEntitasUser();
+        $reptil = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        $this->makeAssesmentWithPertanyaan($reptil);
+        $this->verifyKomoditasFor($user, $reptil);
+
+        VideoPanduan::create(['judul' => 'Video Aktif', 'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'fitur' => [FiturPanduan::AssesmentIsi]]);
+        VideoPanduan::create(['judul' => 'Video Nonaktif', 'video_url' => 'https://example.test/a.mp4', 'fitur' => [FiturPanduan::AssesmentIsi], 'is_active' => false]);
+        $template = TemplateSuratPernyataan::create(['judul' => 'Template Aktif', 'file_path' => 'a.pdf', 'fitur' => [FiturPanduan::AssesmentIsi]]);
+        TemplateSuratPernyataan::create(['judul' => 'Template Nonaktif', 'file_path' => 'b.pdf', 'fitur' => [FiturPanduan::AssesmentIsi], 'is_active' => false]);
+
+        $response = $this->actingAs($user)->get(route('assesment-isi.index'));
+
+        $response->assertOk();
+        $response->assertSee('data-hs-overlay="#assesment-ikuti-modal"', false);
+        $response->assertSee('Video Aktif');
+        $response->assertSee('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ', false);
+        $response->assertSee(route('template-surat-pernyataan.download', $template), false);
+        $response->assertDontSee('Video Nonaktif');
+        $response->assertDontSee('Template Nonaktif');
+    }
+
     public function test_entitas_can_start_answer_and_submit_a_complete_assesment(): void
     {
         $user = $this->makeEntitasUser();
@@ -127,6 +158,7 @@ class AssesmentIsiTest extends TestCase
         $this->actingAs($user)->post(route('assesment-isi.store'), [
             'assesment_id' => $assesment->id,
             'komoditas_id' => $reptil->id,
+            'surat_pernyataan' => $this->suratPernyataan(),
         ])->assertRedirect();
 
         $isi = AssesmentIsi::where('entitas_id', $user->entity_id)->firstOrFail();
@@ -178,6 +210,7 @@ class AssesmentIsiTest extends TestCase
         $this->actingAs($user)->post(route('assesment-isi.store'), [
             'assesment_id' => $assesment->id,
             'komoditas_id' => $reptil->id,
+            'surat_pernyataan' => $this->suratPernyataan(),
         ]);
 
         $isi = AssesmentIsi::where('entitas_id', $user->entity_id)->firstOrFail();
@@ -213,6 +246,7 @@ class AssesmentIsiTest extends TestCase
         $this->actingAs($user)->post(route('assesment-isi.store'), [
             'assesment_id' => $assesment->id,
             'komoditas_id' => $reptil->id,
+            'surat_pernyataan' => $this->suratPernyataan(),
         ]);
 
         $isi = AssesmentIsi::where('entitas_id', $user->entity_id)->firstOrFail();
@@ -238,6 +272,7 @@ class AssesmentIsiTest extends TestCase
         $this->actingAs($user)->post(route('assesment-isi.store'), [
             'assesment_id' => $assesment->id,
             'komoditas_id' => $reptil->id,
+            'surat_pernyataan' => $this->suratPernyataan(),
         ]);
 
         $isi = AssesmentIsi::where('entitas_id', $user->entity_id)->firstOrFail();
@@ -262,6 +297,7 @@ class AssesmentIsiTest extends TestCase
         $this->actingAs($user)->post(route('assesment-isi.store'), [
             'assesment_id' => $assesment->id,
             'komoditas_id' => $reptil->id,
+            'surat_pernyataan' => $this->suratPernyataan(),
         ]);
 
         $isi = AssesmentIsi::where('entitas_id', $user->entity_id)->firstOrFail();
@@ -271,6 +307,35 @@ class AssesmentIsiTest extends TestCase
 
         $isi->refresh();
         $this->assertSame(AssesmentIsiStatus::Draft, $isi->status);
+    }
+
+    public function test_starting_an_assesment_requires_and_stores_the_surat_pernyataan(): void
+    {
+        $user = $this->makeEntitasUser();
+        $reptil = Komoditas::create(['name' => 'Reptil', 'code' => 'RPT']);
+        ['assesment' => $assesment] = $this->makeAssesmentWithPertanyaan($reptil);
+        $this->verifyKomoditasFor($user, $reptil);
+
+        $this->actingAs($user)->post(route('assesment-isi.store'), [
+            'assesment_id' => $assesment->id,
+            'komoditas_id' => $reptil->id,
+        ])->assertSessionHasErrors(['surat_pernyataan' => 'Surat Pernyataan wajib diisi.']);
+
+        $this->assertSame(0, AssesmentIsi::count());
+
+        $this->actingAs($user)->post(route('assesment-isi.store'), [
+            'assesment_id' => $assesment->id,
+            'komoditas_id' => $reptil->id,
+            'surat_pernyataan' => $this->suratPernyataan(),
+        ])->assertRedirect();
+
+        $isi = AssesmentIsi::sole();
+
+        $this->assertSame('surat-pernyataan.pdf', $isi->surat_pernyataan_filename);
+        Storage::disk('s3')->assertExists($isi->surat_pernyataan_path);
+
+        $this->actingAs($user)->get(route('assesment-isi.surat-pernyataan.preview', $isi))->assertRedirect();
+        $this->actingAs($this->makeEntitasUser())->get(route('assesment-isi.surat-pernyataan.preview', $isi))->assertForbidden();
     }
 
     public function test_cannot_start_the_same_assesment_komoditas_twice(): void
@@ -284,11 +349,13 @@ class AssesmentIsiTest extends TestCase
         $this->actingAs($user)->post(route('assesment-isi.store'), [
             'assesment_id' => $assesment->id,
             'komoditas_id' => $reptil->id,
+            'surat_pernyataan' => $this->suratPernyataan(),
         ]);
 
         $this->actingAs($user)->post(route('assesment-isi.store'), [
             'assesment_id' => $assesment->id,
             'komoditas_id' => $reptil->id,
+            'surat_pernyataan' => $this->suratPernyataan(),
         ]);
 
         $this->assertSame(1, AssesmentIsi::where('entitas_id', $user->entity_id)->count());
@@ -303,6 +370,7 @@ class AssesmentIsiTest extends TestCase
         $this->actingAs($user)->post(route('assesment-isi.store'), [
             'assesment_id' => $assesment->id,
             'komoditas_id' => $reptil->id,
+            'surat_pernyataan' => $this->suratPernyataan(),
         ])->assertForbidden();
     }
 }

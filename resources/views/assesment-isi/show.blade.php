@@ -12,6 +12,13 @@
             <i class="size-4" data-lucide="arrow-left"></i>{{ __('Kembali') }}
         </a>
         <div class="flex items-center gap-2 flex-wrap justify-end">
+            @if ($isi->surat_pernyataan_path)
+                <button class="btn btn-sm bg-default-150 inline-flex items-center gap-1" data-hs-overlay="#surat-pernyataan-viewer-modal"
+                        data-document-viewer-title="{{ __('Surat Pernyataan') }}"
+                        data-document-viewer-url="{{ route('assesment-isi.surat-pernyataan.preview', $isi) }}" type="button">
+                    <i class="size-4" data-lucide="file-pen"></i>{{ __('Surat Pernyataan') }}
+                </button>
+            @endif
             @if ($isi->skor_entitas !== null)
                 <span class="text-xs text-default-600">
                     {{ __('Skor Jawaban Anda') }}: <strong>{{ number_format((float) $isi->skor_entitas, 2) }}</strong>
@@ -101,12 +108,14 @@
                                                 <i class="animate-spin size-3.5 inline-block" data-lucide="loader-circle"></i>
                                                 {{ __('Mengunggah...') }}
                                             </span>
-                                            <a class="text-primary hover:underline {{ $existing ? '' : 'hidden' }}"
-                                               data-bukti-link href="{{ $existing?->file_path ? route('assesment-isi.bukti.preview', $existing) : '#' }}"
-                                               target="_blank">
+                                            <button class="text-primary hover:underline {{ $existing ? '' : 'hidden' }}"
+                                                    data-bukti-link data-hs-overlay="#surat-pernyataan-viewer-modal"
+                                                    data-document-viewer-title="{{ $bukti->label }}"
+                                                    data-document-viewer-url="{{ $existing?->file_path ? route('assesment-isi.bukti.preview', $existing) : '' }}"
+                                                    type="button">
                                                 <i class="size-3.5 inline-block" data-lucide="file-text"></i>
                                                 <span data-bukti-filename>{{ $existing?->original_filename }}</span>
-                                            </a>
+                                            </button>
                                             <span class="hidden text-danger" data-bukti-error></span>
                                         </div>
                                     </div>
@@ -131,6 +140,8 @@
             </p>
         @endif
     </form>
+
+    <x-document-viewer-modal id="surat-pernyataan-viewer-modal"/>
 @endsection
 
 @section('scripts')

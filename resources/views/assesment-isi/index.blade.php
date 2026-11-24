@@ -56,14 +56,12 @@
                                                 @endif
                                             </a>
                                         @else
-                                            <form action="{{ route('assesment-isi.store') }}" method="POST">
-                                                @csrf
-                                                <input name="assesment_id" type="hidden" value="{{ $row['assesment']->id }}">
-                                                <input name="komoditas_id" type="hidden" value="{{ $row['komoditas']->id }}">
-                                                <button class="btn btn-sm bg-primary text-white" type="submit">
-                                                    {{ __('Ikuti Assesment') }}
-                                                </button>
-                                            </form>
+                                            <button class="btn btn-sm bg-primary text-white" data-assesment-ikuti
+                                                    data-assesment-id="{{ $row['assesment']->id }}"
+                                                    data-hs-overlay="#assesment-ikuti-modal"
+                                                    data-komoditas-id="{{ $row['komoditas']->id }}" type="button">
+                                                {{ __('Ikuti Assesment') }}
+                                            </button>
                                         @endif
                                     </td>
                                 </tr>
@@ -81,8 +79,11 @@
             </div>
         </div>
     </div>
+
+    @include('assesment-isi.partials.ikuti-modal')
+    <x-document-viewer-modal id="assesment-panduan-viewer-modal"/>
 @endsection
 
 @section('scripts')
-
+    @vite(['resources/js/pages/assesment-isi-index.js'])
 @endsection

@@ -15,6 +15,7 @@ require __DIR__.'/users.php';
 require __DIR__.'/komoditas-entitas.php';
 require __DIR__.'/assesment.php';
 require __DIR__.'/assesment-isi.php';
+require __DIR__.'/panduan.php';
 require __DIR__.'/kuota-perusahaan.php';
 require __DIR__.'/kuota-tangkap.php';
 require __DIR__.'/permohonan-export.php';

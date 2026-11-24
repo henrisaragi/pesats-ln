@@ -39,6 +39,8 @@ class AssesmentIsi extends Model
         'skor_total',
         'skor_entitas',
         'sertifikat_path',
+        'surat_pernyataan_path',
+        'surat_pernyataan_filename',
         'created_by',
     ];
 

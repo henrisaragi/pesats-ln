@@ -214,6 +214,22 @@
                     'route' => 'documents.index',
                     'permission' => 'documents.view',
                 ],
+                [
+                    'label' => __('Panduan'),
+                    'icon' => 'book-open',
+                    'children' => [
+                        [
+                            'label' => __('Template Surat Pernyataan'),
+                            'route' => 'template-surat-pernyataan.index',
+                            'permission' => 'template-surat-pernyataan.view',
+                        ],
+                        [
+                            'label' => __('Video Panduan'),
+                            'route' => 'video-panduan.index',
+                            'permission' => 'video-panduan.view',
+                        ],
+                    ],
+                ],
             ],
         ],
         [

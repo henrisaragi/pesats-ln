@@ -26,6 +26,7 @@ Route::middleware('auth')->prefix('assesment-isi')->name('assesment-isi.')->grou
     // formaction berbeda (lihat assesment-isi/show.blade.php); PUT butuh spoofing _method yang
     // akan ikut membelokkan tombol "Submit" (formaction ke rute submit) jadi request PUT juga.
     Route::post('{isi}', [AssesmentIsiController::class, 'update'])->middleware('permission:assesment-isi.create')->name('update');
+    Route::get('{isi}/surat-pernyataan', [AssesmentIsiController::class, 'previewSuratPernyataan'])->middleware('permission:assesment-isi.view|assesment-isi.verify|assesment-isi.view-all')->name('surat-pernyataan.preview');
     Route::post('{isi}/submit', [AssesmentIsiController::class, 'submit'])->middleware('permission:assesment-isi.create')->name('submit');
     Route::post('{isi}/bukti/{buktiDukungId}', [AssesmentIsiController::class, 'uploadBukti'])->middleware('permission:assesment-isi.create')->name('bukti.upload');
 });
