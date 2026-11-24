@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\RoutingController;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 
 Route::get('locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
@@ -25,8 +27,11 @@ require __DIR__.'/settings.php';
 require __DIR__.'/notifications.php';
 require __DIR__.'/chat.php';
 
+Route::middleware('auth')->get('dashboards', [DashboardController::class, 'index'])->name('dashboards.index');
+Route::get('dashboards/index', fn (): RedirectResponse => redirect()->route('dashboards.index', status: 301));
+
 Route::group(['prefix' => '/'], function () {
-    Route::get('', [RoutingController::class, 'index'])->middleware('auth')->name('root');
+    Route::get('', fn (): RedirectResponse => redirect()->route('dashboards.index'))->middleware('auth')->name('root');
     Route::get('{first}/{second}/{third}', [RoutingController::class, 'thirdLevel'])->name('third');
     Route::get('{first}/{second}', [RoutingController::class, 'secondLevel'])->name('second');
     Route::get('{any}', [RoutingController::class, 'root'])->name('any');

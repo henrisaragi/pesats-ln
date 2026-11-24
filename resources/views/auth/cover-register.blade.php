@@ -10,7 +10,7 @@
         <div class="relative">
             <div class="bg-card/70 rounded-lg w-lg relative">
                 <div class="text-center px-10 py-12">
-                    <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
+                    <a class="flex justify-center" href="{{ route('dashboards.index') }}">
                         <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                         <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                     </a>
@@ -19,7 +19,7 @@
                         <p class="text-base text-default-500">Sign in to continue to Tailwick.</p>
                     </div>
                     <!-- form -->
-                    <form action="{{ route('second', ['dashboards', 'index']) }}" class="text-left w-full mt-10">
+                    <form action="{{ route('dashboards.index') }}" class="text-left w-full mt-10">
                         <div class="mb-4">
                             <label class="block font-medium text-default-900 text-sm mb-2" for="email">Enter
                                 email</label>

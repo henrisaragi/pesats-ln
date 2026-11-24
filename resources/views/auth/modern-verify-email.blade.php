@@ -95,7 +95,7 @@
         </div>
         <div class="relative z-10 flex items-center justify-center min-h-screen px-10 py-14 flex-grow">
             <div>
-                <a class="" href="{{ route('second', ['dashboards', 'index']) }}">
+                <a class="" href="{{ route('dashboards.index') }}">
                     <img alt="" class="h-7 mb-14 mx-auto block" src="{{ asset('images/logo-light.png') }}"/>
                 </a>
                 <img alt="" class="mx-auto rounded-xl block object-cover w-md" src="{{ asset('images/auth-modern.png') }}"/>

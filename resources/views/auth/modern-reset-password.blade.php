@@ -74,7 +74,7 @@
                     <div class="p-3 mb-6 text-warning rounded-md bg-warning/15">
                         Provide your email address, and instructions will be sent to you
                     </div>
-                    <form action="{{ route('second', ['dashboards', 'index']) }}" class="mx-auto">
+                    <form action="{{ route('dashboards.index') }}" class="mx-auto">
                         <div class="text-start">
                             <label class="inline-block mb-2 text-sm text-default-800 font-medium"
                                    for="Email">Email</label>
@@ -104,7 +104,7 @@
         </div>
         <div class="relative z-10 flex items-center justify-center min-h-screen px-10 py-14 grow">
             <div>
-                <a class="" href="{{ route('second', ['dashboards', 'index']) }}">
+                <a class="" href="{{ route('dashboards.index') }}">
                     <img alt="" class="h-7 mb-14 mx-auto block" src="{{ asset('images/logo-light.png') }}"/>
                 </a>
                 <img alt="" class="mx-auto rounded-xl block object-cover w-md" src="{{ asset('images/auth-modern.png') }}"/>

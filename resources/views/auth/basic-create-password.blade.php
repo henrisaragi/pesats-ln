@@ -9,7 +9,7 @@
         <div class="card md:w-lg w-screen z-10">
             <div class="text-center px-10 py-12">
                 <!-- Logo -->
-                <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
+                <a class="flex justify-center" href="{{ route('dashboards.index') }}">
                     <img alt="logo dark" class="h-6 flex dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                     <img alt="" class="h-6 hidden dark:flex" src="{{ asset('images/logo-light.png') }}"/>
                 </a>
@@ -18,7 +18,7 @@
                     <p class="text-base/normal mb-8 text-default-500">Your new password should be distinct from any of
                         your prior passwords</p>
                 </div>
-                <form action="{{ route('second', ['dashboards', 'index']) }}">
+                <form action="{{ route('dashboards.index') }}">
                     <div class="text-start">
                         <label class="inline-block mb-2 text-sm text-default-800 font-medium"
                                for="Email">Password</label>

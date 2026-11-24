@@ -107,7 +107,11 @@ class AuthenticationController extends Controller
 
         $this->flashExpiringKomoditasAlert($user);
 
-        return redirect()->intended(route('second', ['dashboards', 'index']));
+        // Login baru selalu mendarat di dashboard; kembali ke halaman terakhir hanya untuk alur
+        // input ulang password setelah idle (ReauthenticateController).
+        $request->session()->forget('url.intended');
+
+        return redirect()->route('dashboards.index');
     }
 
     public function resendOtp(Request $request): RedirectResponse

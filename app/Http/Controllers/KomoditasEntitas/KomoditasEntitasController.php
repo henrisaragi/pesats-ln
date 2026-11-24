@@ -28,13 +28,6 @@ use Throwable;
 
 class KomoditasEntitasController extends Controller
 {
-    /**
-     * Entity types allowed to submit komoditas entitas registrations.
-     *
-     * @var list<string>
-     */
-    private const ALLOWED_ENTITY_TYPES = ['perusahaan', 'penangkaran'];
-
     public function __construct(private readonly KomoditasEntitasAutoVerifikasiService $autoVerifikasiService) {}
 
     public function index(): View
@@ -276,7 +269,7 @@ class KomoditasEntitasController extends Controller
         $entity = Auth::user()->entity;
 
         abort_unless(
-            $entity !== null && in_array($entity->entity_type, self::ALLOWED_ENTITY_TYPES, true),
+            $entity !== null && in_array($entity->entity_type, KomoditasEntitas::ALLOWED_ENTITY_TYPES, true),
             403
         );
 

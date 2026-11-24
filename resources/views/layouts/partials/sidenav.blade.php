@@ -2,7 +2,7 @@
 <aside class="app-menu" id="app-menu">
     <!-- Sidenav Menu Brand Logo -->
     <a class="logo-box sticky top-0 flex min-h-topbar-height items-center justify-start px-6 backdrop-blur-xs border-b border-default-200"
-        href="{{ route('second', ['dashboards', 'index']) }}">
+        href="{{ route('dashboards.index') }}">
         <!-- Light Brand Logo -->
         <div class="logo-light">
             <img alt="Light logo" class="logo-lg h-6" src="{{ asset('images/logo-light.png') }}" />

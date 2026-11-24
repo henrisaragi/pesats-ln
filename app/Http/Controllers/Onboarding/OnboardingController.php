@@ -147,7 +147,7 @@ class OnboardingController extends Controller
     private function redirectIfAlreadyCompleted(User $user): ?RedirectResponse
     {
         return $user->onboarding_completed
-            ? redirect()->route('second', ['dashboards', 'index'])
+            ? redirect()->route('dashboards.index')
             : null;
     }
 }

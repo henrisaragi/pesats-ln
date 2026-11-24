@@ -10,7 +10,7 @@
         <div class="relative">
             <div class="bg-default-50 rounded-lg w-lg relative">
                 <div class="text-center px-10 py-12">
-                    <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
+                    <a class="flex justify-center" href="{{ route('dashboards.index') }}">
                         <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                         <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                     </a>
@@ -22,7 +22,7 @@
                         <p class="mb-6 text-base text-default-500">It will be as straightforward as Occidental; in fact,
                             it
                             will be just like Occidental to an English speaker.</p>
-                        <a href="{{ route('second', ['dashboards', 'index']) }}">
+                        <a href="{{ route('dashboards.index') }}">
                             <button
                                 class="bg-primary text-white hover:bg-blue-600 rounded text-[13px] py-2 px-4 inline-flex items-center"
                                 type="button">

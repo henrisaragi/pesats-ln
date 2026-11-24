@@ -10,7 +10,7 @@
         <div class="relative">
             <div class="bg-default-50 rounded-lg w-lg relative">
                 <div class="text-center px-10 py-12">
-                    <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
+                    <a class="flex justify-center" href="{{ route('dashboards.index') }}">
                         <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                         <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                     </a>
@@ -19,7 +19,7 @@
                         <p class="text-base mb-8 text-default-500">Please enter the 4 digit code sent to
                             tailwick@themesdesign.in</p>
                     </div>
-                    <form action="{{ route('second', ['dashboards', 'index']) }}">
+                    <form action="{{ route('dashboards.index') }}">
                         <div class="grid grid-cols-4 gap-2">
                             <input class="form-input text-center" maxlength="1" placeholder="•" type="text"/>
                             <input class="form-input text-center" maxlength="1" placeholder="•" type="text"/>

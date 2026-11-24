@@ -14,6 +14,13 @@ class KomoditasEntitas extends Model
 {
     use HasFactory;
 
+    /**
+     * Tipe entitas yang boleh mengajukan komoditas entitas.
+     *
+     * @var list<string>
+     */
+    public const ALLOWED_ENTITY_TYPES = ['perusahaan', 'penangkaran'];
+
     protected $table = 'komoditas_entitas';
 
     /**

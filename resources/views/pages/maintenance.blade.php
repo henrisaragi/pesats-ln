@@ -10,7 +10,7 @@
         <div class="relative">
             <div class="bg-default-100 rounded-lg w-lg relative">
                 <div class="text-center px-10 py-12">
-                    <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
+                    <a class="flex justify-center" href="{{ route('dashboards.index') }}">
                         <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                         <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                     </a>
@@ -22,7 +22,7 @@
                             Mode !!!</h4>
                         <p class="mb-6 text-base text-default-500">Website is Under Construction. Please check back
                             later!</p>
-                        <a href="{{ route('second', ['dashboards', 'index']) }}">
+                        <a href="{{ route('dashboards.index') }}">
                             <button class="btn bg-primary text-white" type="button">
                                 <i class="size-3.5" data-lucide="home"></i>
                                 Back to Home

@@ -1,22 +1,37 @@
 @php
     $menuSections = [
         [
+            'title' => __('Home'),
+            'items' => [
+                [
+                    'label' => __('Dashboard'),
+                    'tour' => __('Halaman beranda: ringkasan status verifikasi komoditas dan assesment pada Tahun Aktif.'),
+                    'icon' => 'layout-dashboard',
+                    'route' => 'dashboards.index',
+                    'permission' => null,
+                ],
+            ],
+        ],
+        [
             'title' => __('Administrasi'),
             'items' => [
                 [
                     'label' => __('Role'),
+                    'tour' => __('Kelola role (peran) pengguna beserta hak akses yang dimiliki tiap role.'),
                     'icon' => 'users-round',
                     'route' => 'roles.index',
                     'permission' => 'roles.view',
                 ],
                 [
                     'label' => __('Permission'),
+                    'tour' => __('Kelola daftar permission yang dapat diberikan ke role.'),
                     'icon' => 'key-round',
                     'route' => 'permissions.index',
                     'permission' => 'permissions.view',
                 ],
                 [
                     'label' => __('Entitas'),
+                    'tour' => __('Kelola data entitas (perusahaan, penangkaran, dll.) beserta user yang terdaftar di dalamnya.'),
                     'icon' => 'building-2',
                     'children' => [
                         [
@@ -38,54 +53,63 @@
             'items' => [
                 [
                     'label' => __('Kuota'),
+                    'tour' => __('Lihat kuota perusahaan Anda beserta realisasinya.'),
                     'icon' => 'gauge',
                     'route' => 'kuota-saya.index',
                     'permission' => 'kuota-saya.view',
                 ],
                 [
                     'label' => __('Kuota Ekspor Saya'),
+                    'tour' => __('Lihat pembagian kuota ekspor yang dialokasikan untuk entitas Anda.'),
                     'icon' => 'fish',
                     'route' => 'kuota-tangkap-saya.index',
                     'permission' => 'kuota.view-own',
                 ],
                 [
                     'label' => __('Customer'),
+                    'tour' => __('Kelola data customer (pembeli) tujuan ekspor Anda.'),
                     'icon' => 'contact',
                     'route' => 'customer.index',
                     'permission' => 'customer.view',
                 ],
                 [
                     'label' => __('Komoditas Entitas'),
+                    'tour' => __('Ajukan dan pantau sertifikat komoditas yang dimiliki entitas Anda.'),
                     'icon' => 'package',
                     'route' => 'komoditas-entitas.index',
                     'permission' => 'komoditas-entitas.view',
                 ],
                 [
                     'label' => __('Verifikasi Komoditas'),
+                    'tour' => __('Verifikasi pengajuan sertifikat komoditas dari entitas.'),
                     'icon' => 'shield-check',
                     'route' => 'komoditas-entitas.verifikasi.index',
                     'permission' => 'komoditas-entitas.verify',
                 ],
                 [
                     'label' => __('Assesment'),
+                    'tour' => __('Isi assesment untuk komoditas yang sudah terverifikasi dan pantau hasilnya.'),
                     'icon' => 'clipboard-check',
                     'route' => 'assesment-isi.index',
                     'permission' => 'assesment-isi.view',
                 ],
                 [
                     'label' => __('Verifikasi Assesment'),
+                    'tour' => __('Periksa dan verifikasi assesment yang sudah dikirim entitas.'),
                     'icon' => 'shield-check',
                     'route' => 'assesment-isi.verifikasi.index',
                     'permission' => 'assesment-isi.verify',
                 ],
                 [
                     'label' => __('SATS-LN Ekspor'),
+                    'tour' => __('Ajukan dan pantau permohonan SATS-LN ekspor.'),
                     'icon' => 'file-text',
                     'route' => 'permohonan-export.index',
                     'permission' => 'permohonan-export.view',
                 ],
                 [
                     'label' => __('Verifikasi Ekspor'),
+                    'tour' => __('Verifikasi permohonan SATS-LN ekspor, termasuk daftar verifikasi yang ditugaskan kepada Anda.'),
                     'icon' => 'shield-check',
                     'children' => [
                         [
@@ -102,6 +126,7 @@
                 ],
                 [
                     'label' => __('Chat'),
+                    'tour' => __('Percakapan langsung antara entitas dan petugas layanan.'),
                     'icon' => 'messages-square',
                     'route' => 'chat.index',
                     'permission' => ['chat.start', 'chat.respond'],
@@ -113,6 +138,7 @@
             'items' => [
                 [
                     'label' => __('Master Data'),
+                    'tour' => __('Kelola data referensi: wilayah, pelabuhan, komoditas, spesies, assesment, dan lainnya.'),
                     'icon' => 'database',
                     'children' => [
                         [
@@ -179,6 +205,7 @@
                 ],
                 [
                     'label' => __('Database Kuota'),
+                    'tour' => __('Kelola kuota nasional, kuota perusahaan, serta pembagian dan pengaturan kuota ekspor.'),
                     'icon' => 'gauge',
                     'children' => [
                         [
@@ -210,12 +237,14 @@
             'items' => [
                 [
                     'label' => __('Dokumen'),
+                    'tour' => __('Kumpulan dokumen yang dapat diunduh.'),
                     'icon' => 'file-text',
                     'route' => 'documents.index',
                     'permission' => 'documents.view',
                 ],
                 [
                     'label' => __('Panduan'),
+                    'tour' => __('Template surat pernyataan dan video panduan penggunaan aplikasi.'),
                     'icon' => 'book-open',
                     'children' => [
                         [
@@ -237,12 +266,14 @@
             'items' => [
                 [
                     'label' => __('Whatsapp'),
+                    'tour' => __('Pengaturan integrasi notifikasi WhatsApp.'),
                     'icon' => 'message-circle',
                     'route' => 'settings.whatsapp.index',
                     'permission' => 'settings.whatsapp.manage',
                 ],
                 [
                     'label' => __('Status Server'),
+                    'tour' => __('Pantau status proses dan layanan server.'),
                     'icon' => 'server',
                     'route' => 'settings.server-status.index',
                     'permission' => 'settings.server-status.view',
@@ -288,7 +319,8 @@
             @foreach ($visibleItems as $item)
                 @if (!empty($item['children']))
                     @php $visibleChildren = collect($item['children'])->filter($isMenuItemVisible); @endphp
-                    <li class="menu-item hs-accordion">
+                    <li class="menu-item hs-accordion" data-sidebar-tour
+                        data-tour-title="{{ $item['label'] }}" data-tour-description="{{ $item['tour'] }}">
                         <a class="hs-accordion-toggle menu-link" href="javascript:void(0)">
                             <span class="menu-icon"><i data-lucide="{{ $item['icon'] }}"></i></span>
                             <span class="menu-text">{{ $item['label'] }}</span>
@@ -305,7 +337,8 @@
                         </ul>
                     </li>
                 @else
-                    <li class="menu-item">
+                    <li class="menu-item" data-sidebar-tour
+                        data-tour-title="{{ $item['label'] }}" data-tour-description="{{ $item['tour'] }}">
                         <a class="menu-link" href="{{ route($item['route']) }}">
                             <span class="menu-icon"><i data-lucide="{{ $item['icon'] }}"></i></span>
                             <div class="menu-text">{{ $item['label'] }}</div>

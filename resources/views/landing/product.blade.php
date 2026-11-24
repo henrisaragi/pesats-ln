@@ -10,7 +10,7 @@
             <div class="container">
                 <div class="grid lg:grid-cols-12 md:grid-cols-10 grid-cols-3 items-center">
                     <div class="lg:col-span-2 md:col-span-2 col-span-1">
-                        <a href="{{ route('second', ['dashboards', 'index']) }}">
+                        <a href="{{ route('dashboards.index') }}">
                             <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}" />
                             <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}" />
                         </a>

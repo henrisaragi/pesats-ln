@@ -18,7 +18,7 @@
                                     to tailwick@themesdesign.in
                                 </p>
                             </div>
-                            <form action="{{ route('second', ['dashboards', 'index']) }}">
+                            <form action="{{ route('dashboards.index') }}">
                                 <div class="grid grid-cols-4 gap-2">
                                     <input class="form-input text-center" maxlength="1" placeholder="•" type="text"/>
                                     <input class="form-input text-center" maxlength="1" placeholder="•" type="text"/>
@@ -36,7 +36,7 @@
                         <div class="pt-10 px-10 h-full">
                             <div class="flex items-center justify-between gap-3">
                                 <div>
-                                    <a href="{{ route('second', ['dashboards', 'index']) }}">
+                                    <a href="{{ route('dashboards.index') }}">
                                         <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                                         <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                                     </a>

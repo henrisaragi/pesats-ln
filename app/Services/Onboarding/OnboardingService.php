@@ -80,7 +80,7 @@ class OnboardingService
     public function nextIncompleteStepRoute(User $user): string
     {
         if ($user->onboarding_completed) {
-            return route('second', ['dashboards', 'index']);
+            return route('dashboards.index');
         }
 
         if (! $this->hasSelectedType($user)) {

@@ -10,7 +10,7 @@
         <div class="relative">
             <div class="bg-default-50 rounded-lg w-lg relative">
                 <div class="text-center px-10 py-12">
-                    <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
+                    <a class="flex justify-center" href="{{ route('dashboards.index') }}">
                         <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                         <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                     </a>
@@ -21,7 +21,7 @@
                     <div class="p-3 mb-6 text-warning rounded-md bg-warning/15">
                         Provide your email address, and instructions will be sent to you
                     </div>
-                    <form action="{{ route('second', ['dashboards', 'index']) }}">
+                    <form action="{{ route('dashboards.index') }}">
                         <div class="text-start">
                             <label class="inline-block mb-2 text-sm text-default-800 font-medium"
                                    for="Email">Email</label>

@@ -14,7 +14,7 @@
             <p class="text-default-500 text-sm mb-8">
                 {{ __('Terima kasih, data entitas Anda sudah lengkap. Anda sekarang dapat menggunakan seluruh fitur aplikasi.') }}
             </p>
-            <a class="btn bg-primary text-white px-6" href="{{ route('second', ['dashboards', 'index']) }}">
+            <a class="btn bg-primary text-white px-6" href="{{ route('dashboards.index') }}">
                 {{ __('Ke Dashboard') }}
             </a>
         </div>

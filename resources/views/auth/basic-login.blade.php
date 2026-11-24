@@ -9,7 +9,7 @@
         <div class="card md:w-lg w-screen z-10">
             <div class="text-center px-10 py-12">
                 <!-- Logo -->
-                <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
+                <a class="flex justify-center" href="{{ route('dashboards.index') }}">
                     <img alt="logo dark" class="h-6 flex dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                     <img alt="" class="h-6 hidden dark:flex" src="{{ asset('images/logo-light.png') }}"/>
                 </a>
@@ -17,7 +17,7 @@
                     <h4 class="mb-2.5 text-xl font-semibold text-primary">Welcome Back !</h4>
                     <p class="text-base text-default-500">Sign in to continue to Tailwick.</p>
                 </div>
-                <form action="{{ route('second', ['dashboards', 'index']) }}" class="text-left w-full mt-10">
+                <form action="{{ route('dashboards.index') }}" class="text-left w-full mt-10">
                     <div class="mb-4">
                         <label class="block font-medium text-default-900 text-sm mb-2" for="email">Username/ Email
                             ID</label>

@@ -6,11 +6,6 @@ use Illuminate\Http\Request;
 
 class RoutingController extends Controller
 {
-    public function index(Request $request)
-    {
-        return view('dashboards/index');
-    }
-
     public function root(Request $request, $first)
     {
         return view($first);

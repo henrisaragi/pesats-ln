@@ -79,7 +79,7 @@ class LoginOtpTest extends TestCase
 
         $response = $this->post('/login/otp', ['otp' => $otpCode]);
 
-        $response->assertRedirect(route('second', ['dashboards', 'index']));
+        $response->assertRedirect(route('dashboards.index'));
         $this->assertAuthenticatedAs($user->fresh());
     }
 
@@ -144,5 +144,23 @@ class LoginOtpTest extends TestCase
     public function test_otp_page_redirects_to_login_without_a_pending_login(): void
     {
         $this->get('/login/otp')->assertRedirect(route('login'));
+    }
+
+    public function test_fresh_login_always_lands_on_the_dashboard_even_with_an_intended_url(): void
+    {
+        Mail::fake();
+        $user = $this->makeUser();
+
+        $this->get(route('kuota-saya.index'))->assertRedirect(route('login'));
+        $this->post('/login', ['login' => $user->email, 'password' => 'password']);
+
+        $otpCode = null;
+        Mail::assertSent(OtpMail::class, function (OtpMail $mail) use (&$otpCode) {
+            $otpCode = $mail->otpCode;
+
+            return true;
+        });
+
+        $this->post('/login/otp', ['otp' => $otpCode])->assertRedirect(route('dashboards.index'));
     }
 }

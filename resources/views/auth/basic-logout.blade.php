@@ -9,7 +9,7 @@
         <div class="card md:w-lg w-screen z-10">
             <div class="text-center px-10 py-12">
                 <!-- Logo -->
-                <a class="flex justify-center" href="{{ route('second', ['dashboards', 'index']) }}">
+                <a class="flex justify-center" href="{{ route('dashboards.index') }}">
                     <img alt="logo dark" class="h-6 flex dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                     <img alt="" class="h-6 hidden dark:flex" src="{{ asset('images/logo-light.png') }}"/>
                 </a>
@@ -21,7 +21,7 @@
                     <p class="mb-8 text-base text-default-500">Thank you for using tailwick admin template
                     </p>
                 </div>
-                <a href="{{ route('second', ['dashboards', 'index']) }}">
+                <a href="{{ route('dashboards.index') }}">
                     <button class="btn bg-primary text-white w-full">Sign In</button>
                 </a>
             </div>

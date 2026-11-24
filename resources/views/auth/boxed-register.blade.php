@@ -34,7 +34,7 @@
                             <div class="mt-10 w-110 mx-auto">
                                 <!-- Email Tab -->
                                 <div aria-labelledby="tabs-with-underline-item-1" id="tabsForEmail" role="tabpanel">
-                                    <form action="{{ route('second', ['dashboards', 'index']) }}" class="text-left w-full mt-10">
+                                    <form action="{{ route('dashboards.index') }}" class="text-left w-full mt-10">
                                         <div class="mb-4">
                                             <label class="block font-medium text-default-900 text-sm mb-2" for="email">Email
                                                 ID</label>
@@ -90,7 +90,7 @@
                                 <!-- Phone Tab -->
                                 <div aria-labelledby="tabs-with-underline-item-2" class="hidden" id="tabsForPhone"
                                      role="tabpanel">
-                                    <form action="{{ route('second', ['dashboards', 'index']) }}" class="text-left w-full mt-10">
+                                    <form action="{{ route('dashboards.index') }}" class="text-left w-full mt-10">
                                         <div class="mb-4">
                                             <label class="block font-medium text-default-900 text-sm mb-2"
                                                    for="Phone Number">Phone
@@ -151,7 +151,7 @@
                         <div class="pt-10 px-10 h-full">
                             <div class="flex items-center justify-between gap-3">
                                 <div>
-                                    <a href="{{ route('second', ['dashboards', 'index']) }}">
+                                    <a href="{{ route('dashboards.index') }}">
                                         <img alt="logo dark" class="h-6 block dark:hidden" src="{{ asset('images/logo-dark.png') }}"/>
                                         <img alt="" class="h-6 hidden dark:block" src="{{ asset('images/logo-light.png') }}"/>
                                     </a>

@@ -65,7 +65,7 @@ class ReauthenticateController extends Controller
 
         return $intendedUrl !== null
             ? redirect()->to($intendedUrl)
-            : redirect()->intended(route('second', ['dashboards', 'index']));
+            : redirect()->intended(route('dashboards.index'));
     }
 
     private function pendingReauthUser(Request $request): ?User

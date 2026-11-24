@@ -39,7 +39,7 @@ class IdleSessionReauthenticationTest extends TestCase
         $user = $this->makeUser();
         $user->forceFill(['last_activity_at' => now()->subMinutes(61)])->save();
 
-        $response = $this->actingAs($user)->get(route('second', ['dashboards', 'index']));
+        $response = $this->actingAs($user)->get(route('dashboards.index'));
 
         $response->assertRedirect(route('reauthenticate.show'));
         $this->assertGuest();
@@ -50,7 +50,7 @@ class IdleSessionReauthenticationTest extends TestCase
         $user = $this->makeUser();
         $user->forceFill(['last_activity_at' => now()->subMinutes(30)])->save();
 
-        $this->actingAs($user)->get(route('second', ['dashboards', 'index']));
+        $this->actingAs($user)->get(route('dashboards.index'));
 
         $this->assertAuthenticatedAs($user);
     }
@@ -110,7 +110,7 @@ class IdleSessionReauthenticationTest extends TestCase
         $user = $this->makeUser();
 
         $this->withCookie('reauth_user', (string) $user->id)
-            ->get(route('root'))
+            ->get(route('dashboards.index'))
             ->assertRedirect(route('reauthenticate.show'));
 
         $this->withCookie('reauth_user', (string) $user->id)
@@ -176,5 +176,30 @@ class IdleSessionReauthenticationTest extends TestCase
         $this->actingAs($user)->getJson(route('notifications.index'))->assertOk();
 
         $this->assertTrue($user->fresh()->last_activity_at->gt(now()->subMinute()));
+    }
+
+    public function test_reauthenticate_after_idle_returns_to_the_page_that_timed_out(): void
+    {
+        $user = $this->makeUser();
+        $user->forceFill(['last_activity_at' => now()->subMinutes(61)])->save();
+
+        $this->actingAs($user)->get(route('dashboards.index').'?year=2026')
+            ->assertRedirect(route('reauthenticate.show'));
+
+        $this->post(route('reauthenticate.store'), ['password' => 'password'])
+            ->assertRedirect(route('dashboards.index').'?year=2026');
+    }
+
+    public function test_reauthenticate_after_expired_session_returns_to_the_requested_page(): void
+    {
+        $user = $this->makeUser();
+
+        $this->withCookie('reauth_user', (string) $user->id)
+            ->get(route('dashboards.index').'?year=2025')
+            ->assertRedirect(route('reauthenticate.show'));
+
+        $this->withCookie('reauth_user', (string) $user->id)
+            ->post(route('reauthenticate.store'), ['password' => 'password'])
+            ->assertRedirect(route('dashboards.index').'?year=2025');
     }
 }
